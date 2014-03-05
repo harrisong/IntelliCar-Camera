@@ -1,0 +1,6 @@
+.settings/
+Debug/
+data/
+build/
+.project
+.cproject
