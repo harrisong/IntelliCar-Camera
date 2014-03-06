@@ -30,10 +30,10 @@ int main(void)
 	//adc_init(ADC0_SE13);
 	//adc_init(ADC1_SE17);
 
-	int16 gyro1=0,gyro2=0,gyro3=0,gyro4=0, sp=5850;
+	int16 gyro1=0,gyro2=0,gyro3=0,gyro4=0, sp=70;
 	int16 angle=0;
 	uint32 motorspeed=0;
-	float kp = 300;
+	float kp = 230;
 
 	char buf[30];
 	while(1){
@@ -51,7 +51,7 @@ int main(void)
 		else
 			gyro2 = adc_once (ADC0_SE9, ADC_16bit);
 		gyro2 = gyro2 - 8600;
-		angle = gyro2*90/11700;
+		angle = gyro2*180/11700;
 		//angle = gyro2 - 5850; //45 degree
 		//gyro3 = adc_once (ADC0_SE12, ADC_16bit);
 		//gyro4 = adc_once (ADC0_SE13, ADC_16bit);
@@ -63,17 +63,17 @@ int main(void)
 
 
 
-		if(angle==80){
+		if(angle==sp || angle < 20){
 			motorspeed = 0;
 
 		}
-		if(angle<80){
-			motorspeed = (80-angle) * kp;
+		else if(angle<sp){
+			motorspeed = (sp-angle) * kp;
 			gpio_set (PTC0, 0);
 			gpio_set (PTA10, 0);
 		}
-		if(angle>80){
-			motorspeed = (angle - 80) * kp;
+		else if(angle>sp){
+			motorspeed = (angle - sp) * kp;
 			gpio_set (PTC0, 1);
 			gpio_set (PTA10, 1);
 		}
