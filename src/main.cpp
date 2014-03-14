@@ -64,7 +64,7 @@ void ALL_INIT()
 			img[i][j] = 0;
 		}
 	}
-
+	//HAHA
 	//SetIsr(PIT0_VECTORn, Pit0Handler);
 	DisableInterrupts;
 	port_init(PTA6, IRQ_RISING | ALT1); 	//HREF
