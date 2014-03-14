@@ -1,98 +1,30 @@
-#include "jsmn/jsmn.h"
-//#include <string>
 #include <cstdint>
 #include <mini_common.h>
 #include <hw_common.h>
-#include <MK60_SysTick.h>
-#include <MK60_port.h>
-#include <MK60_FTM.h>
-#include <MK60_gpio.h>
-#include <MK60_uart.h>
-#include <MK60_adc.h>
-#include <libsc/com/uart_device.h>
+
+#include <balance_encoder.h>
+#include <MK60_pit.h>
+#include <vectors.h>
+
+balance_encoder e1(FTM1);
+balance_encoder e2(FTM2);
+__ISR void Pit0Handler()
+{
+	e1.refresh();
+	e2.refresh();
+	PIT_Flag_Clear(PIT0);
+}
 
 int main(void)
 {
-	libsc::UartDevice uart(3, 115200);
-	FTM_PWM_init(FTM0, FTM_CH0, 10000, 0);
-	FTM_PWM_init(FTM0, FTM_CH1, 10000, 0);
-	gpio_init(PTC0, GPO, 1);
-	gpio_init(PTA10, GPO, 1);
-
-	//FTM_QUAD_Init(FTM1);
-	//FTM_QUAD_Init(FTM2);
-	//int32_t encoderR=0, encoderL=0;
-	//int32_t encoderRnew=0, encoderLnew=0;
-
-	//adc_init(ADC0_SE8);
-	adc_init(ADC0_SE9);
-	//adc_init(ADC0_SE12);
-	//adc_init(ADC0_SE13);
-	//adc_init(ADC1_SE17);
-
-	int16 gyro1=0,gyro2=0,gyro3=0,gyro4=0, sp=70;
-	int16 angle=0;
-	uint32 motorspeed=0;
-	float kp = 230;
-
-	char buf[30];
-	while(1){
+	SetIsr(PIT0_VECTORn, Pit0Handler);
+	pit_init_ms(PIT0, 500);
+	EnableIsr(PIT0_VECTORn);
 
 
-		//encoderRnew = FTM_QUAD_get(FTM1) - encoderR;
-		//encoderLnew = FTM_QUAD_get(FTM2) - encoderL;
-		//FTM_QUAD_get(FTM1)=0;
-		//FTM_QUAD_get(FTM2)=0;
-		//gyro1 = adc_once (ADC0_SE8, ADC_16bit);
-		if(adc_once (ADC0_SE9, ADC_16bit) > 20300)
-			gyro2 = 20300;
-		else if(adc_once (ADC0_SE9, ADC_16bit) < 8600)
-			gyro2 = 8600;
-		else
-			gyro2 = adc_once (ADC0_SE9, ADC_16bit);
-		gyro2 = gyro2 - 8600;
-		angle = gyro2*180/11700;
-		//angle = gyro2 - 5850; //45 degree
-		//gyro3 = adc_once (ADC0_SE12, ADC_16bit);
-		//gyro4 = adc_once (ADC0_SE13, ADC_16bit);
-		//gyro2 = adc_once (ADC1_SE17, ADC_16bit); //21000 45 degree
-		//encoderR = encoderRnew;
-		//encoderL = encoderLnew;
-		//snprintf(buf, 30, "g1:%d g2:%d g3:%d g4:%d 1:%d 2:%d\r\n", gyro1, gyro2, gyro3, gyro4, encoder, encoder2);
-
-
-
-
-		if(angle==sp || angle < 20){
-			motorspeed = 0;
-
-		}
-		else if(angle<sp){
-			motorspeed = (sp-angle) * kp;
-			gpio_set (PTC0, 0);
-			gpio_set (PTA10, 0);
-		}
-		else if(angle>sp){
-			motorspeed = (angle - sp) * kp;
-			gpio_set (PTC0, 1);
-			gpio_set (PTA10, 1);
-		}
-
-
-
-		motorspeed = (motorspeed>10000 ? 10000 : (motorspeed<0 ? 0 : motorspeed));
-
-
-		//snprintf(buf, 30, "%d, %d\r\n", angle, motorspeed);
-		//uart.SendStr(buf);
-
-		FTM_PWM_Duty(FTM0, FTM_CH0, motorspeed);
-		FTM_PWM_Duty(FTM0, FTM_CH1, motorspeed);
-
-		//systick_delay_ms(1000);
-
-	}
 
 
     return 0;
 }
+
+
