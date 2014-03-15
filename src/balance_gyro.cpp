@@ -39,6 +39,6 @@ int16 balance_gyro::get_offset(){
 }
 
 int16 balance_gyro::get_accel(){
-
+	return raw_z;
 }
 

@@ -8,9 +8,9 @@
 #ifndef VARS_H_
 #define VARS_H_
 
-#define kp 0;
-#define kd 0;
-#define ki 0;
+#define kp 260
+#define kd 0
+#define ki 0
 
 int16 motorspeed1, motorspeed2;
 
