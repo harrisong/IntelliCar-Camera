@@ -4,13 +4,10 @@
  *  Created on: Mar 14, 2014
  *      Author: harrison
  */
+#include <cstdlib>
 #include <init.h>
 
 char buf[100];
-
-int16 abs(int16 n){
-	return (n < 0) ? -n : n;
-}
 
 ///UART Pit///
 __ISR void Pit1Handler(){
