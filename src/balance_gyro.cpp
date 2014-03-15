@@ -15,11 +15,13 @@ balance_gyro::balance_gyro(ADCn_Ch_e p1, ADCn_Ch_e p2, ADCn_Ch_e p3, int16 sp){
 	adc_init(raw_accel_port);
 
 	raw_setpoint = sp;
+	raw_gyro = 0;
 	refresh();
 }
 
 void balance_gyro::refresh(){
-	raw_gyro = (int16) adc_once(raw_gyro_port, ADC_16bit);
+	totalsample++;
+	raw_gyro = ((int16) adc_once(raw_gyro_port, ADC_16bit) + raw_gyro)/totalsample;
 	raw_angle = (int16) adc_once(raw_angle_port, ADC_16bit);
 	raw_offset = raw_angle - raw_setpoint;
 

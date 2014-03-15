@@ -21,6 +21,7 @@ private:
 	int16 raw_z;
 	int16 raw_setpoint;
 	int16 raw_offset;
+	int totalsample;
 
 
 public:
