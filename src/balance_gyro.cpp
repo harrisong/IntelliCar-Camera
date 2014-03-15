@@ -54,7 +54,7 @@ int16 balance_gyro::get_offset(){
 	return raw_offset;
 }
 
-int16 balance_gyro::get_accel(){
+float balance_gyro::get_accel(){
 	return accel;
 }
 
