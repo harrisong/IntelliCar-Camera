@@ -19,18 +19,18 @@ balance_gyro::balance_gyro(ADCn_Ch_e p1, ADCn_Ch_e p2, ADCn_Ch_e p3, int16 sp){
 }
 
 void balance_gyro::refresh(){
-	raw_gyro = adc_once(raw_gyro_port, ADC_16bit);
-	raw_angle = adc_once(raw_angle_port, ADC_16bit);
+	raw_gyro = (int16) adc_once(raw_gyro_port, ADC_16bit);
+	raw_angle = (int16) adc_once(raw_angle_port, ADC_16bit);
 	raw_offset = raw_angle - raw_setpoint;
 
-	raw_z =  adc_once(raw_accel_port, ADC_16bit);
+	raw_z =  (int16)adc_once(raw_accel_port, ADC_16bit);
 }
 
-uint16 balance_gyro::get_raw_gyro(){
+int16 balance_gyro::get_raw_gyro(){
 	return raw_gyro;
 }
 
-uint16 balance_gyro::get_raw_angle(){
+int16 balance_gyro::get_raw_angle(){
 	return raw_angle;
 }
 

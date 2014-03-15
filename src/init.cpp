@@ -5,24 +5,37 @@
  *      Author: harrison
  */
 #include <init.h>
-#include <vars.h>
 
-//init encoders
-balance_encoder e1(FTM1);
-balance_encoder e2(FTM2);
+char buf[100];
 
-//init gyro with setpoint
-//gyro(gyro, angle, accel (z), setpoint)
-balance_gyro gyro(ADC0_SE12, ADC0_SE13, ADC0_SE17, 12200);
+int16 abs(int16 n){
+	return (n < 0) ? -n : n;
+}
 
-//init motors
-libsc::Motor motor1(0);
-libsc::Motor motor2(1);
+///UART Pit///
+__ISR void Pit1Handler(){
+	uart_putstr (UART3 , buf);
+	PIT_Flag_Clear(PIT1);
+}
 
 
 ///System loop///
 __ISR void Pit0Handler()
 {
+	//init encoders
+	static balance_encoder e1(FTM1);
+	static balance_encoder e2(FTM2);
+
+	//init gyro with setpoint - gyro(gyro, angle, accel (z), setpoint)
+	static balance_gyro gyro(ADC0_SE13, ADC0_SE12, ADC1_SE10, 12200);
+
+	int16 speed1, speed2;
+	bool dir1, dir2;
+
+	//init motors
+	libsc::Motor motor1(0);
+	libsc::Motor motor2(1);
+
 	///Get values from encoder///
 	e1.refresh();
 	e2.refresh();
@@ -30,12 +43,24 @@ __ISR void Pit0Handler()
 	gyro.refresh();
 
 	///PD equation
-	motorspeed1 = kp * gyro.get_offset() + kd * gyro.get_raw_gyro();
-	motorspeed2 = kp * gyro.get_offset() + kd * gyro.get_raw_gyro();
+	speed1 = kp * gyro.get_offset() + kd * gyro.get_raw_gyro();
+	speed2 = kp * gyro.get_offset() + kd * gyro.get_raw_gyro();
 
+	dir1 = (speed1<0) ? false : true;
+	dir2 = (speed2<0) ? true : false;
+	motor1.SetClockwise(dir1);
+	motor2.SetClockwise(dir2);
+
+	if(gyro.get_offset() < -6600 || gyro.get_offset() >  6500) {
+		speed1 = 0;
+		speed2 = 0;
+	}
 	///Set motors
-	motor1.SetPower(motorspeed1);
-	motor2.SetPower(motorspeed2);
+	motor1.SetPower(abs(speed1));
+	motor2.SetPower(abs(speed2));
+
+	snprintf(buf, 100, "%d\t %d\t %d\t %d\t\ %d\t %d\t \r\n", gyro.get_offset(), speed1, speed2, e1.gettotal(), e2.gettotal(), gyro.get_accel());
+
 
 	PIT_Flag_Clear(PIT0);
 }
@@ -43,11 +68,19 @@ __ISR void Pit0Handler()
 
 
 void init(){
+	uart_init(UART3, 115200);
+	///Starts UART PIT///
+	SetIsr(PIT1_VECTORn, Pit1Handler);
+	pit_init_ms(PIT1, 1000);
+	EnableIsr(PIT1_VECTORn);
+	///Ends UART PIT///
+
 	///Starts Init System loop///
 	SetIsr(PIT0_VECTORn, Pit0Handler);
-	pit_init_ms(PIT0, 500);
+	pit_init_ms(PIT0, 1);
 	EnableIsr(PIT0_VECTORn);
 	///Ends Init System loop///
+
 }
 
 

@@ -16,8 +16,8 @@
 class balance_gyro{
 private:
 	ADCn_Ch_e raw_gyro_port, raw_angle_port, raw_accel_port;
-	uint16 raw_gyro;
-	uint16 raw_angle;
+	int16 raw_gyro;
+	int16 raw_angle;
 	int16 raw_z;
 	int16 raw_setpoint;
 	int16 raw_offset;
@@ -26,8 +26,8 @@ private:
 public:
 	balance_gyro(ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, int16);
 	void refresh();
-	uint16 get_raw_gyro();
-	uint16 get_raw_angle();
+	int16 get_raw_gyro();
+	int16 get_raw_angle();
 	int16 get_offset();
 	int16 get_accel();
 
