@@ -23,8 +23,8 @@ __ISR void Pit0Handler()
 	static balance_encoder e1(FTM1);
 	static balance_encoder e2(FTM2);
 
-	//init gyro with setpoint - gyro(gyro, angle, accel (z), setpoint)
-	static balance_gyro gyro(ADC0_SE13, ADC0_SE12, ADC1_SE10, 12150);
+	//init gyro with setpoint - gyro(gyro, angle, z, x, setpoint)
+	static balance_gyro gyro(ADC0_SE13, ADC0_SE12, ADC1_SE10, ADC1_SE11, 12150);
 
 	int16 speed1, speed2;
 	bool dir1, dir2;
@@ -40,8 +40,8 @@ __ISR void Pit0Handler()
 	gyro.refresh();
 
 	///PD equation
-	speed1 = kp * gyro.get_offset() + kd * gyro.get_raw_gyro();
-	speed2 = kp * gyro.get_offset() + kd * gyro.get_raw_gyro();
+	speed1 = kp * gyro.get_offset() / 100 + kd * gyro.get_raw_gyro();
+	speed2 = kp * gyro.get_offset() / 100 + kd * gyro.get_raw_gyro();
 
 	dir1 = (speed1<0) ? false : true;
 	dir2 = (speed2<0) ? true : false;

@@ -16,18 +16,11 @@ class balance_encoder{
 		FTMn_e ftmn;
 		int16 total,direction,current;
 	public:
-
-
-		balance_encoder(FTMn_e n);
-
+		balance_encoder(FTMn_e);
 		void refresh();
-
 		int16 getcurrent();
-
 		int16 gettotal();
-
 		int16 getdirection();
-
 		void reset();
 };
 

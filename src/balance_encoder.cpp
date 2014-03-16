@@ -13,8 +13,19 @@ balance_encoder::balance_encoder(FTMn_e n){
 }
 
 void balance_encoder::refresh(){
-	current = FTM_QUAD_get(ftmn);
-	total += FTM_QUAD_get(ftmn);
+	int16 value = FTM_QUAD_get(ftmn);
+
+	switch (ftmn){
+		case FTM1:
+			value = -value;
+			break;
+		case FTM2:
+		default:
+			break;
+	}
+
+	current = value;
+	total += value;
 	reset();
 	if(current > 0) direction=1;
 	else if(current < 0) direction = -1;

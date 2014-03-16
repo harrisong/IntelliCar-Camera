@@ -10,12 +10,13 @@
 
 #include <mini_common.h>
 #include <MK60_adc.h>
+#include <math.h>
 
 
 
 class balance_gyro{
 private:
-	ADCn_Ch_e raw_gyro_port, raw_angle_port, raw_accel_port;
+	ADCn_Ch_e raw_gyro_port, raw_angle_port, raw_z_port, raw_x_port;
 	float raw_gyro;
 	int16 raw_angle;
 	float Rz, Rx, accel;
@@ -24,7 +25,7 @@ private:
 	int totalsample;
 	
 	float Vmax;
-	int16 Adc16max;
+	int Adc16max;
 	float Gyrozero;
 	float Gyroscale;
 	float Accelzero;

@@ -8,7 +8,7 @@
 #ifndef VARS_H_
 #define VARS_H_
 
-#define kp 2
+#define kp 1950
 #define kd 0
 #define ki 0
 
