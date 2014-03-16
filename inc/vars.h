@@ -13,6 +13,14 @@
 #define kd 0
 #define ki 0
 
+//Gyro Ports//
+#define GYROADC ADC0_SE13
+#define ANGLEADC ADC0_SE12
+#define RZADC ADC1_SE10
+#define RXADC ADC1_SE11
+
+
+
 //Encoders Ports Definition//
 #ifdef FTM1_QDPHA
 #undef FTM1_QDPHA

@@ -24,7 +24,7 @@ __ISR void Pit0Handler()
 	static balance_encoder e2(FTM2);
 
 	//init gyro with setpoint - gyro(gyro, angle, z, x, setpoint)
-	static balance_gyro gyro(ADC0_SE13, ADC0_SE12, ADC1_SE10, ADC1_SE11, 12150);
+	static balance_gyro gyro(GYROADC, ANGLEADC, RZADC, RXADC, 12150);
 
 	//init motors
 	int16 speed1, speed2;
