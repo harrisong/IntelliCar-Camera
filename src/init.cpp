@@ -26,12 +26,11 @@ __ISR void Pit0Handler()
 	//init gyro with setpoint - gyro(gyro, angle, z, x, setpoint)
 	static balance_gyro gyro(ADC0_SE13, ADC0_SE12, ADC1_SE10, ADC1_SE11, 12150);
 
-	int16 speed1, speed2;
-	bool dir1, dir2;
-
 	//init motors
-	libsc::Motor motor1(0);
-	libsc::Motor motor2(1);
+	int16 speed1, speed2;
+		bool dir1, dir2;
+	static libsc::Motor motor1(0);
+	static libsc::Motor motor2(1);
 
 	///Get values from encoder///
 	e1.refresh();
@@ -40,8 +39,7 @@ __ISR void Pit0Handler()
 	gyro.refresh();
 
 	///PD equation
-	speed1 = kp * gyro.get_offset() / 100 + kd * gyro.get_raw_gyro();
-	speed2 = kp * gyro.get_offset() / 100 + kd * gyro.get_raw_gyro();
+	speed1 = speed2 = kp * gyro.get_offset() / 100 + kd * gyro.get_omega();
 
 	dir1 = (speed1<0) ? false : true;
 	dir2 = (speed2<0) ? true : false;
@@ -58,7 +56,7 @@ __ISR void Pit0Handler()
 	motor1.SetPower(abs(speed1));
 	motor2.SetPower(abs(speed2));
 
-	snprintf(buf, 100, "%d\t %d\t %d\t \r\n", gyro.get_offset(), gyro.get_raw_gyro(), gyro.get_accel());
+	snprintf(buf, 100, "%d\t %f\t %f\t \r\n", gyro.get_offset(), gyro.get_raw_gyro(), gyro.get_accel());
 
 
 	PIT_Flag_Clear(PIT0);

@@ -20,8 +20,8 @@ private:
 	float raw_gyro;
 	int16 raw_angle;
 	float Rz, Rx, accel;
-	int16 raw_setpoint;
-	int16 raw_offset;
+	int16 raw_setpoint, raw_offset, old_raw_offset, omega;
+
 	int totalsample;
 	
 	float Vmax;
@@ -38,6 +38,7 @@ public:
 	float get_raw_gyro();
 	int16 get_raw_angle();
 	int16 get_offset();
+	int16 get_omega();
 	float get_accel();
 
 

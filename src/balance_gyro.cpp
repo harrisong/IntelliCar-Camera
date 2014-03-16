@@ -18,6 +18,9 @@ balance_gyro::balance_gyro(ADCn_Ch_e p1, ADCn_Ch_e p2, ADCn_Ch_e p3, ADCn_Ch_e p
 
 	raw_setpoint = sp;
 	raw_gyro = 0;
+	raw_offset = 0;
+	old_raw_offset = 0;
+	omega = 0;
 	
 	Vmax = 3.3;
 	Adc16max = 65535;
@@ -33,7 +36,9 @@ void balance_gyro::refresh(){
 	totalsample++;
 	raw_angle = (int16) adc_once(raw_angle_port, ADC_16bit);
 	raw_offset = raw_angle - raw_setpoint;
-	
+	omega = raw_offset - old_raw_offset;
+	old_raw_offset = raw_offset;
+
 	//raw_gyro = ((int16) adc_once(raw_gyro_port, ADC_16bit) + raw_gyro)/totalsample;
 	raw_gyro = (adc_once(raw_gyro_port, ADC_16bit) * Vmax / Adc16max - Gyrozero) / Gyroscale;
 	
@@ -52,6 +57,10 @@ int16 balance_gyro::get_raw_angle(){
 
 int16 balance_gyro::get_offset(){
 	return raw_offset;
+}
+
+int16 balance_gyro::get_omega(){
+	return omega;
 }
 
 float balance_gyro::get_accel(){
