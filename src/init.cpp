@@ -56,7 +56,7 @@ __ISR void Pit0Handler()
 	//speed1 = speed2 = kp * gyro.get_offset() + kd * gyro.get_omega() / 100;
 	_gyro = gyro.get_offset();
 	kalman_filtering(&gyro_kf, &_gyro, 1);
-	speed1 = speed2 = kp * _gyro + kd * gyro.get_omega() / 100;
+	speed1 = speed2 = kp * _gyro + kd * gyro.get_omega() / 10;
 
 	dir1 = (speed1<0) ? true : false;
 	dir2 = (speed2<0) ? false : true;

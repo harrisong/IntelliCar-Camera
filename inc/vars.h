@@ -9,8 +9,8 @@
 #define VARS_H_
 
 //speed pid vars//
-#define kp 10
-#define kd 0
+#define kp 2
+#define kd 5
 #define ki 0
 
 //Gyro Ports//
