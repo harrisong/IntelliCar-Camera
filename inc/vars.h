@@ -9,7 +9,7 @@
 #define VARS_H_
 
 //speed pid vars//
-#define kp 1950
+#define kp 10
 #define kd 0
 #define ki 0
 

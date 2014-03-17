@@ -22,6 +22,7 @@
 //#include <libsc/com/k60/ftm_utils.h>
 #include <libsc/com/motor.h>
 //#include <libsc/com/uart_device.h>
+#include "kalman.h"
 
 void init();
 
