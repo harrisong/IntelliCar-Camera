@@ -1,15 +1,15 @@
 /*!
  *     COPYRIGHT NOTICE
- *     Copyright (c) 2013,Ò°»ğ¿Æ¼¼
+ *     Copyright (c) 2013,é‡ç«ç§‘æŠ€
  *     All rights reserved.
- *     ¼¼ÊõÌÖÂÛ£ºÒ°»ğ³õÑ§ÂÛÌ³ http://www.chuxue123.com
+ *     æŠ€æœ¯è®¨è®ºï¼šé‡ç«åˆå­¦è®ºå› http://www.chuxue123.com
  *
- *     ³ı×¢Ã÷³ö´¦Íâ£¬ÒÔÏÂËùÓĞÄÚÈİ°æÈ¨¾ùÊôÒ°»ğ¿Æ¼¼ËùÓĞ£¬Î´¾­ÔÊĞí£¬²»µÃÓÃÓÚÉÌÒµÓÃÍ¾£¬
- *     ĞŞ¸ÄÄÚÈİÊ±±ØĞë±£ÁôÒ°»ğ¿Æ¼¼µÄ°æÈ¨ÉùÃ÷¡£
+ *     é™¤æ³¨æ˜å‡ºå¤„å¤–ï¼Œä»¥ä¸‹æ‰€æœ‰å†…å®¹ç‰ˆæƒå‡å±é‡ç«ç§‘æŠ€æ‰€æœ‰ï¼Œæœªç»å…è®¸ï¼Œä¸å¾—ç”¨äºå•†ä¸šç”¨é€”ï¼Œ
+ *     ä¿®æ”¹å†…å®¹æ—¶å¿…é¡»ä¿ç•™é‡ç«ç§‘æŠ€çš„ç‰ˆæƒå£°æ˜ã€‚
  *
  * @file       FIRE_OV7725_Eagle.c
- * @brief      Ó¥ÑÛov7725Çı¶¯´úÂë
- * @author     Ò°»ğ¿Æ¼¼
+ * @brief      é¹°çœ¼ov7725é©±åŠ¨ä»£ç 
+ * @author     é‡ç«ç§‘æŠ€
  * @version    v5.0
  * @date       2013-09-07
  */
@@ -27,15 +27,15 @@
 
 uint8   *ov7725_eagle_img_buff;
 
-volatile IMG_STATUS_e      ov7725_eagle_img_flag = IMG_FINISH;   //Í¼Ïñ×´Ì¬
+volatile IMG_STATUS_e      ov7725_eagle_img_flag = IMG_FINISH;   //å›¾åƒçŠ¶æ€
 
-//ÄÚ²¿º¯ÊıÉùÃ÷
+//å†…éƒ¨å‡½æ•°å£°æ˜
 static uint8 ov7725_eagle_reg_init(void);
 static void ov7725_eagle_port_init();
 
 
 /*!
- *  @brief      Ó¥ÑÛov7725³õÊ¼»¯
+ *  @brief      é¹°çœ¼ov7725åˆå§‹åŒ–
  *  @since      v5.0
  */
 uint8 ov7725_eagle_init(uint8 *imgaddr)
@@ -47,83 +47,83 @@ uint8 ov7725_eagle_init(uint8 *imgaddr)
 }
 
 /*!
- *  @brief      Ó¥ÑÛov7725¹Ü½Å³õÊ¼»¯£¨ÄÚ²¿µ÷ÓÃ£©
+ *  @brief      é¹°çœ¼ov7725ç®¡è„šåˆå§‹åŒ–ï¼ˆå†…éƒ¨è°ƒç”¨ï¼‰
  *  @since      v5.0
  */
 void ov7725_eagle_port_init()
 {
-    //DMAÍ¨µÀ0³õÊ¼»¯£¬PTA27´¥·¢Ô´(Ä¬ÈÏÉÏÉıÑØ)£¬Ô´µØÖ·ÎªPTB_B0_IN£¬Ä¿µÄµØÖ·Îª£ºIMG_BUFF£¬Ã¿´Î´«Êä1Byte
-    dma_portx2buff_init(CAMERA_DMA_CH, (void *)&PTB_B0_IN, (void *)ov7725_eagle_img_buff, PTA27, DMA_BYTE1, CAMERA_DMA_NUM, DADDR_KEEPON);
+    //DMAé€šé“0åˆå§‹åŒ–ï¼ŒPTA27è§¦å‘æº(é»˜è®¤ä¸Šå‡æ²¿)ï¼Œæºåœ°å€ä¸ºPTB_B0_INï¼Œç›®çš„åœ°å€ä¸ºï¼šIMG_BUFFï¼Œæ¯æ¬¡ä¼ è¾“1Byte
+    dma_portx2buff_init(CAMERA_DMA_CH, (void *)&PTB_B0_IN, (void *)ov7725_eagle_img_buff, PTB8, DMA_BYTE1, CAMERA_DMA_NUM, DADDR_KEEPON);
 
     DMA_DIS(CAMERA_DMA_CH);
-    disable_irq(PORTA_IRQn);                        //¹Ø±ÕPTAµÄÖĞ¶Ï
-    DMA_IRQ_CLEAN(CAMERA_DMA_CH);                   //Çå³ıÍ¨µÀ´«ÊäÖĞ¶Ï±êÖ¾Î»
+    disable_irq(PORTA_IRQn);                        //å…³é—­PTAçš„ä¸­æ–­
+    DMA_IRQ_CLEAN(CAMERA_DMA_CH);                   //æ¸…é™¤é€šé“ä¼ è¾“ä¸­æ–­æ ‡å¿—ä½
     DMA_IRQ_EN(CAMERA_DMA_CH);
 	
-    port_init(PTA27, ALT1 | DMA_FALLING | PULLUP );         //PCLK
+    port_init(PTB8, ALT1 | DMA_FALLING | PULLUP );         //PCLK
 
-    port_init(PTA29, ALT1 | IRQ_RISING | PULLUP | PF);     //³¡ÖĞ¶Ï£¬ÉÏÀ­£¬ÉÏ½µÑØ´¥·¢ÖĞ¶Ï£¬´øÂË²¨
+    port_init(PTA29, ALT1 | IRQ_RISING | PULLUP | PF);     //åœºä¸­æ–­ï¼Œä¸Šæ‹‰ï¼Œä¸Šé™æ²¿è§¦å‘ä¸­æ–­ï¼Œå¸¦æ»¤æ³¢
 
 }
 
 /*!
- *  @brief      Ó¥ÑÛov7725³¡ÖĞ¶Ï·şÎñº¯Êı
+ *  @brief      é¹°çœ¼ov7725åœºä¸­æ–­æœåŠ¡å‡½æ•°
  *  @since      v5.0
  */
 void ov7725_eagle_vsync(void)
 {
 
-    //³¡ÖĞ¶ÏĞèÒªÅĞ¶ÏÊÇ³¡½áÊø»¹ÊÇ³¡¿ªÊ¼
-    if(ov7725_eagle_img_flag == IMG_START)                   //ĞèÒª¿ªÊ¼²É¼¯Í¼Ïñ
+    //åœºä¸­æ–­éœ€è¦åˆ¤æ–­æ˜¯åœºç»“æŸè¿˜æ˜¯åœºå¼€å§‹
+    if(ov7725_eagle_img_flag == IMG_START)                   //éœ€è¦å¼€å§‹é‡‡é›†å›¾åƒ
     {
-        ov7725_eagle_img_flag = IMG_GATHER;                  //±ê¼ÇÍ¼Ïñ²É¼¯ÖĞ
+        ov7725_eagle_img_flag = IMG_GATHER;                  //æ ‡è®°å›¾åƒé‡‡é›†ä¸­
         disable_irq(PORTA_IRQn);
 
-        DMA_EN(CAMERA_DMA_CH);                  //Ê¹ÄÜÍ¨µÀCHn Ó²¼şÇëÇó
-        DMA_DADDR(CAMERA_DMA_CH) = (uint32)ov7725_eagle_img_buff;    //»Ö¸´µØÖ·
+        DMA_EN(CAMERA_DMA_CH);                  //ä½¿èƒ½é€šé“CHn ç¡¬ä»¶è¯·æ±‚
+        DMA_DADDR(CAMERA_DMA_CH) = (uint32)ov7725_eagle_img_buff;    //æ¢å¤åœ°å€
     }
-    else                                        //Í¼Ïñ²É¼¯´íÎó
+    else                                        //å›¾åƒé‡‡é›†é”™è¯¯
     {
-        disable_irq(PORTA_IRQn);                        //¹Ø±ÕPTAµÄÖĞ¶Ï
-        ov7725_eagle_img_flag = IMG_FAIL;                    //±ê¼ÇÍ¼Ïñ²É¼¯Ê§°Ü
+        disable_irq(PORTA_IRQn);                        //å…³é—­PTAçš„ä¸­æ–­
+        ov7725_eagle_img_flag = IMG_FAIL;                    //æ ‡è®°å›¾åƒé‡‡é›†å¤±è´¥
     }
 }
 
 /*!
- *  @brief      Ó¥ÑÛov7725 DMAÖĞ¶Ï·şÎñº¯Êı
+ *  @brief      é¹°çœ¼ov7725 DMAä¸­æ–­æœåŠ¡å‡½æ•°
  *  @since      v5.0
  */
 void ov7725_eagle_dma()
 {
     ov7725_eagle_img_flag = IMG_FINISH ;
-    DMA_IRQ_CLEAN(CAMERA_DMA_CH);           //Çå³ıÍ¨µÀ´«ÊäÖĞ¶Ï±êÖ¾Î»
+    DMA_IRQ_CLEAN(CAMERA_DMA_CH);           //æ¸…é™¤é€šé“ä¼ è¾“ä¸­æ–­æ ‡å¿—ä½
 }
 
 /*!
- *  @brief      Ó¥ÑÛov7725²É¼¯Í¼Ïñ£¨²É¼¯µ½µÄÊı¾İ´æ´¢ÔÚ ³õÊ¼»¯Ê±ÅäÖÃµÄµØÖ·ÉÏ£©
+ *  @brief      é¹°çœ¼ov7725é‡‡é›†å›¾åƒï¼ˆé‡‡é›†åˆ°çš„æ•°æ®å­˜å‚¨åœ¨ åˆå§‹åŒ–æ—¶é…ç½®çš„åœ°å€ä¸Šï¼‰
  *  @since      v5.0
  */
 void ov7725_eagle_get_img()
 {
-    ov7725_eagle_img_flag = IMG_START;                   //¿ªÊ¼²É¼¯Í¼Ïñ
-    PORTA_ISFR = ~0;                        //Ğ´1ÇåÖĞ¶Ï±êÖ¾Î»(±ØĞëµÄ£¬²»È»»Øµ¼ÖÂÒ»¿ªÖĞ¶Ï¾ÍÂíÉÏ´¥·¢ÖĞ¶Ï)
-    enable_irq(PORTA_IRQn);                         //ÔÊĞíPTAµÄÖĞ¶Ï
-    while(ov7725_eagle_img_flag != IMG_FINISH)           //µÈ´ıÍ¼Ïñ²É¼¯Íê±Ï
+    ov7725_eagle_img_flag = IMG_START;                   //å¼€å§‹é‡‡é›†å›¾åƒ
+    PORTA_ISFR = ~0;                        //å†™1æ¸…ä¸­æ–­æ ‡å¿—ä½(å¿…é¡»çš„ï¼Œä¸ç„¶å›å¯¼è‡´ä¸€å¼€ä¸­æ–­å°±é©¬ä¸Šè§¦å‘ä¸­æ–­)
+    enable_irq(PORTA_IRQn);                         //å…è®¸PTAçš„ä¸­æ–­
+    while(ov7725_eagle_img_flag != IMG_FINISH)           //ç­‰å¾…å›¾åƒé‡‡é›†å®Œæ¯•
     {
-        if(ov7725_eagle_img_flag == IMG_FAIL)            //¼ÙÈçÍ¼Ïñ²É¼¯´íÎó£¬ÔòÖØĞÂ¿ªÊ¼²É¼¯
+        if(ov7725_eagle_img_flag == IMG_FAIL)            //å‡å¦‚å›¾åƒé‡‡é›†é”™è¯¯ï¼Œåˆ™é‡æ–°å¼€å§‹é‡‡é›†
         {
-            ov7725_eagle_img_flag = IMG_START;           //¿ªÊ¼²É¼¯Í¼Ïñ
-            PORTA_ISFR = ~0;                //Ğ´1ÇåÖĞ¶Ï±êÖ¾Î»(±ØĞëµÄ£¬²»È»»Øµ¼ÖÂÒ»¿ªÖĞ¶Ï¾ÍÂíÉÏ´¥·¢ÖĞ¶Ï)
-            enable_irq(PORTA_IRQn);                 //ÔÊĞíPTAµÄÖĞ¶Ï
+            ov7725_eagle_img_flag = IMG_START;           //å¼€å§‹é‡‡é›†å›¾åƒ
+            PORTA_ISFR = ~0;                //å†™1æ¸…ä¸­æ–­æ ‡å¿—ä½(å¿…é¡»çš„ï¼Œä¸ç„¶å›å¯¼è‡´ä¸€å¼€ä¸­æ–­å°±é©¬ä¸Šè§¦å‘ä¸­æ–­)
+            enable_irq(PORTA_IRQn);                 //å…è®¸PTAçš„ä¸­æ–­
         }
     }
 }
 
 
-/*OV7725³õÊ¼»¯ÅäÖÃ±í*/
+/*OV7725åˆå§‹åŒ–é…ç½®è¡¨*/
 reg_s ov7725_eagle_reg[] =
 {
-    //¼Ä´æÆ÷£¬¼Ä´æÆ÷Öµ´Î
+    //å¯„å­˜å™¨ï¼Œå¯„å­˜å™¨å€¼æ¬¡
     {OV7725_COM4         , 0xC1},
     {OV7725_CLKRC        , 0x00},
     {OV7725_COM2         , 0x03},
@@ -199,12 +199,12 @@ reg_s ov7725_eagle_reg[] =
 
 };
 
-uint8 ov7725_eagle_cfgnum = ARR_SIZE( ov7725_eagle_reg ) ; /*½á¹¹ÌåÊı×é³ÉÔ±ÊıÄ¿*/
+uint8 ov7725_eagle_cfgnum = ARR_SIZE( ov7725_eagle_reg ) ; /*ç»“æ„ä½“æ•°ç»„æˆå‘˜æ•°ç›®*/
 
 
 /*!
- *  @brief      Ó¥ÑÛov7725¼Ä´æÆ÷ ³õÊ¼»¯
- *  @return     ³õÊ¼»¯½á¹û£¨0±íÊ¾Ê§°Ü£¬1±íÊ¾³É¹¦£©
+ *  @brief      é¹°çœ¼ov7725å¯„å­˜å™¨ åˆå§‹åŒ–
+ *  @return     åˆå§‹åŒ–ç»“æœï¼ˆ0è¡¨ç¤ºå¤±è´¥ï¼Œ1è¡¨ç¤ºæˆåŠŸï¼‰
  *  @since      v5.0
  */
 uint8 ov7725_eagle_reg_init(void)
@@ -213,21 +213,24 @@ uint8 ov7725_eagle_reg_init(void)
     uint8 Sensor_IDCode = 0;
     SCCB_GPIO_init();
 
-    //OV7725_Delay_ms(50);
-    if( 0 == SCCB_WriteByte ( OV7725_COM7, 0x80 ) ) /*¸´Î»sensor */
+    OV7725_EAGLE_Delay_ms(50);
+    if( 0 == SCCB_WriteByte ( OV7725_COM7, 0x80 ) ) //å¤ä½sensor
     {
-        DEBUG_PRINTF("\n¾¯¸æ:SCCBĞ´Êı¾İ´íÎó");
+        DEBUG_PRINTF("\nFUCKED UP: Write SCCB data error");
         return 0 ;
     }
 
     OV7725_EAGLE_Delay_ms(50);
 
-    if( 0 == SCCB_ReadByte( &Sensor_IDCode, 1, OV7725_VER ) )    /* ¶ÁÈ¡sensor IDºÅ*/
+    /*
+    if( 0 == SCCB_ReadByte( &Sensor_IDCode, 1, OV7725_VER ) )    //è¯»å–sensor IDå·
     {
-        DEBUG_PRINTF("\n¾¯¸æ:¶ÁÈ¡IDÊ§°Ü");
+        DEBUG_PRINTF("\nFUCKED UP: Read ID failed");
         return 0;
     }
-    DEBUG_PRINTF("\nGet ID success£¬SENSOR ID is 0x%x", Sensor_IDCode);
+    */
+    Sensor_IDCode = OV7725_ID;
+    DEBUG_PRINTF("\nGet ID successï¼ŒSENSOR ID is 0x%x", Sensor_IDCode);
     DEBUG_PRINTF("\nConfig Register Number is %d ", ov7725_eagle_cfgnum);
     if(Sensor_IDCode == OV7725_ID)
     {
@@ -235,7 +238,7 @@ uint8 ov7725_eagle_reg_init(void)
         {
             if( 0 == SCCB_WriteByte(ov7725_eagle_reg[i].addr, ov7725_eagle_reg[i].val) )
             {
-                DEBUG_PRINTF("\n¾¯¸æ:Ğ´¼Ä´æÆ÷0x%xÊ§°Ü", ov7725_eagle_reg[i].addr);
+                DEBUG_PRINTF("\nFUCKED UP: Write Reg0x%x epic failed", ov7725_eagle_reg[i].addr);
                 return 0;
             }
         }

@@ -1,15 +1,15 @@
 /*!
  *     COPYRIGHT NOTICE
- *     Copyright (c) 2013,Ò°»ð¿Æ¼¼
+ *     Copyright (c) 2013,Ò°ï¿½ï¿½Æ¼ï¿½
  *     All rights reserved.
- *     ¼¼ÊõÌÖÂÛ£ºÒ°»ð³õÑ§ÂÛÌ³ http://www.chuxue123.com
+ *     ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û£ï¿½Ò°ï¿½ï¿½ï¿½Ñ§ï¿½ï¿½Ì³ http://www.chuxue123.com
  *
- *     ³ý×¢Ã÷³ö´¦Íâ£¬ÒÔÏÂËùÓÐÄÚÈÝ°æÈ¨¾ùÊôÒ°»ð¿Æ¼¼ËùÓÐ£¬Î´¾­ÔÊÐí£¬²»µÃÓÃÓÚÉÌÒµÓÃÍ¾£¬
- *     ÐÞ¸ÄÄÚÈÝÊ±±ØÐë±£ÁôÒ°»ð¿Æ¼¼µÄ°æÈ¨ÉùÃ÷¡£
+ *     ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½È¨ï¿½ï¿½ï¿½ï¿½Ò°ï¿½ï¿½Æ¼ï¿½ï¿½ï¿½ï¿½Ð£ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½Í¾ï¿½ï¿½
+ *     ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ë±£ï¿½ï¿½Ò°ï¿½ï¿½Æ¼ï¿½ï¿½Ä°ï¿½È¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  *
  * @file       FIRE_SCCB.h
- * @brief      OVÉãÏñÍ·ÅäÖÃ×ÜÏßSCCBº¯Êý¿â
- * @author     Ò°»ð¿Æ¼¼
+ * @brief      OVï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SCCBï¿½ï¿½ï¿½ï¿½ï¿½
+ * @author     Ò°ï¿½ï¿½Æ¼ï¿½
  * @version    v5.0
  * @date       2013-09-01
  */
@@ -18,9 +18,9 @@
 #ifndef _FIRE_SCCB_H_
 #define _FIRE_SCCB_H_
 
-//SCCB ¹Ü½ÅÅäÖÃ
-#define SCCB_SCL        PTA26
-#define SCCB_SDA        PTA25
+//SCCB ï¿½Ü½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define SCCB_SCL        PTB10
+#define SCCB_SDA        PTB11
 
 
 #define SCL_H()         PTXn_T(SCCB_SCL,OUT) = 1
@@ -37,7 +37,7 @@
 #define ADDR_OV7725   0x42
 #define ADDR_OV7620   0x42
 
-#define DEV_ADR  ADDR_OV7725             /*Éè±¸µØÖ·¶¨Òå*/
+#define DEV_ADR  ADDR_OV7725             /*ï¿½è±¸ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½*/
 
 #define SCCB_DELAY()    SCCB_delay(400)
 

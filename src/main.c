@@ -1,15 +1,15 @@
 /*!
  *     COPYRIGHT NOTICE
- *     Copyright (c) 2013,Ò°»ð¿Æ¼¼
+ *     Copyright (c) 2013,Ò°ï¿½ï¿½Æ¼ï¿½
  *     All rights reserved.
- *     ¼¼ÊõÌÖÂÛ£ºÒ°»ð³õÑ§ÂÛÌ³ http://www.chuxue123.com
+ *     ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û£ï¿½Ò°ï¿½ï¿½ï¿½Ñ§ï¿½ï¿½Ì³ http://www.chuxue123.com
  *
- *     ³ý×¢Ã÷³ö´¦Íâ£¬ÒÔÏÂËùÓÐÄÚÈÝ°æÈ¨¾ùÊôÒ°»ð¿Æ¼¼ËùÓÐ£¬Î´¾­ÔÊÐí£¬²»µÃÓÃÓÚÉÌÒµÓÃÍ¾£¬
- *     ÐÞ¸ÄÄÚÈÝÊ±±ØÐë±£ÁôÒ°»ð¿Æ¼¼µÄ°æÈ¨ÉùÃ÷¡£
+ *     ï¿½ï¿½×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý°ï¿½È¨ï¿½ï¿½ï¿½ï¿½Ò°ï¿½ï¿½Æ¼ï¿½ï¿½ï¿½ï¿½Ð£ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½Í¾ï¿½ï¿½
+ *     ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ë±£ï¿½ï¿½Ò°ï¿½ï¿½Æ¼ï¿½ï¿½Ä°ï¿½È¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  *
  * @file       main.c
- * @brief      Ò°»ðK60 Æ½Ì¨Ö÷³ÌÐò
- * @author     Ò°»ð¿Æ¼¼
+ * @brief      Ò°ï¿½ï¿½K60 Æ½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @author     Ò°ï¿½ï¿½Æ¼ï¿½
  * @version    v5.0
  * @date       2013-08-28
  */
@@ -17,74 +17,85 @@
 
 #include "include.h"
 #include "math.h"
+#include <syscall.h>
+#include <vectors.h>
 
-uint8 imgbuff[CAMERA_SIZE];                             //¶¨Òå´æ´¢½ÓÊÕÍ¼ÏñµÄÊý×é
-uint8 img[CAMERA_W*CAMERA_H];                           //ÓÉÓÚÓ¥ÑÛÉãÏñÍ·ÊÇÒ»×Ö½Ú8¸öÏñËØ£¬Òò¶øÐèÒª½âÑ¹Îª 1×Ö½Ú1¸öÏñËØ£¬·½±ã´¦Àí
+int MyFwriteHandler(int haha, char *ptr, int len)
+{
+	uart_putbuff(UART3, (uint8_t*)ptr, len);
+	return len;
+}
 
-//º¯ÊýÉùÃ÷
-void sendimg(uint8 *imgaddr, uint32 imgsize);          //·¢ËÍÍ¼Ïñµ½ÉÏÎ»»ú
+uint8 imgbuff[CAMERA_SIZE];                             //ï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+uint8 img[CAMERA_W*CAMERA_H];                           //ï¿½ï¿½ï¿½ï¿½Ó¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ò»ï¿½Ö½ï¿½8ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½Ñ¹Îª 1ï¿½Ö½ï¿½1ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ã´¦ï¿½ï¿½
+
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+void sendimg(uint8 *imgaddr, uint32 imgsize);          //ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
 void img_extract(uint8 *dst, uint8 *src, uint32 srclen);
 void PORTA_IRQHandler();
 void DMA0_IRQHandler();
 
 /*!
- *  @brief      mainº¯Êý
+ *  @brief      mainï¿½ï¿½ï¿½ï¿½
  *  @since      v5.0
- *  @note       Ò°»ð DMA ²É¼¯ÉãÏñÍ· ÊµÑé
-                ×¢Òâ£¬´ËÀý³Ì busÆµÂÊÉèÎª100MHz(50MHz busÆµÂÊ»áÌ«Âý¶øµ¼ÖÂÃ»·¨¼°Ê±²É¼¯Í¼Ïñ)
+ *  @note       Ò°ï¿½ï¿½ DMA ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½Í· Êµï¿½ï¿½
+                ×¢ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ï¿½ busÆµï¿½ï¿½ï¿½ï¿½Îª100MHz(50MHz busÆµï¿½Ê»ï¿½Ì«ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½Ê±ï¿½É¼ï¿½Í¼ï¿½ï¿½)
  */
-void  main(void)
+int  main(void)
 {
-    //³õÊ¼»¯ÉãÏñÍ·
+	uart_init(UART3, 115200);
+	__g_fwrite_handler = MyFwriteHandler;
+    //ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·
     camera_init(imgbuff);
 
-    //ÅäÖÃÖÐ¶Ï¸´Î»º¯Êý
-    set_vector_handler(PORTA_VECTORn ,PORTA_IRQHandler);    //ÉèÖÃLPTMRµÄÖÐ¶Ï¸´Î»º¯ÊýÎª PORTA_IRQHandler
-    set_vector_handler(DMA0_VECTORn ,DMA0_IRQHandler);      //ÉèÖÃLPTMRµÄÖÐ¶Ï¸´Î»º¯ÊýÎª PORTA_IRQHandler
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï¸ï¿½Î»ï¿½ï¿½ï¿½ï¿½
+    SetIsr(PORTA_VECTORn ,PORTA_IRQHandler);    //ï¿½ï¿½ï¿½ï¿½LPTMRï¿½ï¿½ï¿½Ð¶Ï¸ï¿½Î»ï¿½ï¿½ï¿½ï¿½Îª PORTA_IRQHandler
+    SetIsr(DMA0_VECTORn ,DMA0_IRQHandler);      //ï¿½ï¿½ï¿½ï¿½LPTMRï¿½ï¿½ï¿½Ð¶Ï¸ï¿½Î»ï¿½ï¿½ï¿½ï¿½Îª PORTA_IRQHandler
 
     while(1)
     {
-        //»ñÈ¡Í¼Ïñ
-        camera_get_img();                                   //ÉãÏñÍ·»ñÈ¡Í¼Ïñ
+        //ï¿½ï¿½È¡Í¼ï¿½ï¿½
+        camera_get_img();                                   //ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½È¡Í¼ï¿½ï¿½
 
-        //½âÑ¹Í¼Ïñ
+        //ï¿½ï¿½Ñ¹Í¼ï¿½ï¿½
         img_extract(img, imgbuff,CAMERA_SIZE);
 
-        //·¢ËÍÍ¼Ïñµ½ÉÏÎ»»ú
-        sendimg(img, CAMERA_W * CAMERA_H);                  //·¢ËÍµ½ÉÏÎ»»ú
+        //ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+        sendimg(img, CAMERA_W * CAMERA_H);                  //ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Î»ï¿½ï¿½
+        //DELAY_MS(100);
     }
 }
 
 /*!
- *  @brief      ·¢ËÍÍ¼Ïñµ½eSmartCameraCarÉÏÎ»»úÏÔÊ¾
- *  @param      imgaddr         Í¼ÏñµØÖ·
- *  @param      imgsize         Í¼ÏñÕ¼ÓÃ¿Õ¼ä´óÐ¡
+ *  @brief      ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½eSmartCameraCarï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½Ê¾
+ *  @param      imgaddr         Í¼ï¿½ï¿½ï¿½Ö·
+ *  @param      imgsize         Í¼ï¿½ï¿½Õ¼ï¿½Ã¿Õ¼ï¿½ï¿½Ð¡
  *  @since      v5.0
- *  @note       ²»Í¬µÄÉÏÎ»»ú£¬²»Í¬µÄÃüÁî£¬ÕâÀïÊ¹ÓÃ eSmartCameraCarÈí¼þ£¬
-                Èç¹ûÊ¹ÓÃÆäËûÉÏÎ»»ú£¬ÔòÐèÒªÐÞ¸Ä´úÂë¡£
- *  Sample usage:   sendimg(imgbuff, CAMERA_W * CAMERA_H);                    //·¢ËÍµ½ÉÏÎ»»ú
+ *  @note       ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½î£¬ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ eSmartCameraCarï¿½ï¿½ï¿½ï¿½ï¿½
+                ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Þ¸Ä´ï¿½ï¿½ë¡£
+ *  Sample usage:   sendimg(imgbuff, CAMERA_W * CAMERA_H);                    //ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Î»ï¿½ï¿½
  */
 void sendimg(uint8 *imgaddr, uint32 imgsize)
 {
-    uint8 cmd[4] = {0, 255, 1, 0 };    //yy_ÉãÏñÍ·´®¿Úµ÷ÊÔ Ê¹ÓÃµÄÃüÁî
+    uint8 cmd[4] = {0, 255, 1, 0 };    //yy_ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ Ê¹ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½
 
-    uart_putbuff(FIRE_PORT, cmd, sizeof(cmd));    //ÏÈ·¢ËÍÃüÁî
+    uart_putbuff(FIRE_PORT, cmd, sizeof(cmd));    //ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    uart_putbuff(FIRE_PORT, imgaddr, imgsize); //ÔÙ·¢ËÍÍ¼Ïñ
+    uart_putbuff(FIRE_PORT, imgaddr, imgsize); //ï¿½Ù·ï¿½ï¿½ï¿½Í¼ï¿½ï¿½
 }
 
 /*!
- *  @brief      ¶þÖµ»¯Í¼Ïñ½âÑ¹£¨¿Õ¼ä »» Ê±¼ä ½âÑ¹£©
- *  @param      dst             Í¼Ïñ½âÑ¹Ä¿µÄµØÖ·
- *  @param      src             Í¼Ïñ½âÑ¹Ô´µØÖ·
- *  @param      srclen          ¶þÖµ»¯Í¼ÏñµÄÕ¼ÓÃ¿Õ¼ä´óÐ¡
+ *  @brief      ï¿½ï¿½Öµï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½Õ¼ï¿½ ï¿½ï¿½ Ê±ï¿½ï¿½ ï¿½ï¿½Ñ¹ï¿½ï¿½
+ *  @param      dst             Í¼ï¿½ï¿½ï¿½Ñ¹Ä¿ï¿½Äµï¿½Ö·
+ *  @param      src             Í¼ï¿½ï¿½ï¿½Ñ¹Ô´ï¿½ï¿½Ö·
+ *  @param      srclen          ï¿½ï¿½Öµï¿½ï¿½Í¼ï¿½ï¿½ï¿½Õ¼ï¿½Ã¿Õ¼ï¿½ï¿½Ð¡
  *  @since      v5.0            img_extract(img, imgbuff,CAMERA_SIZE);
- *  Sample usage:   sendimg(imgbuff, CAMERA_W * CAMERA_H);                    //·¢ËÍµ½ÉÏÎ»»ú
+ *  Sample usage:   sendimg(imgbuff, CAMERA_W * CAMERA_H);                    //ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Î»ï¿½ï¿½
  */
 void img_extract(uint8 *dst, uint8 *src, uint32 srclen)
 {
-    uint8 colour[2] = {255, 0}; //0 ºÍ 1 ·Ö±ð¶ÔÓ¦µÄÑÕÉ«
-    //×¢£ºÒ°»ðµÄÉãÏñÍ· 0 ±íÊ¾ °×É«£¬1±íÊ¾ ºÚÉ«
+    uint8 colour[2] = {255, 0}; //0 ï¿½ï¿½ 1 ï¿½Ö±ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½É«
+    //×¢ï¿½ï¿½Ò°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í· 0 ï¿½ï¿½Ê¾ ï¿½ï¿½É«ï¿½ï¿½1ï¿½ï¿½Ê¾ ï¿½ï¿½É«
     uint8 tmpsrc;
     while(srclen --)
     {
@@ -101,23 +112,23 @@ void img_extract(uint8 *dst, uint8 *src, uint32 srclen)
 }
 
 /*!
- *  @brief      PORTAÖÐ¶Ï·þÎñº¯Êý
+ *  @brief      PORTAï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½
  *  @since      v5.0
  */
 void PORTA_IRQHandler()
 {
-    uint8  n = 0;    //Òý½ÅºÅ
+    uint8  n = 0;    //ï¿½ï¿½Åºï¿½
     uint32 flag = PORTA_ISFR;
-    PORTA_ISFR  = ~0;                                   //ÇåÖÐ¶Ï±êÖ¾Î»
+    PORTA_ISFR  = ~0;                                   //ï¿½ï¿½ï¿½Ð¶Ï±ï¿½Ö¾Î»
 
-    n = 29;                                             //³¡ÖÐ¶Ï
-    if(flag & (1 << n))                                 //PTA29´¥·¢ÖÐ¶Ï
+    n = 29;                                             //ï¿½ï¿½ï¿½Ð¶ï¿½
+    if(flag & (1 << n))                                 //PTA29ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
     {
         camera_vsync();
     }
-#if 0             //Ó¥ÑÛÖ±½ÓÈ«ËÙ²É¼¯£¬²»ÐèÒªÐÐÖÐ¶Ï
+#if 0             //Ó¥ï¿½ï¿½Ö±ï¿½ï¿½È«ï¿½Ù²É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ð¶ï¿½
     n = 28;
-    if(flag & (1 << n))                                 //PTA28´¥·¢ÖÐ¶Ï
+    if(flag & (1 << n))                                 //PTA28ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½
     {
         camera_href();
     }
@@ -125,7 +136,7 @@ void PORTA_IRQHandler()
 }
 
 /*!
- *  @brief      DMA0ÖÐ¶Ï·þÎñº¯Êý
+ *  @brief      DMA0ï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½
  *  @since      v5.0
  */
 void DMA0_IRQHandler()
