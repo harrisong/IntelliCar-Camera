@@ -272,7 +272,8 @@ int SCCB_WriteByte_one( uint16_t WriteAddress , uint8_t SendByte )
     if(!SCCB_Start())
 	{   
 	    return 0;
-	}DEBUG_PRINT("Warning:SCCB2\n");
+	}
+    DEBUG_PRINT("Warning:SCCB2\n");
     SCCB_SendByte( DEV_ADR );                    /* ������ַ */
     if( !SCCB_WaitAck() )
 	{  
