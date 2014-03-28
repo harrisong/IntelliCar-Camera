@@ -1,37 +1,31 @@
 #ifndef __INCLUDE_H__
 #define __INCLUDE_H__
 
-#include <mini_common.h>
-#include <hw_common.h>
-//#include  "common.h"
+#include  "common.h"
 
 /*
- * Include ÓÃ»§×Ô¶¨ÒåµÄÍ·ÎÄ¼þ
+ * Include ï¿½Ã»ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½Í·ï¿½Ä¼ï¿½
  */
-#include  "MK60_wdog.h"
-#include  "MK60_gpio.h"     //IO¿Ú²Ù×÷
-#include  "MK60_uart.h"     //´®¿Ú
-#include  "MK60_SysTick.h"
-#include  "MK60_lptmr.h"    //µÍ¹¦ºÄ¶¨Ê±Æ÷(ÑÓÊ±)
-#include  "MK60_i2c.h"      //I2C
-#include  "MK60_spi.h"      //SPI
-#include  "MK60_ftm.h"      //FTM
-#include  "MK60_pit.h"      //PIT
-#include  "MK60_rtc.h"      //RTC
-#include  "MK60_adc.h"      //ADC
-#include  "MK60_dac.h"      //DAC
-#include  "MK60_dma.h"      //DMA
-#include  "MK60_FLASH.h"    //FLASH
 
-//#include  "FIRE_LED.H"          //LED
-#include  "FIRE_KEY.H"          //KEY
-//#include  "FIRE_MMA7455.h"      //ÈýÖá¼ÓËÙ¶ÈMMA7455
-//#include  "FIRE_NRF24L0.h"      //ÎÞÏßÄ£¿éNRF24L01+
-#include  "FIRE_RTC_count.h"    //RTC Ê±¼ä×ª»»
-#include  "FIRE_camera.h"       //ÉãÏñÍ·×ÜÍ·ÎÄ¼þ
+#include  <MK60_gpio.h>
+#include  <MK60_uart.h>      //ï¿½ï¿½ï¿½ï¿½
+#include  <MK60_lptmr.h>     //ï¿½Í¹ï¿½ï¿½Ä¶ï¿½Ê±ï¿½ï¿½(ï¿½ï¿½Ê±)
+#include  <MK60_pit.h>
+//#include  "LED.h"
+#include  <MK60_dma.h>
+
+//#include "BL144002.h"
+//#include "lcd.h"
+#include "ov7725.h"
+#include  <MK60_spi.h>
+//#include "NRF24L0.h"
+//#include "NRF24L0_MSG.h"
+#include "OV7725.h"
+//#include "key.h"
 
 
 
+extern volatile IMG_STATE	img_flag ;		//Í¼ï¿½ï¿½×´Ì¬
 
 
 #endif  //__INCLUDE_H__

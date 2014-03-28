@@ -1,16 +1,16 @@
-/******************** (C) COPYRIGHT 2011 Ò°»ðÇ¶ÈëÊ½¿ª·¢¹¤×÷ÊÒ ********************
- * ÎÄ¼þÃû       £ºisr.h
- * ÃèÊö         £ºÖØÐÂºê¶¨ÒåÖÐ¶ÏºÅ£¬ÖØÓ³ÉäÖÐ¶ÏÏòÁ¿±íÀïµÄÖÐ¶Ïº¯ÊýµØÖ·£¬
- *                Ê¹ÆäÖ¸ÏòÎÒÃÇËù¶¨ÒåµÄÖÐ¶Ï·þÎñº¯Êý¡£ÉùÃ÷ÖÐ¶Ï·þÎñº¯Êý
- *                ¾¯¸æ£ºÖ»ÄÜÔÚ"vectors.c"°üº¬£¬¶øÇÒ±ØÐëÔÚ"vectors.h"°üº¬µÄºóÃæ£¡£¡£¡
+/******************** (C) COPYRIGHT 2011 Ò°ï¿½ï¿½Ç¶ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ********************
+ * ï¿½Ä¼ï¿½ï¿½ï¿½       ï¿½ï¿½isr.h
+ * ï¿½ï¿½ï¿½ï¿½         ï¿½ï¿½ï¿½ï¿½ï¿½Âºê¶¨ï¿½ï¿½ï¿½Ð¶ÏºÅ£ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ïºï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½
+ *                Ê¹ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½
+ *                ï¿½ï¿½ï¿½æ£ºÖ»ï¿½ï¿½ï¿½ï¿½"vectors.c"ï¿½ï¿½ï¿½ï¿½Ò±ï¿½ï¿½ï¿½ï¿½ï¿½"vectors.h"ï¿½ï¿½Äºï¿½ï¿½æ£¡ï¿½ï¿½ï¿½ï¿½
  *
- * ÊµÑéÆ½Ì¨     £ºÒ°»ðkinetis¿ª·¢°å
- * ¿â°æ±¾       £º
- * Ç¶ÈëÏµÍ³     £º
+ * Êµï¿½ï¿½Æ½Ì¨     ï¿½ï¿½Ò°ï¿½ï¿½kinetisï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½æ±¾       ï¿½ï¿½
+ * Ç¶ï¿½ï¿½ÏµÍ³     ï¿½ï¿½
  *
- * ×÷Õß         £ºÒ°»ðÇ¶ÈëÊ½¿ª·¢¹¤×÷ÊÒ
- * ÌÔ±¦µê       £ºhttp://firestm32.taobao.com
- * ¼¼ÊõÖ§³ÖÂÛÌ³ £ºhttp://www.ourdev.cn/bbs/bbs_list.jsp?bbs_id=1008
+ * ï¿½ï¿½ï¿½ï¿½         ï¿½ï¿½Ò°ï¿½ï¿½Ç¶ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * ï¿½Ô±ï¿½ï¿½ï¿½       ï¿½ï¿½http://firestm32.taobao.com
+ * ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½ï¿½ï¿½Ì³ ï¿½ï¿½http://www.ourdev.cn/bbs/bbs_list.jsp?bbs_id=1008
 **********************************************************************************/
 
 
@@ -20,38 +20,38 @@
 
 #include  "include.h"
 
-/*                          ÖØÐÂ¶¨ÒåÖÐ¶ÏÏòÁ¿±í
- *  ÏÈÈ¡ÏûÄ¬ÈÏµÄÖÐ¶ÏÏòÁ¿ÔªËØºê¶¨Òå       #undef  VECTOR_xxx
- *  ÔÚÖØÐÂ¶¨Òåµ½×Ô¼º±àÐ´µÄÖÐ¶Ïº¯Êý       #define VECTOR_xxx    xxx_IRQHandler
- *  ÀýÈç£º
+/*                          ï¿½ï¿½ï¿½Â¶ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ *  ï¿½ï¿½È¡ï¿½ï¿½Ä¬ï¿½Ïµï¿½ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½ï¿½Ôªï¿½Øºê¶¨ï¿½ï¿½       #undef  VECTOR_xxx
+ *  ï¿½ï¿½ï¿½ï¿½ï¿½Â¶ï¿½ï¿½åµ½ï¿½Ô¼ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½Ð¶Ïºï¿½ï¿½ï¿½       #define VECTOR_xxx    xxx_IRQHandler
+ *  ï¿½ï¿½ï¿½ç£º
  *       #undef  VECTOR_003
- *       #define VECTOR_003    HardFault_Handler    ÖØÐÂ¶¨ÒåÓ²¼þÉÏ·ÃÖÐ¶Ï·þÎñº¯Êý
+ *       #define VECTOR_003    HardFault_Handler    ï¿½ï¿½ï¿½Â¶ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½Ï·ï¿½ï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½
  *
- *       extren void  HardFault_Handler(void);      ÉùÃ÷º¯Êý£¬È»ºóÔÚisr.cÀï¶¨Òå
+ *       extren void  HardFault_Handler(void);      ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»ï¿½ï¿½ï¿½ï¿½isr.cï¿½ï¶¨ï¿½ï¿½
  */
 
+/*
+#undef  VECTOR_103                        //È¡ï¿½ï¿½ï¿½Ð¶ÏºÅµÄ¶ï¿½ï¿½ï¿½
+#define VECTOR_103    PORTA_IRQHandler    //PORTAï¿½Ð¶ï¿½
 
-#undef  VECTOR_104                        //È¡ÏûÖÐ¶ÏºÅµÄ¶¨Òå
-#define VECTOR_104    PORTB_IRQHandler    //PORTAÖÐ¶Ï
-
-#undef  VECTOR_107                        //È¡ÏûÖÐ¶ÏºÅµÄ¶¨Òå
-#define VECTOR_107    PORTE_IRQHandler    //PORTEÖÐ¶Ï
+#undef  VECTOR_107                        //È¡ï¿½ï¿½ï¿½Ð¶ÏºÅµÄ¶ï¿½ï¿½ï¿½
+#define VECTOR_107    PORTE_IRQHandler    //PORTEï¿½Ð¶ï¿½
 
 #undef  VECTOR_084
-#define VECTOR_084    PIT0_IRQHandler     //ÖØÐÂ¶¨Òå84ºÅÖÐ¶ÏÎªPIT0_IRQHandlerÖÐ¶Ï
+#define VECTOR_084    PIT0_IRQHandler     //ï¿½ï¿½ï¿½Â¶ï¿½ï¿½ï¿½84ï¿½ï¿½ï¿½Ð¶ï¿½ÎªPIT0_IRQHandlerï¿½Ð¶ï¿½
 
 #undef  VECTOR_085
-#define VECTOR_085    PIT1_IRQHandler//key_IRQHandler     //ÖØÐÂ¶¨Òå84ºÅÖÐ¶ÏÎªkey_IRQHandlerÖÐ¶Ï£¬PIT1
+#define VECTOR_085    PIT1_IRQHandler//key_IRQHandler     //ï¿½ï¿½ï¿½Â¶ï¿½ï¿½ï¿½84ï¿½ï¿½ï¿½Ð¶ï¿½Îªkey_IRQHandlerï¿½Ð¶Ï£ï¿½PIT1
 
 #undef  VECTOR_016
-#define VECTOR_016   DMA0_IRQHandler
+#define VECTOR_016   DMA0_IRQHandler        
+*/
 
-
-extern void PORTB_IRQHandler();           //PORTAÖÐ¶Ï·þÎñº¯Êý
-extern void PORTE_IRQHandler();           //PORTEÖÐ¶Ï·þÎñº¯Êý
-extern void PIT0_IRQHandler();            //PIT0 ¶¨Ê±ÖÐ¶Ï·þÎñº¯Êý
-extern void PIT1_IRQHandler();            //PIT1 ¶¨Ê±ÖÐ¶Ï·þÎñº¯Êý
-extern void DMA0_IRQHandler();
+extern __ISR void PORTA_IRQHandler();           //PORTAï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½
+extern __ISR void PORTE_IRQHandler();           //PORTEï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½
+extern __ISR void PIT0_IRQHandler();            //PIT0 ï¿½ï¿½Ê±ï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½
+extern __ISR void PIT1_IRQHandler();            //PIT1 ï¿½ï¿½Ê±ï¿½Ð¶Ï·ï¿½ï¿½ï¿½ï¿½ï¿½
+extern __ISR void DMA0_IRQHandler();
 
 
 #endif  //__ISR_H
