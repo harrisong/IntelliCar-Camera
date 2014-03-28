@@ -30,7 +30,7 @@ volatile uint16_t Vnum=0;
 *  �޸�ʱ�䣺2012-1-25    �Ѳ���
 *  ��    ע����ź���Ҫ�Լ���ʼ�������
 *************************************************************************/
-void PORTA_IRQHandler()
+__ISR void PORTA_IRQHandler()
 {
     uint8_t  n = 0;    //��ź�
 	//Site_t site={10,90};
@@ -94,7 +94,7 @@ void PORTA_IRQHandler()
 *  �޸�ʱ�䣺2012-9-17    �Ѳ���
 *  ��    ע����ź���Ҫ�Լ���ʼ�������
 *************************************************************************/
-void PORTE_IRQHandler()
+__ISR void PORTE_IRQHandler()
 {
     uint8_t  n;    //��ź�
 
@@ -119,7 +119,7 @@ void PORTE_IRQHandler()
 *  �޸�ʱ�䣺2012-2-18    �Ѳ���
 *  ��    ע��
 *************************************************************************/
-void PIT0_IRQHandler(void)
+__ISR void PIT0_IRQHandler(void)
 {
 	//Site_t site={10,70};
 	//disable_irq(87); 							//�ر�PTA���ж�
@@ -139,29 +139,28 @@ void PIT0_IRQHandler(void)
 *  �޸�ʱ�䣺2012-11-18    �Ѳ���
 *  ��    ע�������������
 *************************************************************************/
-/*
-void PIT1_IRQHandler(void)
+__ISR void PIT1_IRQHandler(void)
 {
-    key_IRQHandler();
+	printf("hello\n");
+    //key_IRQHandler();
     PIT_Flag_Clear(PIT1);       				//���жϱ�־λ
 }
-*/
 
 
 
-void DMA0_IRQHandler()
+__ISR void DMA0_IRQHandler()
 {
     volatile uint8_t i;
     //img_flag = IMG_FINISH ;
     //disable_irq(87);                      //���жϿ�ʼ�ɼ�ͼƬʱ���͹ر����жϣ�����Ͳ���Ҫ�ٹر�
     DMA_DIS(CAMERA_DMA_CH);            	//�ر�ͨ��CHn Ӳ������
-   img_flag = IMG_FINISH ;
+    img_flag = IMG_FINISH ;
     DMA_IRQ_CLEAN(CAMERA_DMA_CH);           //���ͨ�������жϱ�־λ
 
-    Vnum++;
+  Vnum++;
+   i++;
     i++;
     i++;
-    i++;
-    i++;                        //��ʱ�����ⳬƵʱ��DMA���ȶ����Ϸ�
+   i++;                        //��ʱ�����ⳬƵʱ��DMA���ȶ����Ϸ�
 }
 

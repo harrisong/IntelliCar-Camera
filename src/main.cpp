@@ -13,6 +13,9 @@
 
 #include "common.h"
 #include "include.h"
+#include <libsc/com/uart_device.h>
+#include <libutil/clock.h>
+#include <libutil/misc.h>
 #define MAX_ONCE_TX_NUM     32
 #define COM_LEN     2
 
@@ -29,35 +32,40 @@ uint8_t  var1,var2;
 uint16_t var3,var4;
 uint32_t var5,var6;
 
-uint8_t img_buff[20][80];
+uint8_t img_buff[60][80];
 uint8_t i=0,j=0;
 
 //采集图像，并无线发送到调试器上，接收调试器发来的变量值
 //PS:如果你想看简单的摄像头驱动代码，看本文底下那些注释
 int main(void)
 {
+	 //gpio_init(PTA29, GPO, 1);
+	 //while (1);
 	//Site_t site={0,0};						    //显示图像左上角位置
 	//Size_t size={CAMERA_W,CAMERA_H};			//显示区域图像大小
-  uart_init (UART3, 115200);
+  //uart_init (UART3, 115200);
+	libsc::UartDevice uart(3, 115200);
+	libutil::Clock::Init();
+	libutil::InitDefaultFwriteHandler(&uart);
     //LCD_Init(RED);            					//初始化，设置背景为白色
 	Ov7725_Init(img_bin_buff);          		//摄像头初始化
 
   
 //gpio_init(PORTB,20,GPO,1);
                   
-        while(1)
-        {  
-          
-      ov7725_get_img();	
-            img_extract((uint8_t *)img_buff,(uint8_t *)img_bin_buff,2400);
+	while(1)
+	{
+		ov7725_get_img();
+		img_extract((uint8_t *)img_buff,(uint8_t *)img_bin_buff,CAMERA_SIZE);
+		uart.SendChar(0);
+		uart.SendChar(255);
+		uart.SendChar(1);
+		uart.SendChar(0);
 
-       for(i=0;i<60;i++)
-        {
-          for(j=0;j<80;j++)
-            uart_putchar (UART3, img_buff[i][j]);
-        }
-        
-         }
+		uart.SendBuffer((uint8_t*)img_buff, 80 * 60);
+	}
+
+	libutil::UninitDefaultFwriteHandler();
 }
       
    /* while(1)

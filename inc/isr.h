@@ -47,11 +47,11 @@
 #define VECTOR_016   DMA0_IRQHandler        
 */
 
-extern __ISR void PORTA_IRQHandler();           //PORTA�жϷ�����
-extern __ISR void PORTE_IRQHandler();           //PORTE�жϷ�����
-extern __ISR void PIT0_IRQHandler();            //PIT0 ��ʱ�жϷ�����
-extern __ISR void PIT1_IRQHandler();            //PIT1 ��ʱ�жϷ�����
-extern __ISR void DMA0_IRQHandler();
+__ISR void PORTA_IRQHandler();           //PORTA�жϷ�����
+__ISR void PORTE_IRQHandler();           //PORTE�жϷ�����
+__ISR void PIT0_IRQHandler();            //PIT0 ��ʱ�жϷ�����
+__ISR void PIT1_IRQHandler();            //PIT1 ��ʱ�жϷ�����
+__ISR void DMA0_IRQHandler();
 
 
 #endif  //__ISR_H

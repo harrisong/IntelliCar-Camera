@@ -15,7 +15,8 @@
 
 #define ADDR_OV7725   0x42
 
-#define SCCB_DELAY()	SCCB_delay(20)
+//#define SCCB_DELAY()	SCCB_delay(400)
+#define SCCB_DELAY()	DELAY_US(100)
 
 
 void SCCB_GPIO_init(void);

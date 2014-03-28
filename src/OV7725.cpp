@@ -24,11 +24,13 @@ void Ov7725_exti_Init()
 	dma_portx2buff_init(CAMERA_DMA_CH, (void *)&PTB_BYTE0_IN, (void *)IMG_BUFF, PTB8, DMA_BYTE1, CAMERA_SIZE , DADDR_KEEPON);
      DEBUG_PRINT("warning:2");
     
-    port_init(PTB8, DMA_RISING | PULLUP );   //PCLK
+    port_init(PTB8, DMA_RISING | PULLUP | ALT1);   //PCLK
+    GPIO_PDDR_REG(GPIOX_BASE(PTB8)) |= (1 << PTn(PTB8));
  DEBUG_PRINT("warning:3");
     DMA_IRQ_EN(DMA_CH0);
  DEBUG_PRINT("warning:4");
-    port_init(PTA29, IRQ_RISING | PULLUP | PF);   //���жϣ��������½��ش����жϣ����˲�
+    port_init(PTA29, IRQ_RISING | PULLUP | PF | ALT1);   //���жϣ��������½��ش����жϣ����˲�
+    GPIO_PDDR_REG(GPIOX_BASE(PTA29)) &= ~(1 << PTn(PTA29));
  DEBUG_PRINT("warning:5");
     DisableIsr(PORTA_VECTORn); 						//�ر�PTA���ж�
      DEBUG_PRINT("warning:6");
@@ -149,14 +151,16 @@ uint8_t cfgnum = sizeof(ov7727_reg) / sizeof(ov7727_reg[0]); /*�ṹ����
 uint8_t Ov7725_Init(uint8_t *imgaddr)
 {
 	SetIsr(PORTA_VECTORn, PORTA_IRQHandler);
-	SetIsr(PORTE_VECTORn, PORTE_IRQHandler);
-	SetIsr(PIT0_VECTORn, PIT0_IRQHandler);
+	//SetIsr(PORTE_VECTORn, PORTE_IRQHandler);
+	//SetIsr(PIT0_VECTORn, PIT0_IRQHandler);
 	//SetIsr(PIT1_VECTORn, PIT1_IRQHandler);
 	SetIsr(DMA0_VECTORn, DMA0_IRQHandler);
-	EnableIsr(PORTA_VECTORn);
-	EnableIsr(PORTE_VECTORn);
-	EnableIsr(PIT0_VECTORn);
-	EnableIsr(DMA0_VECTORn);
+	//EnableIsr(PORTA_VECTORn);
+	//EnableIsr(PORTE_VECTORn);
+	//EnableIsr(PIT0_VECTORn);
+	//pit_init_ms(PIT1, 1000);
+	//EnableIsr(PIT1_VECTORn);
+	//EnableIsr(DMA0_VECTORn);
 
     IMG_BUFF = imgaddr;
    while(Ov7725_reg_Init() == 0);
