@@ -7,11 +7,11 @@
 #define	SCL_DDR_OUT() 	PTB20_DDR = 1
 #define	SCL_DDR_IN() 	PTB20_DDR = 0
 
-#define SDA_H()         PTB11_OUT = 1
-#define SDA_L()         PTB11_OUT = 0
-#define SDA_IN()      	PTB11_IN
-#define SDA_DDR_OUT()	PTB11_DDR = 1
-#define SDA_DDR_IN()	PTB11_DDR = 0
+#define SDA_H()         PTB21_OUT = 1
+#define SDA_L()         PTB21_OUT = 0
+#define SDA_IN()      	PTB21_IN
+#define SDA_DDR_OUT()	PTB21_DDR = 1
+#define SDA_DDR_IN()	PTB21_DDR = 0
 
 #define ADDR_OV7725   0x42
 

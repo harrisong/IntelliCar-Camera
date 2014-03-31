@@ -21,11 +21,11 @@ static uint8_t Ov7725_reg_Init(void);
 void Ov7725_exti_Init()
 {    DEBUG_PRINT("warning:1");
     //DMAͨ��0��ʼ����PTB8�����ش���DMA���䣬Դ��ַΪPTD_BYTE0_IN��Ŀ�ĵ�ַΪ��BUFF ��ÿ�δ���1Byte������CAMERA_SIZE�κ�ֹͣ����
-	dma_portx2buff_init(CAMERA_DMA_CH, (void *)&PTB_BYTE0_IN, (void *)IMG_BUFF, PTB8, DMA_BYTE1, CAMERA_SIZE , DADDR_KEEPON);
+	dma_portx2buff_init(CAMERA_DMA_CH, (void *)&PTC_BYTE1_IN, (void *)IMG_BUFF, PTC3, DMA_BYTE1, CAMERA_SIZE , DADDR_KEEPON);
      DEBUG_PRINT("warning:2");
     
-    port_init(PTB8, DMA_RISING | PULLUP | ALT1);   //PCLK
-    GPIO_PDDR_REG(GPIOX_BASE(PTB8)) |= (1 << PTn(PTB8));
+    port_init(PTC3, DMA_RISING | PULLUP | ALT1);   //PCLK
+    GPIO_PDDR_REG(GPIOX_BASE(PTC3)) |= (1 << PTn(PTC3));
  DEBUG_PRINT("warning:3");
     DMA_IRQ_EN(DMA_CH0);
  DEBUG_PRINT("warning:4");
