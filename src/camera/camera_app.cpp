@@ -53,12 +53,13 @@ void CameraApp::PositionControl(){
 
 void CameraApp::TurnControl(){
 
-	uint8_t  img_buff = m_car.GetCamera().GetImageBuff();
+	uint8_t  ImageBuff = m_car.GetCamera().GetImageBuff();
+
 
 }
 
 void CameraApp::SendImage(){
-
+	m_car.GetCamera().extract_to_buffer();
 	m_car.UartSendChar(0);
 	m_car.UartSendChar(255);
 	m_car.UartSendChar(1);
@@ -76,6 +77,10 @@ void CameraApp::Run()
 {
 	while (true)
 	{
+		#if defined(DEBUG)
+			SendImage();
+		#endif
+
 		BalanceControl();
 		PositionControl();
 		SendToMotor();
