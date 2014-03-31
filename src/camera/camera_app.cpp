@@ -53,9 +53,51 @@ void CameraApp::PositionControl(){
 
 void CameraApp::TurnControl(){
 
-	uint8_t*  ImageBuff = m_car.GetCamera().GetImageBuff();
+	int BlackCount = 0;
+	int BlackSum = 0;
+	float LineCenterX = -1;
 
+	float LineCenterXSet[60];
 
+	for(int i=0; i<60; i++)
+	{
+		for(int j=0; j<80; j++)
+		{
+			if(m_car.GetCamera().GetPixelColor(i, j)==BLACK)
+			{
+				BlackCount++;
+				BlackSum+=j;
+			}
+		}
+		LineCenterX = BlackSum / BlackCount;
+		LineCenterXSet[i] = LineCenterX;
+	}
+
+	float s1=0; float s2=0; float s3=0; float s4=0;
+	float slope;
+
+	for(int i=0; i<60; i++)
+	{
+		s1+=LineCenterXSet[i]*i;
+		s2+=LineCenterXSet[i];
+		s3+=i;
+		s4+=i*i;
+	}
+
+	slope = (60*s1 - s2*s3) / (60*s4 - s2*s2);					//from Excel equation for calculating the slope of giving n points;
+
+	float sumX=0; float sumY=0;
+	float intercept;
+
+	for(int i=0; i<60; i++)
+	{
+		sumX+=LineCenterXSet[i];
+		sumY+=i;
+	}
+
+	intercept = (sumY/60) - (slope*sumX/60);
+
+	DEBUG_PRINT("Line equation: y = %fx + %f", slope, intercept);			//print our y = mx + c;
 }
 
 void CameraApp::SendImage(){
@@ -81,6 +123,7 @@ void CameraApp::Run()
 			SendImage();
 		#endif
 
+		TurnControl();
 		BalanceControl();
 		PositionControl();
 		SendToMotor();
