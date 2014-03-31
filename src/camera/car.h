@@ -41,6 +41,11 @@ public:
 		m_leds[id].SetEnable(flag);
 	}
 
+	void UartSendChar(const char c)
+		{
+			m_uart.SendChar(c);
+		}
+
 	void UartSendStr(const char *str)
 	{
 		m_uart.SendStr(str);
@@ -55,11 +60,10 @@ public:
 	{
 		return m_uart.PeekChar(out_ch);
 	}
-
-	void balance();
-	void setposition();
-	void setcarspeed();
-	void setservo(int16 angle);
+	BalanceGyro GetGyro();
+	BalanceEncoder GetEncoder(int n);
+	BalanceCamera GetCamera();
+	libsc::Motor GetMotor(int n);
 
 private:
 	libsc::Led m_leds[4];
@@ -70,11 +74,7 @@ private:
 	BalanceEncoder encoder2;
 	BalanceCamera camera;
 
-	KF gyro_kf;
-	float _gyro;
-	int _count;
 
-	int16 speed1, speed2;
 };
 
 }

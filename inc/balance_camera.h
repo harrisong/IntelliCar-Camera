@@ -20,6 +20,7 @@ public:
 	~BalanceCamera();
 	void img_extract(uint8_t * dst,uint8_t * src,uint32_t srclen);
 	void extract_to_buffer();
+	uint8_t GetImageBuff();
 
 private:
 	#define MAX_ONCE_TX_NUM     32
@@ -43,7 +44,6 @@ private:
 	uint8_t tmpsrc;
 
 	//libsc::UartDevice uart;
-
 
 };
 

@@ -21,11 +21,19 @@ public:
 	~CameraApp();
 	void BalanceControl();
 	void PositionControl();
+	void TurnControl();
+	void SendToMotor();
+	void SendImage();
 
 	void Run();
 
 private:
 	Car m_car;
+	KF gyro_kf;
+	float _gyro;
+	int _count;
+	int16 Speed1, Speed2;
+	int32 Position, TargetPosition;
 };
 
 }
