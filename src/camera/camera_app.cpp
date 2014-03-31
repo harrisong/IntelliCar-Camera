@@ -84,7 +84,7 @@ void CameraApp::TurnControl(){
 		s4+=i*i;
 	}
 
-	slope = (60*s1 - s2*s3) / (60*s4 - s2*s2);					//from Excel equation for calculating the slope of giving n points;
+	slope = (60*s1 - s2*s3) / (60*s4 - s2*s2);					//from Excel equation for calculating the slope of giving n points
 
 	float sumX=0; float sumY=0;
 	float intercept;
