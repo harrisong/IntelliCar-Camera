@@ -6,13 +6,13 @@
  */
 #include <balance_encoder.h>
 
-balance_encoder::balance_encoder(FTMn_e n){
+BalanceEncoder::BalanceEncoder(FTMn_e n){
 	ftmn = n;
 	total=0,direction=0,current=0;
 	FTM_QUAD_Init(ftmn);
 }
 
-void balance_encoder::refresh(){
+void BalanceEncoder::refresh(){
 	int16 value = FTM_QUAD_get(ftmn);
 
 	switch (ftmn){
@@ -31,18 +31,18 @@ void balance_encoder::refresh(){
 	else if(current < 0) direction = -1;
 }
 
-int16 balance_encoder::getcurrent(){
+int16 BalanceEncoder::getcurrent(){
 	return current;
 }
 
-int16 balance_encoder::gettotal(){
+int16 BalanceEncoder::gettotal(){
 	return total;
 }
 
-int16 balance_encoder::getdirection(){
+int16 BalanceEncoder::getdirection(){
 	return direction;
 }
 
-void balance_encoder::reset(){
+void BalanceEncoder::reset(){
 	FTM_QUAD_clean(ftmn);
 }

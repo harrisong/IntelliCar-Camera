@@ -19,15 +19,13 @@ class CameraApp
 public:
 	CameraApp();
 	~CameraApp();
+	void BalanceControl();
+	void PositionControl();
 
 	void Run();
 
-	//static int FwriteHandler(int, char *ptr, int len);
-
 private:
 	Car m_car;
-
-	static CameraApp *m_instance;
 };
 
 }

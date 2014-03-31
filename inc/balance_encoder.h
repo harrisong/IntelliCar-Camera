@@ -11,12 +11,12 @@
 
 
 
-class balance_encoder{
+class BalanceEncoder{
 	private:
 		FTMn_e ftmn;
 		int16 total,direction,current;
 	public:
-		balance_encoder(FTMn_e);
+		BalanceEncoder(FTMn_e);
 		void refresh();
 		int16 getcurrent();
 		int16 gettotal();

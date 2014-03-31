@@ -16,8 +16,9 @@
 #include <libsc/com/led.h>
 #include <libsc/com/uart_device.h>
 #include <libsc/com/motor.h>
-#include <balance_gyro.h>
-#include <balance_encoder.h>
+#include "balance_gyro.h"
+#include "balance_encoder.h"
+#include "balance_camera.h"
 #include "kalman.h"
 
 namespace camera
@@ -64,9 +65,10 @@ private:
 	libsc::Led m_leds[4];
 	libsc::UartDevice m_uart;
 	libsc::Motor motor1, motor2;
-	balance_gyro gyro;
-	balance_encoder encoder1;
-	balance_encoder encoder2;
+	BalanceGyro gyro;
+	BalanceEncoder encoder1;
+	BalanceEncoder encoder2;
+	BalanceCamera camera;
 
 	KF gyro_kf;
 	float _gyro;

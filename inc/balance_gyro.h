@@ -14,7 +14,7 @@
 
 
 
-class balance_gyro{
+class BalanceGyro{
 private:
 	ADCn_Ch_e raw_gyro_port, raw_angle_port, raw_z_port, raw_x_port;
 	float raw_gyro;
@@ -33,7 +33,7 @@ private:
 
 
 public:
-	balance_gyro(ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, int16);
+	BalanceGyro(ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, int16);
 	void refresh();
 	float get_raw_gyro();
 	int16 get_raw_angle();
