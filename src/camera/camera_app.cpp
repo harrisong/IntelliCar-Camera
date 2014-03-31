@@ -53,7 +53,7 @@ void CameraApp::PositionControl(){
 
 void CameraApp::TurnControl(){
 
-	uint8_t  ImageBuff = m_car.GetCamera().GetImageBuff();
+	uint8_t*  ImageBuff = m_car.GetCamera().GetImageBuff();
 
 
 }

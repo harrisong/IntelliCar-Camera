@@ -32,8 +32,8 @@ void BalanceCamera::extract_to_buffer(){
 		img_extract((uint8_t *)img_buff,(uint8_t *)img_bin_buff,CAMERA_SIZE);
 }
 
-uint8_t BalanceCamera::GetImageBuff(){
-	return img_buff;
+uint8_t* BalanceCamera::GetImageBuff(){
+	return (uint8_t*)img_buff;
 }
       
 //img_extract �Ĵ������£�
