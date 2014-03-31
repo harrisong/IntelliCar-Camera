@@ -3,7 +3,7 @@
  *
  *  Created on: Mar 14, 2014
  *      Author: harrison
- */
+ *
 
 #ifndef INIT_H_
 #define INIT_H_
