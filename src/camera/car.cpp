@@ -7,6 +7,7 @@
  */
 
 #include "camera/car.h"
+#include <libutil/misc.h>
 
 using namespace libsc;
 
@@ -19,7 +20,13 @@ Car::Car()
 		  gyro(GYROADC, ANGLEADC, RZADC, RXADC, 12200),
 		  encoder1(FTM1), encoder2(FTM2)
 {
-	m_uart.StartReceive();
+	libutil::InitDefaultFwriteHandler(&m_uart);
+	//m_uart.StartReceive();
+}
+
+Car::~Car()
+{
+	libutil::UninitDefaultFwriteHandler();
 }
 
 BalanceGyro Car::GetGyro(){

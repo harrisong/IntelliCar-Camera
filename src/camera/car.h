@@ -28,6 +28,7 @@ class Car
 {
 public:
 	Car();
+	~Car();
 
 	/**
 	 * Switch on/off the LEDs

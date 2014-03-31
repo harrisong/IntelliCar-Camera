@@ -64,7 +64,7 @@ void CameraApp::SendImage(){
 	m_car.UartSendChar(255);
 	m_car.UartSendChar(1);
 	m_car.UartSendChar(0);
-	m_car.UartSendBuffer((uint8_t*)m_car.GetCamera().GetImageBuff(), 80 * 60);
+	m_car.UartSendBuffer(m_car.GetCamera().GetImageBuff(), 80 * 60);
 
 }
 
