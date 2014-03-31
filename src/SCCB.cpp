@@ -32,7 +32,7 @@ static void SCCB_delay(volatile uint16_t i)
 void SCCB_GPIO_init(void)
 {
 	gpio_init  (PTB20, GPO, 0);  //��ʼ��SCL
-	gpio_init  (PTB11, GPO, 0);  //��ʼ��SDA
+	gpio_init  (PTB21, GPO, 0);  //��ʼ��SDA
 }
 
 
