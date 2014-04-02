@@ -44,24 +44,24 @@ __ISR void PORTA_IRQHandler()
     n = 29;											//���ж�
     if(PORTA_ISFR & (1 << n))           			//PTA29�����ж�
     {
-        DEBUG_PRINT("warning:13"); 
+        //DEBUG_PRINT("warning:13");
         /*  ����Ϊ�û�����  */
         
         //���ж���Ҫ�ж��ǳ������ǳ���ʼ
         if(img_flag == IMG_START)					//��Ҫ��ʼ�ɼ�ͼ��
-        {     DEBUG_PRINT("warning:14");
+        {   //  DEBUG_PRINT("warning:14");
             img_flag = IMG_GATHER;					//���ͼ��ɼ���
             DisableIsr(PORTA_VECTORn);
-             DEBUG_PRINT("warning:15");
+           //  DEBUG_PRINT("warning:15");
             DMA_EN(CAMERA_DMA_CH);            		//ʹ��ͨ��CHn Ӳ������
             
             DMA_DADDR(CAMERA_DMA_CH) = (uint32_t)IMG_BUFF;    //�ָ���ַ
-               DEBUG_PRINT("warning:16\n");
+              // DEBUG_PRINT("warning:16\n");
         }
         //#ifdef DEBUG
       
         else if(img_flag == IMG_GATHER)				//ͼ��ɼ��н��볡�жϣ���ͼ��ɼ����
-        {    DEBUG_PRINT("warning:17");
+        {  //  DEBUG_PRINT("warning:17");
             while(1);                               //DMA�ɼ��쳣
         }
        // #endif
@@ -71,9 +71,8 @@ __ISR void PORTA_IRQHandler()
             //DMA_IRQ_DIS(CAMERA_DMA_CH);	                //�ر�ͨ��CHn �ж����� 
             //LCD_Str(site,"ERROR",BLUE,RED);
             img_flag = IMG_FAIL;					//���ͼ��ɼ�ʧ��
-             DEBUG_PRINT("warning:18");
         }
-         DEBUG_PRINT("warning:100\n");
+      //   DEBUG_PRINT("warning:100\n");
         PORTA_ISFR  = ~0;        			        //���ж��ȫ����Ҫ���жϱ�־λ
         return;										//���жϴ����ˣ��Ͳ���Ҫ�������ж�
     

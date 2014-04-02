@@ -1,54 +1,63 @@
-/******************** (C) COPYRIGHT 2011 Ò°»ðÇ¶ÈëÊ½¿ª·¢¹¤×÷ÊÒ ********************
- * ÎÄ¼þÃû       £ºmain.c
- * ÃèÊö         £ºSD¿¨´øÎÄ¼þÏµÍ³ÊµÑé
+/******************** (C) COPYRIGHT 2011 Ò°ï¿½ï¿½Ç¶ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ********************
+ * ï¿½Ä¼ï¿½ï¿½ï¿½       ï¿½ï¿½main.c
+ * ï¿½ï¿½ï¿½ï¿½         ï¿½ï¿½SDï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ÏµÍ³Êµï¿½ï¿½
  *
- * ÊµÑéÆ½Ì¨     £ºÒ°»ðkinetis¿ª·¢°å
- * ¿â°æ±¾       £º
- * Ç¶ÈëÏµÍ³     £º
+ * Êµï¿½ï¿½Æ½Ì¨     ï¿½ï¿½Ò°ï¿½ï¿½kinetisï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½æ±¾       ï¿½ï¿½
+ * Ç¶ï¿½ï¿½ÏµÍ³     ï¿½ï¿½
  *
- * ×÷Õß         £ºÒ°»ðÇ¶ÈëÊ½¿ª·¢¹¤×÷ÊÒ
- * ÌÔ±¦µê       £ºhttp://firestm32.taobao.com
- * ¼¼ÊõÖ§³ÖÂÛÌ³ £ºhttp://www.ourdev.cn/bbs/bbs_list.jsp?bbs_id=1008
+ * ï¿½ï¿½ï¿½ï¿½         ï¿½ï¿½Ò°ï¿½ï¿½Ç¶ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * ï¿½Ô±ï¿½ï¿½ï¿½       ï¿½ï¿½http://firestm32.taobao.com
+ * ï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½ï¿½ï¿½Ì³ ï¿½ï¿½http://www.ourdev.cn/bbs/bbs_list.jsp?bbs_id=1008
 **********************************************************************************/
 
 #include "common.h"
 #include "include.h"
 #include <libsc/com/uart_device.h>
+#include <libsc/com/lcd.h>
+//#include <libutil/string.h>
 #include <libutil/clock.h>
 #include <libutil/misc.h>
 #define MAX_ONCE_TX_NUM     32
 #define COM_LEN     2
+enum Color{WHITE, BLACK};
 
-uint8_t  nrf_buff[CAMERA_SIZE + MAX_ONCE_TX_NUM];     //Ô¤¶à
-uint8_t *img_bin_buff = (uint8_t *)(((uint8_t *)&nrf_buff) + COM_LEN);  //¶þÖµ»¯Í¼ÏñµÄbufÖ¸Õë£¬ÓÉÓÚ¿ªÍ·ÓÐ COM_LEN ¸ö×Ö½ÚÊÇÁô¸øÐ£Ñé£¬ËùÒÔÐèÒª¼Ó COM_LEN
+uint8_t  nrf_buff[CAMERA_SIZE + MAX_ONCE_TX_NUM];     //Ô¤ï¿½ï¿½
+uint8_t *img_bin_buff = (uint8_t *)(((uint8_t *)&nrf_buff) + COM_LEN);  //ï¿½ï¿½Öµï¿½ï¿½Í¼ï¿½ï¿½ï¿½bufÖ¸ï¿½ë£¬ï¿½ï¿½ï¿½Ú¿ï¿½Í·ï¿½ï¿½ COM_LEN ï¿½ï¿½ï¿½Ö½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½é£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ COM_LEN
 
-uint8_t 	img_buf[CAMERA_W*CAMERA_H];					//·ÇÑ¹ËõµÄ¶þÖµ»¯Í¼Ïñ£¨ÓÃÓÚÊ¶±ð£©
+uint8_t 	img_buf[CAMERA_W*CAMERA_H];					//ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½Ä¶ï¿½Öµï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½
 void    img_extract(uint8_t *dst,uint8_t *src,uint32_t srclen);
 
 
-//ÕâÐ©±äÁ¿¶¼ÊÇ²âÊÔÓÃ£¬ÓÐÐèÒª£¬Çë×ÔÐÐÐÞ¸Ä
-//¿ÉÒÔÊÇÆäËûÎÄ¼þ¶¨Òå£¬²»Ò»¶¨ÊÇÕâ¸öÎÄ¼þÀï¶¨Òå£¬È»ºó°Ñ
+//ï¿½ï¿½Ð©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ¸ï¿½
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½å£¬ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¶¨ï¿½å£¬È»ï¿½ï¿½ï¿½
 uint8_t  var1,var2;
 uint16_t var3,var4;
 uint32_t var5,var6;
 
-uint8_t img_buff[60][80];
+bool img_buff[60][80];
 uint8_t i=0,j=0;
 
-//²É¼¯Í¼Ïñ£¬²¢ÎÞÏß·¢ËÍµ½µ÷ÊÔÆ÷ÉÏ£¬½ÓÊÕµ÷ÊÔÆ÷·¢À´µÄ±äÁ¿Öµ
-//PS:Èç¹ûÄãÏë¿´¼òµ¥µÄÉãÏñÍ·Çý¶¯´úÂë£¬¿´±¾ÎÄµ×ÏÂÄÇÐ©×¢ÊÍ
+
+Color GetPixelColor(uint8_t x, uint8_t y)
+{
+	return img_buff[x][y] ? WHITE : BLACK;
+}
+
 int main(void)
 {
+	libsc::Lcd lcd(true);
+	lcd.Clear(0x7777);
 	 //gpio_init(PTA29, GPO, 1);
 	 //while (1);
-	//Site_t site={0,0};						    //ÏÔÊ¾Í¼Ïñ×óÉÏ½ÇÎ»ÖÃ
-	//Size_t size={CAMERA_W,CAMERA_H};			//ÏÔÊ¾ÇøÓòÍ¼Ïñ´óÐ¡
+	//Site_t site={0,0};						    //ï¿½ï¿½Ê¾Í¼ï¿½ï¿½ï¿½ï¿½ï¿½Ï½ï¿½Î»ï¿½ï¿½
+	//Size_t size={CAMERA_W,CAMERA_H};			//ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ð¡
   //uart_init (UART3, 115200);
 	libsc::UartDevice uart(3, 115200);
 	libutil::Clock::Init();
 	libutil::InitDefaultFwriteHandler(&uart);
-    //LCD_Init(RED);            					//³õÊ¼»¯£¬ÉèÖÃ±³¾°Îª°×É«
-	Ov7725_Init(img_bin_buff);          		//ÉãÏñÍ·³õÊ¼»¯
+    //LCD_Init(RED);            					//ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã±ï¿½ï¿½ï¿½Îªï¿½ï¿½É«
+	Ov7725_Init(img_bin_buff);          		//ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½Ê¼ï¿½ï¿½
 
   
 //gpio_init(PORTB,20,GPO,1);
@@ -57,78 +66,75 @@ int main(void)
 	{
 		ov7725_get_img();
 		img_extract((uint8_t *)img_buff,(uint8_t *)img_bin_buff,CAMERA_SIZE);
-		uart.SendChar(0);
+
+		/*uart.SendChar(0);
 		uart.SendChar(255);
 		uart.SendChar(1);
 		uart.SendChar(0);
 
-		uart.SendBuffer((uint8_t*)img_buff, 80 * 60);
+		uart.SendBuffer((uint8_t*)img_buff, 80 * 60);*/
+		for(int i=0; i<60; i++){
+			lcd.DrawPixelBuffer(0, i, 80, 1, 0xFFFF, 0x0000, img_buff[i] );
+		}
+
+		int BlackCount = 0;
+			int BlackSum = 0;
+			float LineCenterX = -1;
+
+			float LineCenterXSet[60];
+
+			for(int i=0; i<60; i++)
+			{
+				for(int j=8; j<88; j++)
+				{
+					if(GetPixelColor(i, j%80)==BLACK)
+					{
+						BlackCount++;
+						BlackSum+=j;
+					}
+				}
+				LineCenterX = BlackSum / BlackCount;
+				LineCenterXSet[i] = LineCenterX;
+			}
+
+			float s1=0; float s2=0; float s3=0; float s4=0;
+			float slope;
+
+			for(int i=0; i<60; i++)
+			{
+				s1+=LineCenterXSet[i]*i;
+				s2+=LineCenterXSet[i];
+				s3+=i;
+				s4+=i*i;
+			}
+
+			slope = (60*s1 - s2*s3) / (60*s4 - s2*s2);					//from Excel equation for calculating the slope of giving n points
+
+			float sumX=0; float sumY=0;
+			float intercept;
+
+			for(int i=0; i<60; i++)
+			{
+				sumX+=LineCenterXSet[i];
+				sumY+=i;
+			}
+
+			intercept = (sumY/60) - (slope*sumX/60);
+
+
+			//lcd.DrawString(0, 100, libutil::String::Format("y = %fx + %f", slope, intercept).c_str(), 0xFFFF);
+			//DEBUG_PRINT("\n\nLine equation: y = %fx + %f\n\n", slope, intercept);			//print our y = mx + c;
 	}
 
 	libutil::UninitDefaultFwriteHandler();
 }
-      
-   /* while(1)
-    {
-        ov7725_get_img();			            //²É¼¯Í¼Ïñ
-        img_extract((uint8_t *)img_buff,(uint8_t *)img_bin_buff,2400);
-        uart_putchar (UART3, 0);
-        uart_putchar (UART3, 255);
-        uart_putchar (UART3,1);
-        uart_putchar (UART3,0);
-        for(i=0;i<120;i++)
-        {
-          for(j=0;j<160;j++)
-            uart_putchar (UART1, img_buff[i][j]);
-        }
-    }
-		//ÈçÏÂÊ¾·¶¾ÍÊÇ²»»áÆÆ»µ»º´æÇøµÄ²Ù×÷£º£¨Ö»¶Ô»º´æÇø½øÐÐ¶Á²Ù×÷£©
-        //LCD_Img_Binary(site,size,(uint16_t *)img_bin_buff);		//ÏÔÊ¾Í¼Ïñ
-    }     
 
 
-*/
-/********************************************************************
-×¢Òâ£º
-    Èç¹ûÄãÖ»Ïë²É¼¯Í¼Ïñ²¢ÏÔÊ¾£¬Ö»ÐèÒªÊ¹ÓÃÏÂÃæµÄmainº¯Êý¼´¿É¡£
-    Ov7725_Init ÊÇ³õÊ¼»¯ÉãÏñÍ·º¯Êý
-    ov7725_get_img ÊÇ»ñÈ¡Í¼Ïñ£¬Í¼ÏñµÄµØÖ·ÊÇ £ºimg_bin_buff*/
 
-/*void main(void)
-{
-	Site_t site={0,0};						    //ÏÔÊ¾Í¼Ïñ×óÉÏ½ÇÎ»ÖÃ
-	Size_t size={CAMERA_W,CAMERA_H};			//ÏÔÊ¾ÇøÓòÍ¼Ïñ´óÐ¡
-
-    LCD_Init(RED);            					//³õÊ¼»¯£¬ÉèÖÃ±³¾°Îª°×É«
-     uart_init (UART3, 115200);     
-	Ov7725_Init(img_bin_buff);          		//ÉãÏñÍ·³õÊ¼»¯
-
-    while(1)
-    {         uart_putchar (UART3, '0');
-        ov7725_get_img();			            //²É¼¯Í¼Ïñ
-
-		//ÈçÏÂÊ¾·¶¾ÍÊÇ²»»áÆÆ»µ»º´æÇøµÄ²Ù×÷£º£¨Ö»¶Ô»º´æÇø½øÐÐ¶Á²Ù×÷£©
-       // LCD_Img_Binary(site,size,(uint16_t *)img_bin_buff);		//ÏÔÊ¾Í¼Ïñ
-
-    }     
-}
-
-/*///-----------------------------------------------------------------------
-
-//ÓÉÓÚ²É¼¯»ØÀ´µÄÍ¼ÏñÊÇ  Ò»¸ö×Ö½Ú8¸öÏñËØ£¬ÐèÒª½âÑ¹³ÉÒ»¸ö×Ö½Ú1¸öÏñËØÀ´·½±ãÍ¼Ïñ´¦Àí£¬¿ÉÒÔÓÃimg_extract º¯Êý
-
-//Ïë½âÑ¹µ½£º uint8_t img_buf[H][W];  Õâ¸ö ¶þÎ¬Êý×éÀï¡££¨µ±È»Ò²¿ÉÒÔÊÇÒ»Î¬Êý×é£º uint8_t img_buf[H*W];  £©
-//ÔòÐèÒªµ÷ÓÃÕâ¸öº¯Êý£º
-//img_extract((uint8_t *) img_buf,(uint8_t *) img_bin_buff, H*W/8);          //½âÑ¹Îª»Ò¶ÈÍ¼Ïñ£¬·½±ã·¢ËÍµ½ÉÏÎ»»úÏÔ
-
-
-//img_extract µÄ´úÂëÈçÏÂ£º
-
-//Ñ¹Ëõ¶þÖµ»¯Í¼Ïñ½âÑ¹£¨¿Õ¼ä »» Ê±¼ä ½âÑ¹£©
 void img_extract(uint8_t * dst,uint8_t * src,uint32_t srclen)
 {
-	uint8_t colour[2]={255,0};	//0 ºÍ 1 ·Ö±ð¶ÔÓ¦µÄÑÕÉ«
-							//×¢£ºÒ°»ðµÄÉãÏñÍ· 0 ±íÊ¾ °×É«£¬1±íÊ¾ ºÚÉ«
+	uint8_t colour[2]={255,0};	//0 ï¿½ï¿½ 1 ï¿½Ö±ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½É«
+							//×¢ï¿½ï¿½Ò°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í· 0 ï¿½ï¿½Ê¾ ï¿½ï¿½É«ï¿½ï¿½1ï¿½ï¿½Ê¾ ï¿½ï¿½É«
 	uint8_t tmpsrc;
 	while(srclen --)
 	{
@@ -142,5 +148,6 @@ void img_extract(uint8_t * dst,uint8_t * src,uint32_t srclen)
 		*dst++ = colour[ (tmpsrc >> 1 ) & 0x01 ];
 		*dst++ = colour[ (tmpsrc >> 0 ) & 0x01 ];
 	}
+
 }
 

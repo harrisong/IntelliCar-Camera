@@ -19,40 +19,40 @@ volatile IMG_STATE	    img_flag = IMG_FINISH;		//ͼ��״̬
 static uint8_t Ov7725_reg_Init(void);
 
 void Ov7725_exti_Init()
-{    DEBUG_PRINT("warning:1");
+{   // DEBUG_PRINT("warning:1");
     //DMAͨ��0��ʼ����PTB8�����ش���DMA���䣬Դ��ַΪPTD_BYTE0_IN��Ŀ�ĵ�ַΪ��BUFF ��ÿ�δ���1Byte������CAMERA_SIZE�κ�ֹͣ����
-	dma_portx2buff_init(CAMERA_DMA_CH, (void *)&PTB_BYTE0_IN, (void *)IMG_BUFF, PTB8, DMA_BYTE1, CAMERA_SIZE , DADDR_KEEPON);
-     DEBUG_PRINT("warning:2");
+	dma_portx2buff_init(CAMERA_DMA_CH, (void *)&PTC_B1_IN, (void *)IMG_BUFF, PTC19, DMA_BYTE1, CAMERA_SIZE , DADDR_KEEPON);
+   //  DEBUG_PRINT("warning:2");
     
-    port_init(PTB8, DMA_RISING | PULLUP | ALT1);   //PCLK
-    GPIO_PDDR_REG(GPIOX_BASE(PTB8)) |= (1 << PTn(PTB8));
- DEBUG_PRINT("warning:3");
+    port_init(PTC19, DMA_RISING | PULLUP | ALT1);   //PCLK
+    GPIO_PDDR_REG(GPIOX_BASE(PTC19)) |= (1 << PTn(PTC19));
+// DEBUG_PRINT("warning:3");
     DMA_IRQ_EN(DMA_CH0);
- DEBUG_PRINT("warning:4");
+// DEBUG_PRINT("warning:4");
     port_init(PTA29, IRQ_RISING | PULLUP | PF | ALT1);   //���жϣ��������½��ش����жϣ����˲�
     GPIO_PDDR_REG(GPIOX_BASE(PTA29)) &= ~(1 << PTn(PTA29));
- DEBUG_PRINT("warning:5");
+// DEBUG_PRINT("warning:5");
     DisableIsr(PORTA_VECTORn); 						//�ر�PTA���ж�
      DEBUG_PRINT("warning:6");
 }
 
 void ov7725_get_img()
-{ DEBUG_PRINT("warning:7");
+{// DEBUG_PRINT("warning:7");
     img_flag = IMG_START;					//��ʼ�ɼ�ͼ��
-     DEBUG_PRINT("warning:8");
+    // DEBUG_PRINT("warning:8");
     PORTA_ISFR = ~0;							//д1���жϱ�־λ(����ģ���Ȼ�ص���һ���жϾ����ϴ����ж�)
-     DEBUG_PRINT("warning:9");
+     //DEBUG_PRINT("warning:9");
     EnableIsr(PORTA_VECTORn); 						//����PTA���ж�
     
-     DEBUG_PRINT("warning:10");
+    // DEBUG_PRINT("warning:10");
     while(img_flag != IMG_FINISH)           //�ȴ�ͼ��ɼ����
-    {    DEBUG_PRINT("warning:11");
+    {   // DEBUG_PRINT("warning:11");
         if(img_flag == IMG_FAIL)            //����ͼ��ɼ����������¿�ʼ�ɼ�
         {
             img_flag = IMG_START;			//��ʼ�ɼ�ͼ��
             PORTA_ISFR = ~0;					//д1���жϱ�־λ(����ģ���Ȼ�ص���һ���жϾ����ϴ����ж�)
             EnableIsr(PORTA_VECTORn); 				//����PTA���ж�
-             DEBUG_PRINT("warning:12");
+           //  DEBUG_PRINT("warning:12");
         }
     }
 }
