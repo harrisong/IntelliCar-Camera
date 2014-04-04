@@ -59,12 +59,11 @@ void CameraApp::TurnControl(){
 
 	float LineCenterXSet[60];
 
-	for(int i=0; i<60; i++)
+	for(int i=1; i<=60; i++)
 	{
-		for(int j=0; j<80; j++)
+		for(int j=1; j<=80; j++)
 		{
-			Byte img_buff = m_car.GetCamera();
-			if(img_buff[i*j]==BLACK)
+			if(m_car.GetImgBuff(i*j-1)==BLACK)
 			{
 				BlackCount++;
 				BlackSum+=j;

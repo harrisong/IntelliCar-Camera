@@ -19,7 +19,7 @@ namespace camera
 Car::Car()
 		: m_leds{Led(0), Led(1), Led(2), Led(3)}, m_uart(3, 115200),
 		  motor1(0), motor2(1, 0.9),
-		  camera(80, 60),
+		  camera(CAMERA_H, CAMERA_W),
 		  gyro(GYROADC, ANGLEADC, RZADC, RXADC, 12200),
 		  encoder1(FTM1), encoder2(FTM2)
 {
@@ -64,11 +64,31 @@ libsc::Motor Car::GetMotor(int n){
 		break;
 	}
 }
+COLORS Car::GetImgBuff(int n){
+	GetCamera();
+	return img_buff[n];
+}
 
-const Byte* Car::GetCamera(){
-	Byte img = camera.LockBuffer();
+void Car::GetCamera(){
+	const Byte* img = camera.LockBuffer();
+	COLORS colour[2]={WHITE,BLACK};
+	uint8_t tmpsrc;
+
+	int srclen = camera.GetImageW() * camera.GetImageH();
+	while(srclen --)
+	{
+		tmpsrc = *img++;
+		*img_buff++ = colour[ (tmpsrc >> 7 ) & 0x01 ];
+		*img_buff++ = colour[ (tmpsrc >> 6 ) & 0x01 ];
+		*img_buff++ = colour[ (tmpsrc >> 5 ) & 0x01 ];
+		*img_buff++ = colour[ (tmpsrc >> 4 ) & 0x01 ];
+		*img_buff++ = colour[ (tmpsrc >> 3 ) & 0x01 ];
+		*img_buff++ = colour[ (tmpsrc >> 2 ) & 0x01 ];
+		*img_buff++ = colour[ (tmpsrc >> 1 ) & 0x01 ];
+		*img_buff++ = colour[ (tmpsrc >> 0 ) & 0x01 ];
+	}
+
 	camera.UnlockBuffer();
-	return &img;
 }
 
 }

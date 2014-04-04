@@ -22,6 +22,10 @@
 
 #include "kalman.h"
 
+enum COLORS {WHITE, BLACK};
+#define CAMERA_H 80
+#define CAMERA_W 60
+
 namespace camera
 {
 
@@ -65,17 +69,18 @@ public:
 	BalanceGyro GetGyro();
 	BalanceEncoder GetEncoder(int n);
 	libsc::Motor GetMotor(int n);
-	const Byte* GetCamera();
+	void GetCamera();
+	COLORS GetImgBuff(int);
 
 private:
 	libsc::Led m_leds[4];
 	libsc::UartDevice m_uart;
 	libsc::Motor motor1, motor2;
 	libsc::Ov7725 camera;
+	COLORS* img_buff;
 	BalanceGyro gyro;
 	BalanceEncoder encoder1;
 	BalanceEncoder encoder2;
-
 
 };
 
