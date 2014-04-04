@@ -3,7 +3,7 @@
 #
 # This connects to a GDB Server listening
 # for commands on localhost at tcp port 2331
-target remote 175.159.118.201:2331
+target remote localhost:2331
 # Reset the chip to get to a known state.
 monitor reset
 #
