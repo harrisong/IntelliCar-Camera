@@ -44,10 +44,6 @@ BalanceEncoder Car::GetEncoder(int n){
 	}
 }
 
-BalanceCamera Car::GetCamera(){
-	return camera;
-}
-
 libsc::Motor Car::GetMotor(int n){
 	switch(n){
 	case 1:

@@ -8,7 +8,7 @@
 
 #ifndef CAMERA_APP_H_
 #define CAMERA_APP_H_
-
+#include <libutil/misc.h>
 #include "camera/car.h"
 
 namespace camera

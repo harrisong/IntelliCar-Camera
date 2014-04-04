@@ -63,7 +63,7 @@ void CameraApp::TurnControl(){
 	{
 		for(int j=0; j<80; j++)
 		{
-			if(m_car.GetCamera().GetPixelColor(i, j)==BLACK)
+			//if(m_car.GetCamera().GetPixelColor(i, j)==BLACK)
 			{
 				BlackCount++;
 				BlackSum+=j;
@@ -101,12 +101,12 @@ void CameraApp::TurnControl(){
 }
 
 void CameraApp::SendImage(){
-	m_car.GetCamera().extract_to_buffer();
+
 	m_car.UartSendChar(0);
 	m_car.UartSendChar(255);
 	m_car.UartSendChar(1);
 	m_car.UartSendChar(0);
-	m_car.UartSendBuffer(m_car.GetCamera().GetImageBuff(), 80 * 60);
+	//m_car.UartSendBuffer(m_car.GetCamera().GetImageBuff(), 80 * 60);
 
 }
 

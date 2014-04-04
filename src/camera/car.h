@@ -18,7 +18,7 @@
 #include <libsc/com/motor.h>
 #include "balance_gyro.h"
 #include "balance_encoder.h"
-#include "balance_camera.h"
+
 #include "kalman.h"
 
 namespace camera
@@ -63,7 +63,6 @@ public:
 	}
 	BalanceGyro GetGyro();
 	BalanceEncoder GetEncoder(int n);
-	BalanceCamera GetCamera();
 	libsc::Motor GetMotor(int n);
 
 private:
@@ -73,7 +72,6 @@ private:
 	BalanceGyro gyro;
 	BalanceEncoder encoder1;
 	BalanceEncoder encoder2;
-	BalanceCamera camera;
 
 
 };
