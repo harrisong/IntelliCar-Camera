@@ -59,11 +59,11 @@ void CameraApp::TurnControl(){
 
 	float LineCenterXSet[60];
 
-	for(int i=1; i<=60; i++)
+	for(int i=1; i<=CAMERA_H; i++)
 	{
-		for(int j=1; j<=80; j++)
+		for(int j=1; j<=CAMERA_W; j++)
 		{
-			if(m_car.GetImgBuff(i*j-1)==BLACK)
+			if(m_car.GetPixel(i*j-1)==BLACK)
 			{
 				BlackCount++;
 				BlackSum+=j;
@@ -127,6 +127,8 @@ void CameraApp::Run()
 		BalanceControl();
 		PositionControl();
 		SendToMotor();
+
+
 	}
 }
 

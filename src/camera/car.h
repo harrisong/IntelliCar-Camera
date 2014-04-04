@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <vectors.h>
 #include <libsc/com/ov7725.h>
+#include <libsc/com/lcd.h>
 #include <libsc/com/led.h>
 #include <libsc/com/uart_device.h>
 #include <libsc/com/motor.h>
@@ -70,13 +71,15 @@ public:
 	BalanceEncoder GetEncoder(int n);
 	libsc::Motor GetMotor(int n);
 	void GetCamera();
-	COLORS GetImgBuff(int);
+	COLORS GetPixel(int);
+	COLORS* GetImgBuff();
 
 private:
 	libsc::Led m_leds[4];
 	libsc::UartDevice m_uart;
 	libsc::Motor motor1, motor2;
 	libsc::Ov7725 camera;
+	libsc::Lcd lcd;
 	COLORS* img_buff;
 	BalanceGyro gyro;
 	BalanceEncoder encoder1;

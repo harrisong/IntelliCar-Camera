@@ -31,6 +31,8 @@ Car::Car()
 		DELAY_MS(250);
 	}
 	camera.ShootContinuously();
+	libsc::Lcd lcd(true);
+	lcd.Clear(0x7777);
 }
 
 Car::~Car()
@@ -64,9 +66,15 @@ libsc::Motor Car::GetMotor(int n){
 		break;
 	}
 }
-COLORS Car::GetImgBuff(int n){
+
+COLORS Car::GetPixel(int n){
 	GetCamera();
 	return img_buff[n];
+}
+
+COLORS* Car::GetImgBuff(){
+	GetCamera();
+	return img_buff;
 }
 
 void Car::GetCamera(){
