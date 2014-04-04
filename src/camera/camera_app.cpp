@@ -63,7 +63,8 @@ void CameraApp::TurnControl(){
 	{
 		for(int j=0; j<80; j++)
 		{
-			//if(m_car.GetCamera().GetPixelColor(i, j)==BLACK)
+			Byte img_buff = m_car.GetCamera();
+			if(img_buff[i*j]==BLACK)
 			{
 				BlackCount++;
 				BlackSum+=j;
@@ -97,7 +98,7 @@ void CameraApp::TurnControl(){
 
 	intercept = (sumY/60) - (slope*sumX/60);
 
-	DEBUG_PRINT("Line equation: y = %fx + %f", slope, intercept);			//print our y = mx + c;
+	LOG_W("Line equation: y = %fx + %f", slope, intercept);			//print our y = mx + c;
 }
 
 void CameraApp::SendImage(){

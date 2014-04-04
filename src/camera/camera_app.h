@@ -8,6 +8,7 @@
 
 #ifndef CAMERA_APP_H_
 #define CAMERA_APP_H_
+#include <log.h>
 #include <libutil/misc.h>
 #include "camera/car.h"
 

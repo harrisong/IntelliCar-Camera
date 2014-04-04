@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <vectors.h>
+#include <libsc/com/ov7725.h>
 #include <libsc/com/led.h>
 #include <libsc/com/uart_device.h>
 #include <libsc/com/motor.h>
@@ -64,11 +65,13 @@ public:
 	BalanceGyro GetGyro();
 	BalanceEncoder GetEncoder(int n);
 	libsc::Motor GetMotor(int n);
+	const Byte* GetCamera();
 
 private:
 	libsc::Led m_leds[4];
 	libsc::UartDevice m_uart;
 	libsc::Motor motor1, motor2;
+	libsc::Ov7725 camera;
 	BalanceGyro gyro;
 	BalanceEncoder encoder1;
 	BalanceEncoder encoder2;
