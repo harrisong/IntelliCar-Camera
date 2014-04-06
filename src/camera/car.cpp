@@ -11,6 +11,8 @@
 #include "camera/car.h"
 #include <libutil/misc.h>
 
+
+
 using namespace libsc;
 
 namespace camera
@@ -21,7 +23,8 @@ Car::Car()
 		  motor1(0), motor2(1, 0.9),
 		  camera(CAMERA_H, CAMERA_W),
 		  gyro(GYROADC, ANGLEADC, RZADC, RXADC, 12200),
-		  encoder1(FTM1), encoder2(FTM2)
+		  encoder1(FTM1), encoder2(FTM2),
+		  lcd(true)
 {
 	libutil::InitDefaultFwriteHandler(&m_uart);
 	//m_uart.StartReceive();
@@ -31,8 +34,8 @@ Car::Car()
 		DELAY_MS(250);
 	}
 	camera.ShootContinuously();
-	libsc::Lcd lcd(true);
-	lcd.Clear(0x7777);
+
+	lcd.Clear(0x0000);
 }
 
 Car::~Car()
@@ -97,6 +100,11 @@ void Car::GetCamera(){
 	}
 
 	camera.UnlockBuffer();
+}
+
+libsc::Led Car::GetLed(int n)
+{
+	return m_leds[n];
 }
 
 }

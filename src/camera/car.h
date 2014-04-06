@@ -70,6 +70,7 @@ public:
 	BalanceGyro GetGyro();
 	BalanceEncoder GetEncoder(int n);
 	libsc::Motor GetMotor(int n);
+	libsc::Led GetLed(int n);
 	void GetCamera();
 	COLORS GetPixel(int);
 	COLORS* GetImgBuff();

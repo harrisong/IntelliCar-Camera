@@ -8,7 +8,11 @@
 
 #include <syscall.h>
 
+
+#include "mini_common.h"
+#include "hw_common.h"
 #include "camera/camera_app.h"
+#include "MK60_gpio.h"
 
 namespace camera
 {
@@ -69,7 +73,7 @@ void CameraApp::TurnControl(){
 				BlackSum+=j;
 			}
 		}
-		LineCenterX = BlackSum / BlackCount;
+		LineCenterX = (int) (BlackSum / BlackCount) ;
 		LineCenterXSet[i] = LineCenterX;
 	}
 
@@ -97,6 +101,8 @@ void CameraApp::TurnControl(){
 
 	intercept = (sumY/60) - (slope*sumX/60);
 
+
+
 	LOG_W("Line equation: y = %fx + %f", slope, intercept);			//print our y = mx + c;
 }
 
@@ -117,6 +123,7 @@ void CameraApp::SendToMotor(){
 
 void CameraApp::Run()
 {
+
 	while (true)
 	{
 		#if defined(DEBUG)
@@ -130,6 +137,7 @@ void CameraApp::Run()
 
 
 	}
+
 }
 
 }
