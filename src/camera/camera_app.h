@@ -23,7 +23,7 @@ public:
 	void BalanceControl();
 	void PositionControl();
 	void TurnControl();
-	void SendToMotor();
+	void MoveMotor();
 	void SendImage();
 
 	void Run();

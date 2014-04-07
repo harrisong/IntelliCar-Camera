@@ -74,6 +74,7 @@ public:
 	void GyroRefresh();
 	int16 GetGyroOffset();
 	int16 GetGyroOmega();
+	int16 GetRawAngle();
 	BalanceEncoder GetEncoder(int n);
 	libsc::Motor GetMotor(int n);
 	libsc::Led GetLed(int n);

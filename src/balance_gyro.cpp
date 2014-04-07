@@ -11,7 +11,7 @@ BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p2, ADCn_Ch_e p3, ADCn_Ch_e p4,
 	raw_setpoint(sp), raw_gyro(0), raw_offset(0), old_raw_offset(0), omega(0),
 	Vmax(3.3), Adc16max(65535), Gyrozero(1.23), Gyroscale(0.00067), Accelzero(1.65), Accelscale(0.4785) {
 
-	adc_init(raw_gyro_port);
+	//adc_init(raw_gyro_port);
 	adc_init(raw_angle_port);
 	//adc_init(raw_z_port);
 	//adc_init(raw_x_port);
@@ -39,7 +39,7 @@ float BalanceGyro::get_raw_gyro(){
 	return raw_gyro;
 }
 
-int16 BalanceGyro::get_raw_angle(){
+int16 BalanceGyro::GetRawAngle(){
 	return raw_angle;
 }
 

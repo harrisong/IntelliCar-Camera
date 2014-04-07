@@ -33,14 +33,14 @@ void CameraApp::BalanceControl()
 	m_car.GyroRefresh();
 
 	///PD equation
-	_gyro = m_car.GetGyroOffset();
-	kalman_filtering(&gyro_kf, &_gyro, 1);
-	if(_gyro < -6600 || _gyro >  6500) {
+	//_gyro = m_car.GetGyroOffset();
+	//kalman_filtering(&gyro_kf, &_gyro, 1);
+	if(m_car.GetGyroOffset() < -6600 || m_car.GetGyroOffset() >  6500) {
 		Speed1 = Speed2 = 0;
 	}else{
-		Speed1 = Speed2 = kp * _gyro + kd * m_car.GetGyroOmega();
+		Speed1 = Speed2 = kp * m_car.GetGyroOffset() + kd * m_car.GetGyroOmega();
 	}
-	printf("Raw Gyro: %d \t Speed: %d\n\r", m_car.GetGyroOffset(), Speed1);
+	printf("Raw Angle: %d \t Speed: %d\n\r", m_car.GetRawAngle(), Speed1);
 	DELAY_MS(1000);
 }
 
@@ -71,7 +71,7 @@ void CameraApp::SendImage(){
 
 }
 
-void CameraApp::SendToMotor(){
+void CameraApp::MoveMotor(){
 	m_car.GetMotor(1).SetPower(Speed1);
 	m_car.GetMotor(2).SetPower(Speed2);
 }
@@ -90,7 +90,7 @@ void CameraApp::Run()
 		//TurnControl();
 		BalanceControl();
 		//PositionControl();
-		//SendToMotor();
+		MoveMotor();
 
 
 	}
