@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <vectors.h>
+#include <libutil/clock.h>
 #include <libsc/com/ov7725.h>
 #include <libsc/com/lcd.h>
 #include <libsc/com/led.h>
@@ -24,8 +25,11 @@
 #include "kalman.h"
 
 enum COLORS {WHITE, BLACK};
-#define CAMERA_H 80
-#define CAMERA_W 60
+#define CAM_W 160
+#define CAM_H 120
+#define WHITE_BYTE 0xFF
+#define BLACK_BYTE 0						//online RGB 565 calculator
+#define RED_BYTE 0xF800						//http://www.henningkarlsen.com/electronics/calc_rgb565.php
 
 namespace camera
 {
@@ -71,20 +75,24 @@ public:
 	BalanceEncoder GetEncoder(int n);
 	libsc::Motor GetMotor(int n);
 	libsc::Led GetLed(int n);
-	void GetCamera();
-	COLORS GetPixel(int);
-	COLORS* GetImgBuff();
+	Byte* ExpandPixel(const Byte *, const int);
+	void ShootOnceTest();
+	void ShootContinuouslyTest();
+	void DrawCenterPixel(const Byte* src, const int line);
+	int GetPixel(const int x, const int y, const int offset);
+	void PrintCenterLineEquation(float LineCenterX[]);
 
 private:
 	libsc::Led m_leds[4];
 	libsc::UartDevice m_uart;
 	libsc::Motor motor1, motor2;
-	libsc::Ov7725 camera;
-	libsc::Lcd lcd;
-	COLORS* img_buff;
+	libsc::Ov7725 m_cam;
+	libsc::Lcd m_lcd;
 	BalanceGyro gyro;
 	BalanceEncoder encoder1;
 	BalanceEncoder encoder2;
+
+
 
 };
 

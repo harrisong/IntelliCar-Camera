@@ -16,11 +16,11 @@
 
 namespace camera
 {
-
 CameraApp::CameraApp():
 	_gyro(0), _count(0), Speed1(0), Speed2(0)
 {
 	kalman_filter_init(&gyro_kf, 0.005, 0.5, 0, 1);
+	m_car.ShootOnceTest();
 }
 
 CameraApp::~CameraApp()
@@ -41,6 +41,7 @@ void CameraApp::BalanceControl()
 	}else{
 		Speed1 = Speed2 = kp * _gyro + kd * m_car.GetGyro().get_omega();
 	}
+	LOG_W("%d\n\r", Speed1);
 }
 
 void CameraApp::PositionControl(){
@@ -57,62 +58,16 @@ void CameraApp::PositionControl(){
 
 void CameraApp::TurnControl(){
 
-	int BlackCount = 0;
-	int BlackSum = 0;
-	float LineCenterX = -1;
 
-	float LineCenterXSet[60];
-
-	for(int i=1; i<=CAMERA_H; i++)
-	{
-		for(int j=1; j<=CAMERA_W; j++)
-		{
-			if(m_car.GetPixel(i*j-1)==BLACK)
-			{
-				BlackCount++;
-				BlackSum+=j;
-			}
-		}
-		LineCenterX = (int) (BlackSum / BlackCount) ;
-		LineCenterXSet[i] = LineCenterX;
-	}
-
-	float s1=0; float s2=0; float s3=0; float s4=0;
-	float slope;
-
-	for(int i=0; i<60; i++)
-	{
-		s1+=LineCenterXSet[i]*i;
-		s2+=LineCenterXSet[i];
-		s3+=i;
-		s4+=i*i;
-	}
-
-	slope = (60*s1 - s2*s3) / (60*s4 - s2*s2);					//from Excel equation for calculating the slope of giving n points
-
-	float sumX=0; float sumY=0;
-	float intercept;
-
-	for(int i=0; i<60; i++)
-	{
-		sumX+=LineCenterXSet[i];
-		sumY+=i;
-	}
-
-	intercept = (sumY/60) - (slope*sumX/60);
-
-
-
-	LOG_W("Line equation: y = %fx + %f", slope, intercept);			//print our y = mx + c;
 }
 
 void CameraApp::SendImage(){
 
-	m_car.UartSendChar(0);
+	/*m_car.UartSendChar(0);
 	m_car.UartSendChar(255);
 	m_car.UartSendChar(1);
 	m_car.UartSendChar(0);
-	//m_car.UartSendBuffer(m_car.GetCamera().GetImageBuff(), 80 * 60);
+	*/
 
 }
 
@@ -121,19 +76,21 @@ void CameraApp::SendToMotor(){
 	m_car.GetMotor(2).SetPower(Speed2);
 }
 
+
+
 void CameraApp::Run()
 {
 
 	while (true)
 	{
 		#if defined(DEBUG)
-			SendImage();
+			//SendImage();
 		#endif
 
-		TurnControl();
+		//TurnControl();
 		BalanceControl();
-		PositionControl();
-		SendToMotor();
+		//PositionControl();
+		//SendToMotor();
 
 
 	}
