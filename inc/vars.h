@@ -14,8 +14,8 @@
 #define ki 0f
 
 //Gyro Ports//
-#define GYROADC ADC0_SE13
-#define ANGLEADC ADC0_SE12
+#define GYROADC ADC0_SE14
+#define ANGLEADC ADC0_SE15
 #define RZADC ADC1_SE10
 #define RXADC ADC1_SE11
 

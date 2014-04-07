@@ -20,10 +20,10 @@ namespace camera
 
 Car::Car()
 		: m_leds{Led(0), Led(1), Led(2), Led(3)}, m_uart(3, 115200),
-		  motor1(0), motor2(1, 0.9),
+		  m_motor1(0), m_motor2(1, 0.9),
 		  m_cam(CAM_W, CAM_H),
-		  gyro(GYROADC, ANGLEADC, RZADC, RXADC, 12200),
-		  encoder1(FTM1), encoder2(FTM2),
+		  m_gyro(GYROADC, ANGLEADC, RZADC, RXADC, 4200),
+		  m_encoder1(FTM1), m_encoder2(FTM2),
 		  m_lcd(true)
 {
 	libutil::InitDefaultFwriteHandler(&m_uart);
@@ -43,16 +43,28 @@ Car::~Car()
 }
 
 BalanceGyro Car::GetGyro(){
-	return gyro;
+	return m_gyro;
+}
+
+void Car::GyroRefresh(){
+	m_gyro.Refresh();
+}
+
+int16 Car::GetGyroOffset(){
+	return m_gyro.GetOffset();
+}
+
+int16 Car::GetGyroOmega(){
+	return m_gyro.GetOmega();
 }
 
 BalanceEncoder Car::GetEncoder(int n){
 	switch(n){
 	case 1:
-		return encoder1;
+		return m_encoder1;
 		break;
 	case 2:
-		return encoder2;
+		return m_encoder2;
 		break;
 	}
 }
@@ -61,10 +73,10 @@ libsc::Motor Car::GetMotor(int n){
 	switch(n){
 	case 1:
 	default:
-		return motor1;
+		return m_motor1;
 		break;
 	case 2:
-		return motor2;
+		return m_motor2;
 		break;
 	}
 }
@@ -98,8 +110,8 @@ void Car::ShootOnceTest(){
 	libutil::Clock::ClockInt prev_time = libutil::Clock::Time();
 	int frame_count = 0;
 	m_cam.ShootOnce();
-	while (true)
-	{
+	//while (true)
+	//{
 		while (!m_cam.IsImageReady())
 		{}
 
@@ -136,8 +148,8 @@ void Car::ShootOnceTest(){
 			frame_count = 0;
 		}
 
-		m_cam.ShootOnce();
-	}
+		//m_cam.ShootOnce();
+	//}
 }
 
 }

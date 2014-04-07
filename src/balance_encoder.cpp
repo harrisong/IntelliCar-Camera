@@ -35,7 +35,7 @@ int16 BalanceEncoder::getcurrent(){
 	return current;
 }
 
-int16 BalanceEncoder::gettotal(){
+int16 BalanceEncoder::GetTotal(){
 	return total;
 }
 

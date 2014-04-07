@@ -24,7 +24,6 @@
 
 #include "kalman.h"
 
-enum COLORS {WHITE, BLACK};
 #define CAM_W 160
 #define CAM_H 120
 #define WHITE_BYTE 0xFF
@@ -72,6 +71,9 @@ public:
 		return m_uart.PeekChar(out_ch);
 	}
 	BalanceGyro GetGyro();
+	void GyroRefresh();
+	int16 GetGyroOffset();
+	int16 GetGyroOmega();
 	BalanceEncoder GetEncoder(int n);
 	libsc::Motor GetMotor(int n);
 	libsc::Led GetLed(int n);
@@ -85,12 +87,12 @@ public:
 private:
 	libsc::Led m_leds[4];
 	libsc::UartDevice m_uart;
-	libsc::Motor motor1, motor2;
+	libsc::Motor m_motor1, m_motor2;
 	libsc::Ov7725 m_cam;
 	libsc::Lcd m_lcd;
-	BalanceGyro gyro;
-	BalanceEncoder encoder1;
-	BalanceEncoder encoder2;
+	BalanceGyro m_gyro;
+	BalanceEncoder m_encoder1;
+	BalanceEncoder m_encoder2;
 
 
 

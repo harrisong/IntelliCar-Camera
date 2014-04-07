@@ -13,13 +13,13 @@ BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p2, ADCn_Ch_e p3, ADCn_Ch_e p4,
 
 	adc_init(raw_gyro_port);
 	adc_init(raw_angle_port);
-	adc_init(raw_z_port);
-	adc_init(raw_x_port);
+	//adc_init(raw_z_port);
+	//adc_init(raw_x_port);
 	
-	refresh();
+	Refresh();
 }
 
-void BalanceGyro::refresh(){
+void BalanceGyro::Refresh(){
 	totalsample++;
 	raw_angle = (int16) adc_once(raw_angle_port, ADC_16bit);
 	raw_offset = raw_angle - raw_setpoint;
@@ -43,11 +43,11 @@ int16 BalanceGyro::get_raw_angle(){
 	return raw_angle;
 }
 
-int16 BalanceGyro::get_offset(){
+int16 BalanceGyro::GetOffset(){
 	return raw_offset;
 }
 
-int16 BalanceGyro::get_omega(){
+int16 BalanceGyro::GetOmega(){
 	return omega;
 }
 

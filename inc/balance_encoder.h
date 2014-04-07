@@ -19,7 +19,7 @@ class BalanceEncoder{
 		BalanceEncoder(FTMn_e);
 		void refresh();
 		int16 getcurrent();
-		int16 gettotal();
+		int16 GetTotal();
 		int16 getdirection();
 		void reset();
 };

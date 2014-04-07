@@ -34,11 +34,11 @@ private:
 
 public:
 	BalanceGyro(ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, int16);
-	void refresh();
+	void Refresh();
 	float get_raw_gyro();
 	int16 get_raw_angle();
-	int16 get_offset();
-	int16 get_omega();
+	int16 GetOffset();
+	int16 GetOmega();
 	float get_accel();
 
 
