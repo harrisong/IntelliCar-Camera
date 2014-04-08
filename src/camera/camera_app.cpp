@@ -41,7 +41,7 @@ void CameraApp::BalanceControl()
 		Speed1 = Speed2 = kp * m_car.GetGyroOffset() + kd * m_car.GetGyroOmega();
 	}
 	printf("Raw Angle: %d \t Speed: %d\n\r", m_car.GetRawAngle(), Speed1);
-	DELAY_MS(1000);
+	//DELAY_MS(1000);
 }
 
 void CameraApp::PositionControl(){
@@ -72,8 +72,8 @@ void CameraApp::SendImage(){
 }
 
 void CameraApp::MoveMotor(){
-	m_car.GetMotor(1).SetPower(Speed1);
-	m_car.GetMotor(2).SetPower(Speed2);
+	m_car.MoveMotor(1,5000);
+	m_car.MoveMotor(2,5000);
 }
 
 
@@ -86,9 +86,9 @@ void CameraApp::Run()
 		#if defined(DEBUG)
 			//SendImage();
 		#endif
-		//m_car.ShootOnceTest();
+		m_car.ShootOnceTest();
 		//TurnControl();
-		BalanceControl();
+		//BalanceControl();
 		//PositionControl();
 		MoveMotor();
 

@@ -20,7 +20,7 @@ namespace camera
 
 Car::Car()
 		: m_leds{Led(0), Led(1), Led(2), Led(3)}, m_uart(3, 115200),
-		  m_motor1(0), m_motor2(1, 0.9),
+		  m_motor1(0), m_motor2(1),
 		  m_cam(CAM_W, CAM_H),
 		  m_gyro(GYROADC, ANGLEADC, RZADC, RXADC, 16350),
 		  m_encoder1(FTM1), m_encoder2(FTM2),
@@ -83,6 +83,17 @@ libsc::Motor Car::GetMotor(int n){
 		return m_motor2;
 		break;
 	}
+}
+
+void Car::MoveMotor(int n, const uint16_t power){
+	switch(n){
+		case 1:
+			m_motor1.SetPower(power);
+			break;
+		case 2:
+			m_motor2.SetPower(power);
+			break;
+		}
 }
 
 

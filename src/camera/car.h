@@ -85,6 +85,8 @@ public:
 	int GetPixel(const int x, const int y, const int offset);
 	void PrintCenterLineEquation(float LineCenterX[]);
 
+	void MoveMotor(int, const uint16_t);
+
 private:
 	libsc::Led m_leds[4];
 	libsc::UartDevice m_uart;
