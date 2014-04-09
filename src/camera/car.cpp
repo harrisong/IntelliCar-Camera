@@ -91,7 +91,22 @@ libsc::Led Car::GetLed(int n)
 	return m_leds[n];
 }
 
-Byte* Car::ExpandPixel(const Byte *src, const int line)
+libsc::Lcd Car::GetLcd()
+{
+	return m_lcd;
+}
+
+libsc::UartDevice Car::GetBluetooth()
+{
+	return m_uart;
+}
+
+const Byte* Car::GetImage()
+{
+	return src;
+}
+
+Byte* Car::ExpandPixel(const int line)
 {
     static Byte product[CAM_W];
     Byte *it = product;
@@ -119,14 +134,14 @@ void Car::ShootOnceTest(){
 		while (!m_cam.IsImageReady())
 		{}
 
-		const Byte *src = m_cam.LockBuffer();
+		src = m_cam.LockBuffer();
 		//uart.SendChar(0);
 		//uart.SendChar(255);
 		//uart.SendChar(1);
 		//uart.SendChar(0);
 		for (int i = CAM_H - 1; i >= 0; --i)
 		{
-			const Byte *buf = ExpandPixel(src, i);
+			const Byte *buf = ExpandPixel(i);
 			//uart.SendBuffer(buf, CAM_W);
 
 			m_lcd.DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);

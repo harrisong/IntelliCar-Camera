@@ -78,12 +78,12 @@ public:
 	BalanceEncoder GetEncoder(int n);
 	libsc::Motor GetMotor(int n);
 	libsc::Led GetLed(int n);
-	Byte* ExpandPixel(const Byte *, const int);
+	libsc::Lcd GetLcd();
+	libsc::UartDevice GetBluetooth();
+	Byte* ExpandPixel(const int);
 	void ShootOnceTest();
 	void ShootContinuouslyTest();
-	void DrawCenterPixel(const Byte* src, const int line);
-	int GetPixel(const int x, const int y, const int offset);
-	void PrintCenterLineEquation(float LineCenterX[]);
+	const Byte* GetImage();
 
 private:
 	libsc::Led m_leds[4];
@@ -94,7 +94,7 @@ private:
 	BalanceGyro m_gyro;
 	BalanceEncoder m_encoder1;
 	BalanceEncoder m_encoder2;
-
+	const Byte* src;
 
 
 };

@@ -26,6 +26,10 @@ public:
 	void MoveMotor();
 	void SendImage();
 
+	void DrawCenterPixelAndPrintEquation();
+	int GetRotationInstruction();
+	int GetPixel(const Byte* src, const int x, const int y);
+
 	void Run();
 
 private:
