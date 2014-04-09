@@ -9,6 +9,7 @@
 #ifndef CAMERA_CAR_H_
 #define CAMERA_CAR_H_
 
+#include <libsc/com/config/2014_camera.h>
 #include <vars.h>
 #include <cstdint>
 #include <cstdlib>
@@ -84,7 +85,7 @@ public:
 
 	libsc::Led GetLed(int n);
 
-	Byte* ExpandPixel(const Byte *, const int);
+	Byte* ExpandPixel(const int);
 	
 	libsc::Lcd GetLcd();
 	libsc::UartDevice GetBluetooth();

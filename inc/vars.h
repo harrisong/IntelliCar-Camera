@@ -23,11 +23,7 @@
 #define speed_ki 0.0f
 #define SPEEDSETPOINT 500
 
-//Gyro Ports//
-#define GYROADC ADC0_SE14
-#define ANGLEADC ADC0_SE14
-#define RZADC ADC1_SE10
-#define RXADC ADC1_SE11
+
 
 
 #endif /* VARS_H_ */
