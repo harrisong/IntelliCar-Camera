@@ -22,7 +22,7 @@ Car::Car()
 		: m_leds{Led(0), Led(1), Led(2), Led(3)}, m_uart(3, 115200),
 		  m_motor1(0), m_motor2(1),
 		  m_cam(CAM_W, CAM_H),
-		  m_gyro(GYROADC, ANGLEADC, RZADC, RXADC, 16350),
+		  m_gyro(GYROADC, ANGLEADC, RZADC, RXADC, SETPOINT),
 		  m_encoder1(FTM1), m_encoder2(FTM2),
 		  m_lcd(true)
 {
@@ -42,9 +42,6 @@ Car::~Car()
 	libutil::UninitDefaultFwriteHandler();
 }
 
-BalanceGyro Car::GetGyro(){
-	return m_gyro;
-}
 
 void Car::GyroRefresh(){
 	m_gyro.Refresh();
@@ -54,7 +51,7 @@ int16 Car::GetGyroOffset(){
 	return m_gyro.GetOffset();
 }
 
-int16 Car::GetRawAngle(){
+uint16 Car::GetRawAngle(){
 	return m_gyro.GetRawAngle();
 }
 
@@ -94,6 +91,18 @@ void Car::MoveMotor(int n, const uint16_t power){
 			m_motor2.SetPower(power);
 			break;
 		}
+}
+
+void Car::MotorDir(int n,const bool flag){
+	switch(n){
+			case 1:
+				m_motor1.SetClockwise(flag);
+				break;
+			case 2:
+				m_motor2.SetClockwise(flag);
+				break;
+			}
+
 }
 
 

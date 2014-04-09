@@ -70,22 +70,26 @@ public:
 	{
 		return m_uart.PeekChar(out_ch);
 	}
-	BalanceGyro GetGyro();
+
 	void GyroRefresh();
 	int16 GetGyroOffset();
 	int16 GetGyroOmega();
-	int16 GetRawAngle();
+	uint16 GetRawAngle();
+
 	BalanceEncoder GetEncoder(int n);
+
 	libsc::Motor GetMotor(int n);
+	void MoveMotor(int, const uint16_t);
+	void MotorDir(int n, const bool flag);
+
 	libsc::Led GetLed(int n);
+
 	Byte* ExpandPixel(const Byte *, const int);
 	void ShootOnceTest();
 	void ShootContinuouslyTest();
 	void DrawCenterPixel(const Byte* src, const int line);
 	int GetPixel(const int x, const int y, const int offset);
 	void PrintCenterLineEquation(float LineCenterX[]);
-
-	void MoveMotor(int, const uint16_t);
 
 private:
 	libsc::Led m_leds[4];

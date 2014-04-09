@@ -21,7 +21,7 @@ BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p2, ADCn_Ch_e p3, ADCn_Ch_e p4,
 
 void BalanceGyro::Refresh(){
 	totalsample++;
-	raw_angle = (int16) adc_once(raw_angle_port, ADC_16bit);
+	raw_angle = adc_once(raw_angle_port, ADC_16bit);
 	raw_offset = raw_angle - raw_setpoint;
 	omega = raw_offset - old_raw_offset;
 	old_raw_offset = raw_offset;

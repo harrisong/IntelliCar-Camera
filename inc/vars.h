@@ -8,10 +8,20 @@
 #ifndef VARS_H_
 #define VARS_H_
 
+//balance pid vars//
+#define balance_kp 5.1f
+#define balance_kd 0.0f
+#define balance_ki 0.0f
+
+#define SETPOINT 30500
+#define DEADZONELOWER 24500
+#define DEADZONEHIGHER 37000
+
 //speed pid vars//
-#define kp 2.0f
-#define kd 0.5f
-#define ki 0f
+#define speed_kp 4.0f
+#define speed_kd 2.0f
+#define speed_ki 0.0f
+#define SPEEDSETPOINT 500
 
 //Gyro Ports//
 #define GYROADC ADC0_SE14

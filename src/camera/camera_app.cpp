@@ -17,8 +17,11 @@
 namespace camera
 {
 CameraApp::CameraApp():
-	_gyro(0), _count(0), Speed1(0), Speed2(0)
+	_gyro(0), _count(0), Speed1(0), Speed2(0),
+	m_balance_pid(SETPOINT, balance_kp, balance_ki, balance_kd),
+	m_speed_pid(SPEEDSETPOINT, speed_kp, speed_ki, speed_kd)
 {
+	libutil::Clock::Init();
 	kalman_filter_init(&gyro_kf, 0.005, 0.5, 0, 1);
 }
 
@@ -35,12 +38,19 @@ void CameraApp::BalanceControl()
 	///PD equation
 	//_gyro = m_car.GetGyroOffset();
 	//kalman_filtering(&gyro_kf, &_gyro, 1);
-	if(m_car.GetGyroOffset() < -6600 || m_car.GetGyroOffset() >  6500) {
+	if(m_car.GetRawAngle() < DEADZONELOWER || m_car.GetRawAngle() >  DEADZONEHIGHER) {
 		Speed1 = Speed2 = 0;
 	}else{
-		Speed1 = Speed2 = kp * m_car.GetGyroOffset() + kd * m_car.GetGyroOmega();
+		//Speed1 = Speed2 = balance_kp * m_car.GetGyroOffset() + balance_kd * m_car.GetGyroOmega();
+		Speed1 = Speed2 = m_balance_pid.Calc(m_car.GetRawAngle());
 	}
-	printf("Raw Angle: %d \t Speed: %d\n\r", m_car.GetRawAngle(), Speed1);
+	if(Speed1 > 0){
+		m_dir1 = m_dir2 = false;
+	}else if(Speed1 < 0){
+		m_dir1 = m_dir2 = true;
+	}
+	//printf("Raw Angle: %d \t Speed: %d\n\r", m_car.GetRawAngle(), Speed1);
+	printf("%d\r", m_car.GetGyroOffset());
 	//DELAY_MS(1000);
 }
 
@@ -54,6 +64,10 @@ void CameraApp::PositionControl(){
 	}else if(Position  - TargetPosition < 0){
 
 	}
+}
+
+void CameraApp::SpeedControl(){
+	//m_speed_pid.Calc( );
 }
 
 void CameraApp::TurnControl(){
@@ -72,8 +86,10 @@ void CameraApp::SendImage(){
 }
 
 void CameraApp::MoveMotor(){
-	m_car.MoveMotor(1,5000);
-	m_car.MoveMotor(2,5000);
+	m_car.MotorDir(1, m_dir1);
+	m_car.MoveMotor(1,abs(Speed1));
+	m_car.MotorDir(2, !m_dir2);
+	m_car.MoveMotor(2,abs(Speed2));
 }
 
 
@@ -88,7 +104,7 @@ void CameraApp::Run()
 		#endif
 		m_car.ShootOnceTest();
 		//TurnControl();
-		//BalanceControl();
+		BalanceControl();
 		//PositionControl();
 		MoveMotor();
 
