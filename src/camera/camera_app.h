@@ -22,6 +22,9 @@ class CameraApp
 public:
 	CameraApp();
 	~CameraApp();
+
+	static __ISR void Pit1Handler();
+
 	void BalanceControl();
 	void PositionControl();
 	void SpeedControl();
@@ -35,11 +38,15 @@ public:
 	void Run();
 
 private:
+	void OnPit();
+
+	static CameraApp *m_instance;
+
 	Car m_car;
 	KF m_gyro_kf;
 	float m_gyro;
 	uint16 n;
-	uint16 n2;
+	float n2;
 	int16_t m_speed1, m_speed2;
 	int32 m_position, m_target_position;
 	int32 m_encoder_speed2;
@@ -47,7 +54,7 @@ private:
 	libutil::PidController<int16_t, int16_t> m_balance_pid;
 	libutil::PidController<int32, int32> m_speed_pid;
 
-	int m_count;
+	int m_count, count;
 };
 
 }

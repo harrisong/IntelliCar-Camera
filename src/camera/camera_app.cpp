@@ -14,10 +14,15 @@
 #include "camera/camera_app.h"
 #include <MK60_gpio.h>
 #include <MK60_adc.h>
+#include <MK60_pit.h>
+#include <vectors.h>
 #include "libutil/string.h"
 
 namespace camera
 {
+
+CameraApp *CameraApp::m_instance = nullptr;
+
 CameraApp::CameraApp():
 	m_gyro(0), m_speed1(0), m_speed2(0),
 	m_balance_pid(SETPOINT, balance_kp, balance_ki, balance_kd),
@@ -26,6 +31,8 @@ CameraApp::CameraApp():
 {
 	libutil::Clock::Init();
 	kalman_filter_init(&m_gyro_kf, 0.005, 0.5, 0, 1);
+
+	m_instance = this;
 }
 
 CameraApp::~CameraApp()
@@ -163,7 +170,7 @@ void CameraApp::BalanceControl()
 
 	///PD equation
 	m_gyro = (float) m_car.GetRawAngle();
-	kalman_filtering(&m_gyro_kf, &m_gyro, 1);
+	//kalman_filtering(&m_gyro_kf, &m_gyro, 1);
 	if(m_car.GetRawAngle() < DEADZONELOWER || m_car.GetRawAngle() >  DEADZONEHIGHER) {
 		m_speed1 = m_speed2 = 0;
 	}else{
@@ -176,7 +183,7 @@ void CameraApp::BalanceControl()
 	}else if(m_speed1 < 0){
 		m_dir1 = m_dir2 = false;
 	}
-	printf("Angle: %d \t Speed2: %d \n\r", m_car.GetRawAngle(), m_speed1);
+	//printf("Angle: %d \t Speed2: %d \n\r", m_car.GetRawAngle(), m_speed1);
 	//m_count++;
 	//DELAY_MS(1000);
 }
@@ -222,51 +229,109 @@ void CameraApp::MoveMotor(){
 
 
 
+__ISR void CameraApp::Pit1Handler()
+{
+	if (m_instance)
+	{
+		m_instance->OnPit();
+	}
+}
+
+
+void CameraApp::OnPit()
+{
+
+	switch(count%2){
+	case 0:
+		m_car.ShootOnceTest();
+		break;
+	case 1:
+
+
+		//printf("Kd: %f \n\r ", n2);
+		//m_balance_pid.SetKd((float)n2);
+		while(gpio_get(PTD15)==0)
+		{
+			//n = adc_once(ADC1_SE4a, ADC_16bit);
+			//n2 = n*20/65535.0;
+			//m_car.GetGyro()->ChangeSetPoint(n2+DEADZONELOWER);
+			//if(n2<1) n2=1;
+			//m_balance_pid.SetKp(n2);
+			//printf("Kp: %f \t \n\r", n2);
+
+			n = adc_once(ADC1_SE4a, ADC_16bit);
+			printf("SetPoint: %d\n\r", n);
+
+
+			m_car.GetGyro()->ChangeSetPoint(n);
+			m_balance_pid.SetSetpoint((int16)n);
+
+
+
+
+			DELAY_MS(300);
+		}
+
+		BalanceControl();
+
+		break;
+	default:
+		break;
+	}
+	count++;
+
+	//DrawCenterPixelAndPrintEquation();
+	//int instruction = GetRotationInstruction();
+	//TurnControl();
+	//PositionControl();
+	MoveMotor();
+
+	DELAY_MS(1);
+	PIT_Flag_Clear(PIT0);
+}
+
 void CameraApp::Run()
 {
-	int count=0;
-	int button_count = 0;
-	/*adc_init(ADC1_SE4a);
-	n = adc_once(ADC1_SE4a, ADC_16bit);
+	count=0;
+	float m_gyro_total=0;
+	adc_init(ADC1_SE4a);
+	//n = adc_once(ADC1_SE4a, ADC_16bit);
 	gpio_init(PTD15, GPI, 1);
+	gpio_init(PTC18, GPI, 1);
 
     while(gpio_get(PTD15)==1)
-    {m_car.GyroRefresh();
-	m_gyro = (float) m_car.GetRawAngle();
-	kalman_filtering(&m_gyro_kf, &m_gyro, 1);
+    {
+
+    }
+
+
+
+    for(int i=0; i<80; i++){
+		m_car.GyroRefresh();
+		m_gyro = (float) m_car.GetRawAngle();
+		kalman_filtering(&m_gyro_kf, &m_gyro, 1);
+		m_gyro_total += m_gyro;
+
+
+    }
+    m_gyro_total/=80;
+    printf("SetPoint: %d\n\r", (uint16) m_gyro_total);
+
+
+
+	 while(gpio_get(PTC18)==1)
+	 {
+
+	 }
 	//m_car.GetGyro()->ChangeSetPoint((uint16)m_gyro);
-	m_balance_pid.SetSetpoint((int32)m_gyro);
-	printf("SetPoint: %d", (uint16) m_gyro);
-    }*/
+	m_balance_pid.SetSetpoint((int32)m_gyro_total);
+
+	SetIsr(PIT1_VECTORn, Pit1Handler);
+	pit_init_ms(PIT1, 50);
+	EnableIsr(PIT1_VECTORn);
+
 	while (true)
-	{
-		switch(count%2){
-		case 0:
-			m_car.ShootOnceTest();
-			break;
-		case 1:
-			//n = adc_once(ADC1_SE4a, ADC_16bit);
-			//n2 = n*(DEADZONEHIGHER - DEADZONELOWER)/65535;
-			//m_car.GetGyro()->ChangeSetPoint(n2+DEADZONELOWER);
-			//m_balance_pid.SetKd(n2);
-
-			BalanceControl();
-
-			break;
-		default:
-			break;
-		}
-		count++;
-
-		//DrawCenterPixelAndPrintEquation();
-		//int instruction = GetRotationInstruction();
-		//TurnControl();
-		//PositionControl();
-		MoveMotor();
-
-
-	}
-
+	{}
 }
 
 }

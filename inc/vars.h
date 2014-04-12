@@ -10,7 +10,8 @@
 
 //balance pid vars//
 #define balance_kp 6.0f
-#define balance_kd 1.40f
+#define balance_kd 1.275f
+//#define balance_kd 0.0f
 #define balance_ki 0.0f
 
 #define SETPOINT 30780
