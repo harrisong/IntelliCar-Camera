@@ -107,7 +107,8 @@ private:
 	BalanceGyro m_gyro;
 	BalanceEncoder m_encoder1;
 	BalanceEncoder m_encoder2;
-	int32 m_current_speed, m_prev_speed, m_delta_speed;
+	int32 m_current_speed1, m_prev_speed1, m_delta_speed1;
+	int32 m_current_speed2, m_prev_speed2, m_delta_speed2;
 	uint16_t m_current_time, m_prev_time, m_delta_time;
 
 	const Byte* src;

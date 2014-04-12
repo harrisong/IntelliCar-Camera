@@ -49,7 +49,7 @@ private:
 	float n2;
 	int16_t m_speed1, m_speed2;
 	int32 m_position, m_target_position;
-	int32 m_encoder_speed2;
+	int32 m_encoder_speed1 ,m_encoder_speed2;
 	bool m_dir1, m_dir2;
 	libutil::PidController<int16_t, int16_t> m_balance_pid;
 	libutil::PidController<int32, int32> m_speed_pid;

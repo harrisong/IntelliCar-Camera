@@ -84,19 +84,33 @@ int32 Car::GetEncoderSpeed(int n){
 	m_delta_time = m_current_time - m_prev_time;
 	switch(n){
 	case 0:
-		m_current_speed = m_encoder1.GetCurrent();
+		m_current_speed1 = m_encoder1.GetCurrent();
+		m_delta_speed1 = m_current_speed1 - m_prev_speed1;
+		m_prev_speed1 = m_current_speed1;
 		break;
 	case 1:
-		m_current_speed = m_encoder2.GetCurrent();
+		m_current_speed2 = m_encoder2.GetCurrent();
+		m_delta_speed2 = m_current_speed2 - m_prev_speed2;
+		m_prev_speed2 = m_current_speed2;
 		break;
 	default:
 		assert(0);
 		break;
 	}
-	m_delta_speed = m_current_speed - m_prev_speed;
-	m_prev_speed = m_current_speed;
+
 	m_prev_time = m_current_time;
-	return m_delta_speed;
+	switch(n){
+	case 0:
+		return m_delta_speed1/m_current_time;
+		break;
+	case 1:
+
+		return m_delta_speed2/m_current_time;
+		break;
+	default:
+		assert(0);
+		break;
+	}
 }
 
 libsc::Motor* Car::GetMotor(int n){
@@ -181,7 +195,7 @@ void Car::ShootOnceTest(){
 	int frame_count = 0;
 	m_cam.ShootOnce();
 
-		/*while (!m_cam.IsImageReady())
+		while (!m_cam.IsImageReady())
 		{}
 
 		src = m_cam.LockBuffer();
@@ -210,7 +224,7 @@ void Car::ShootOnceTest(){
 			prev_time = libutil::Clock::Time();
 			printf("FPS: %d\n", frame_count);
 			frame_count = 0;
-		}*/
+		}
 
 
 }

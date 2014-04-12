@@ -30,7 +30,7 @@ CameraApp::CameraApp():
 	m_count(0)
 {
 	libutil::Clock::Init();
-	kalman_filter_init(&m_gyro_kf, 0.005, 0.5, 0, 1);
+	//kalman_filter_init(&m_gyro_kf, 0.005, 0.5, 0, 1);
 
 	m_instance = this;
 }
@@ -204,9 +204,12 @@ void CameraApp::PositionControl(){
 
 void CameraApp::SpeedControl(){
 	m_count++;
+
+	m_car.GetEncoder(0)->refresh();
 	m_car.GetEncoder(1)->refresh();
-	m_encoder_speed2 =  m_car.GetEncoderSpeed(1);
-	//if(m_count % 5 == 0) printf("Speed: %d\r\n", m_encoder_speed2);
+	m_encoder_speed1 =  m_car.GetEncoderSpeed(0); ////Left Encoder
+	m_encoder_speed2 =  m_car.GetEncoderSpeed(1); ////Right Encoder
+	if(m_count % 100 == 0) printf("Speed1: %d \t Speed2: %d \r\n", m_encoder_speed1, m_encoder_speed2);
 
 	//m_speed_pid.Calc( );
 }
@@ -240,8 +243,8 @@ __ISR void CameraApp::Pit1Handler()
 
 void CameraApp::OnPit()
 {
-
-	switch(count%2){
+	count = 0;
+	switch(count){
 	case 0:
 		m_car.ShootOnceTest();
 		break;
@@ -263,7 +266,7 @@ void CameraApp::OnPit()
 			printf("SetPoint: %d\n\r", n);
 
 
-			m_car.GetGyro()->ChangeSetPoint(n);
+			//m_car.GetGyro()->ChangeSetPoint(n);
 			m_balance_pid.SetSetpoint((int16)n);
 
 
@@ -275,10 +278,13 @@ void CameraApp::OnPit()
 		BalanceControl();
 
 		break;
+	case 2:
+		SpeedControl();
+		break;
 	default:
 		break;
 	}
-	count++;
+	//count++;
 
 	//DrawCenterPixelAndPrintEquation();
 	//int instruction = GetRotationInstruction();
@@ -292,7 +298,7 @@ void CameraApp::OnPit()
 
 void CameraApp::Run()
 {
-	count=0;
+	/*count=0;
 	float m_gyro_total=0;
 	adc_init(ADC1_SE4a);
 	//n = adc_once(ADC1_SE4a, ADC_16bit);
@@ -309,7 +315,7 @@ void CameraApp::Run()
     for(int i=0; i<80; i++){
 		m_car.GyroRefresh();
 		m_gyro = (float) m_car.GetRawAngle();
-		kalman_filtering(&m_gyro_kf, &m_gyro, 1);
+		//kalman_filtering(&m_gyro_kf, &m_gyro, 1);
 		m_gyro_total += m_gyro;
 
 
@@ -324,10 +330,10 @@ void CameraApp::Run()
 
 	 }
 	//m_car.GetGyro()->ChangeSetPoint((uint16)m_gyro);
-	m_balance_pid.SetSetpoint((int32)m_gyro_total);
-
+	//m_balance_pid.SetSetpoint((int32)m_gyro_total);
+	 */
 	SetIsr(PIT1_VECTORn, Pit1Handler);
-	pit_init_ms(PIT1, 50);
+	pit_init_ms(PIT1, 1000);
 	EnableIsr(PIT1_VECTORn);
 
 	while (true)
