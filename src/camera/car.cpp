@@ -10,6 +10,7 @@
 #include <log.h>
 #include "camera/car.h"
 #include <libutil/misc.h>
+#include <assert.h>
 
 
 
@@ -23,7 +24,8 @@ Car::Car()
 		  m_motor1(0), m_motor2(1),
 		  m_cam(CAM_W, CAM_H),
 		  m_gyro(GYROADC, ANGLEADC, RZADC, RXADC, SETPOINT),
-		  m_encoder1(FTM1), m_encoder2(FTM2),
+		  m_encoder1(0),
+		  m_encoder2(1),
 		  m_lcd(true)
 {
 	libutil::InitDefaultFwriteHandler(&m_uart);
@@ -43,6 +45,10 @@ Car::~Car()
 }
 
 
+BalanceGyro* Car::GetGyro(){
+	return &m_gyro;
+}
+
 void Car::GyroRefresh(){
 	m_gyro.Refresh();
 }
@@ -59,35 +65,60 @@ int16 Car::GetGyroOmega(){
 	return m_gyro.GetOmega();
 }
 
-BalanceEncoder Car::GetEncoder(int n){
+BalanceEncoder* Car::GetEncoder(int n){
 	switch(n){
-	case 1:
-		return m_encoder1;
+	case 0:
+		return &m_encoder1;
 		break;
-	case 2:
-		return m_encoder2;
+	case 1:
+		return &m_encoder2;
+		break;
+	default:
+		assert(0);
 		break;
 	}
 }
 
-libsc::Motor Car::GetMotor(int n){
+int32 Car::GetEncoderSpeed(int n){
+	m_current_time = libutil::Clock::Time();
+	m_delta_time = m_current_time - m_prev_time;
 	switch(n){
-	case 1:
-	default:
-		return m_motor1;
+	case 0:
+		m_current_speed = m_encoder1.GetCurrent();
 		break;
-	case 2:
-		return m_motor2;
+	case 1:
+		m_current_speed = m_encoder2.GetCurrent();
+		break;
+	default:
+		assert(0);
+		break;
+	}
+	m_delta_speed = m_current_speed - m_prev_speed;
+	m_prev_speed = m_current_speed;
+	m_prev_time = m_current_time;
+	return m_delta_speed;
+}
+
+libsc::Motor* Car::GetMotor(int n){
+	switch(n){
+	case 0:
+		return &m_motor1;
+		break;
+	case 1:
+		return &m_motor2;
+		break;
+	default:
+		assert(0);
 		break;
 	}
 }
 
 void Car::MoveMotor(int n, const uint16_t power){
 	switch(n){
-		case 1:
+		case 0:
 			m_motor1.SetPower(power);
 			break;
-		case 2:
+		case 1:
 			m_motor2.SetPower(power);
 			break;
 		}
@@ -95,10 +126,10 @@ void Car::MoveMotor(int n, const uint16_t power){
 
 void Car::MotorDir(int n,const bool flag){
 	switch(n){
-			case 1:
+			case 0:
 				m_motor1.SetClockwise(flag);
 				break;
-			case 2:
+			case 1:
 				m_motor2.SetClockwise(flag);
 				break;
 			}
@@ -106,19 +137,19 @@ void Car::MotorDir(int n,const bool flag){
 }
 
 
-libsc::Led Car::GetLed(int n)
+libsc::Led* Car::GetLed(int n)
 {
-	return m_leds[n];
+	return &m_leds[n];
 }
 
-libsc::Lcd Car::GetLcd()
+libsc::Lcd* Car::GetLcd()
 {
-	return m_lcd;
+	return &m_lcd;
 }
 
-libsc::UartDevice Car::GetBluetooth()
+libsc::UartDevice* Car::GetBluetooth()
 {
-	return m_uart;
+	return &m_uart;
 }
 
 const Byte* Car::GetImage()
@@ -149,8 +180,7 @@ void Car::ShootOnceTest(){
 	libutil::Clock::ClockInt prev_time = libutil::Clock::Time();
 	int frame_count = 0;
 	m_cam.ShootOnce();
-	//while (true)
-	//{
+
 		while (!m_cam.IsImageReady())
 		{}
 
@@ -168,12 +198,7 @@ void Car::ShootOnceTest(){
 			//uart.SendChar('\n');
 			//delete[] buf;
 		}
-/*
-		for(int i=0; i<120; i++)
-		{
-			DrawCenterPixel(src, i);
-		}
-*/
+
 	   // printCenterLineEquation(LineCenterXSet);
 
 		m_cam.UnlockBuffer();
@@ -187,8 +212,7 @@ void Car::ShootOnceTest(){
 			frame_count = 0;
 		}
 
-		//m_cam.ShootOnce();
-	//}
+
 }
 
 }

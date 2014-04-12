@@ -20,6 +20,7 @@
 #include <libsc/com/led.h>
 #include <libsc/com/uart_device.h>
 #include <libsc/com/motor.h>
+#include <libsc/com/encoder.h>
 #include "balance_gyro.h"
 #include "balance_encoder.h"
 
@@ -72,23 +73,25 @@ public:
 		return m_uart.PeekChar(out_ch);
 	}
 
+	BalanceGyro* GetGyro();
 	void GyroRefresh();
 	int16 GetGyroOffset();
 	int16 GetGyroOmega();
 	uint16 GetRawAngle();
 
-	BalanceEncoder GetEncoder(int n);
+	BalanceEncoder* GetEncoder(int n);
+	int32 GetEncoderSpeed(int);
 
-	libsc::Motor GetMotor(int n);
+	libsc::Motor* GetMotor(int n);
 	void MoveMotor(int, const uint16_t);
 	void MotorDir(int n, const bool flag);
 
-	libsc::Led GetLed(int n);
+	libsc::Led* GetLed(int n);
 
 	Byte* ExpandPixel(const int);
 	
-	libsc::Lcd GetLcd();
-	libsc::UartDevice GetBluetooth();
+	libsc::Lcd* GetLcd();
+	libsc::UartDevice* GetBluetooth();
 
 
 	void ShootOnceTest();
@@ -104,6 +107,9 @@ private:
 	BalanceGyro m_gyro;
 	BalanceEncoder m_encoder1;
 	BalanceEncoder m_encoder2;
+	int32 m_current_speed, m_prev_speed, m_delta_speed;
+	uint16_t m_current_time, m_prev_time, m_delta_time;
+
 	const Byte* src;
 
 

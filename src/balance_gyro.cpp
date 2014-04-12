@@ -35,6 +35,10 @@ void BalanceGyro::Refresh(){
 	accel = sqrt(pow(Rx,2) + pow(Rz,2));*/
 }
 
+void BalanceGyro::ChangeSetPoint(uint16 n){
+	raw_setpoint = n;
+}
+
 float BalanceGyro::get_raw_gyro(){
 	return raw_gyro;
 }

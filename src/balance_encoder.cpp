@@ -6,14 +6,27 @@
  */
 #include <balance_encoder.h>
 
-BalanceEncoder::BalanceEncoder(FTMn_e n){
-	ftmn = n;
-	total=0,direction=0,current=0;
+BalanceEncoder::BalanceEncoder(int n):
+	total(0), direction(0), current(0)
+{
+	libutil::Clock::Init();
+	switch(n){
+	case 0:
+		ftmn = FTM1;
+		break;
+	case 1:
+		ftmn = FTM2;
+		break;
+	default:
+		assert(0);
+		break;
+	}
+
 	FTM_QUAD_Init(ftmn);
 }
 
 void BalanceEncoder::refresh(){
-	int16 value = FTM_QUAD_get(ftmn);
+	int32 value = (int32) FTM_QUAD_get(ftmn);
 
 	switch (ftmn){
 		case FTM1:
@@ -26,23 +39,26 @@ void BalanceEncoder::refresh(){
 
 	current = value;
 	total += value;
-	reset();
+	if(value == 32767) Reset();
 	if(current > 0) direction=1;
 	else if(current < 0) direction = -1;
+	prev = current;
 }
 
-int16 BalanceEncoder::getcurrent(){
+int16 BalanceEncoder::GetCurrent(){
 	return current;
 }
 
-int16 BalanceEncoder::GetTotal(){
+int32 BalanceEncoder::GetTotal(){
 	return total;
 }
 
-int16 BalanceEncoder::getdirection(){
+int16 BalanceEncoder::GetDirection(){
 	return direction;
 }
 
-void BalanceEncoder::reset(){
+
+
+void BalanceEncoder::Reset(){
 	FTM_QUAD_clean(ftmn);
 }

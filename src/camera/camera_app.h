@@ -27,7 +27,6 @@ public:
 	void SpeedControl();
 	void TurnControl();
 	void MoveMotor();
-	void SendImage();
 
 	void DrawCenterPixelAndPrintEquation();
 	int GetRotationInstruction();
@@ -37,14 +36,18 @@ public:
 
 private:
 	Car m_car;
-	KF gyro_kf;
-	float _gyro;
-	int _count;
-	int16 Speed1, Speed2;
-	int32 Position, TargetPosition;
+	KF m_gyro_kf;
+	float m_gyro;
+	uint16 n;
+	uint16 n2;
+	int16_t m_speed1, m_speed2;
+	int32 m_position, m_target_position;
+	int32 m_encoder_speed2;
 	bool m_dir1, m_dir2;
-	libutil::PidController<uint16, int16> m_balance_pid;
-	libutil::PidController<uint16, int16> m_speed_pid;
+	libutil::PidController<int16_t, int16_t> m_balance_pid;
+	libutil::PidController<int32, int32> m_speed_pid;
+
+	int m_count;
 };
 
 }

@@ -40,6 +40,7 @@ public:
 	int16 GetOffset();
 	int16 GetOmega();
 	float get_accel();
+	void ChangeSetPoint(uint16);
 
 
 };

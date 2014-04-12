@@ -6,6 +6,9 @@
  */
 #include <mini_common.h>
 #include <MK60_FTM.h>
+#include <libutil/clock.h>
+#include <assert.h>
+
 #ifndef BALANCE_ENCODERS_H_
 #define BALANCE_ENCODERS_H_
 
@@ -14,14 +17,16 @@
 class BalanceEncoder{
 	private:
 		FTMn_e ftmn;
-		int16 total,direction,current;
+		int16 direction,current, prev;
+		uint32 total;
 	public:
-		BalanceEncoder(FTMn_e);
+		BalanceEncoder(int);
 		void refresh();
-		int16 getcurrent();
-		int16 GetTotal();
-		int16 getdirection();
-		void reset();
+		int16 GetCurrent();
+		int32 GetTotal();
+		int16 GetDirection();
+
+		void Reset();
 };
 
 
