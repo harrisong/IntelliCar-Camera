@@ -25,7 +25,7 @@ CameraApp::CameraApp():
 	m_count(0)
 {
 	libutil::Clock::Init();
-	kalman_filter_init(&m_gyro_kf, 0.005, 0.5, 0, 1);
+	kalman_filter_init(&m_gyro_kf, 0.05, 0.5, 0, 1);
 }
 
 CameraApp::~CameraApp()
@@ -176,9 +176,9 @@ void CameraApp::BalanceControl()
 	}else if(m_speed1 < 0){
 		m_dir1 = m_dir2 = false;
 	}
-	printf("Angle: %d \t Speed2: %d \n\r", m_car.GetRawAngle(), m_speed1);
+	printf("%d\n\r", m_car.GetRawAngle());
 	//m_count++;
-	//DELAY_MS(1000);
+
 }
 
 void CameraApp::PositionControl(){
@@ -224,13 +224,24 @@ void CameraApp::MoveMotor(){
 
 void CameraApp::Run()
 {
+
 	int count=0;
 	int button_count = 0;
-	/*adc_init(ADC1_SE4a);
-	n = adc_once(ADC1_SE4a, ADC_16bit);
+	adc_init(ADC1_SE4a);
+
 	gpio_init(PTD15, GPI, 1);
 
-    while(gpio_get(PTD15)==1)
+
+
+	/*while(gpio_get(PTD15)==1){
+		//n = adc_once(ADC1_SE4a, ADC_16bit);
+		//m_balance_pid.SetSetpoint((int16)n*(DEADZONEHIGHER-DEADZONELOWER)/65535);
+
+	}
+	while(gpio_get(PTD15)==0);*/
+
+	while(gpio_get(PTD15)==1);
+    /*while(gpio_get(PTD15)==0)
     {m_car.GyroRefresh();
 	m_gyro = (float) m_car.GetRawAngle();
 	kalman_filtering(&m_gyro_kf, &m_gyro, 1);
@@ -240,6 +251,7 @@ void CameraApp::Run()
     }*/
 	while (true)
 	{
+		count = 1;
 		switch(count%2){
 		case 0:
 			m_car.ShootOnceTest();
@@ -249,14 +261,21 @@ void CameraApp::Run()
 			//n2 = n*(DEADZONEHIGHER - DEADZONELOWER)/65535;
 			//m_car.GetGyro()->ChangeSetPoint(n2+DEADZONELOWER);
 			//m_balance_pid.SetKd(n2);
-
+			while(gpio_get(PTD15)==0){
+			n = adc_once(ADC1_SE4a, ADC_16bit);
+			m_balance_pid.SetSetpoint((int16)n*(DEADZONEHIGHER-DEADZONELOWER)/65535);
+			printf("SP:%d\n\r", n*(DEADZONEHIGHER-DEADZONELOWER)/65535);
+			}
 			BalanceControl();
 
+			break;
+		case 2:
+			SpeedControl();
 			break;
 		default:
 			break;
 		}
-		count++;
+		//count++;
 
 		//DrawCenterPixelAndPrintEquation();
 		//int instruction = GetRotationInstruction();

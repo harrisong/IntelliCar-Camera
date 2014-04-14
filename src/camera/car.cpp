@@ -80,6 +80,7 @@ BalanceEncoder* Car::GetEncoder(int n){
 }
 
 int32 Car::GetEncoderSpeed(int n){
+	int32 m_current_speed, m_prev_speed, m_delta_speed;
 	m_current_time = libutil::Clock::Time();
 	m_delta_time = m_current_time - m_prev_time;
 	switch(n){

@@ -9,11 +9,11 @@
 #define VARS_H_
 
 //balance pid vars//
-#define balance_kp 7.000f
-#define balance_kd 0.5f
+#define balance_kp 3.5f
+#define balance_kd 1.5f
 #define balance_ki 0.0f
 
-#define SETPOINT 30780
+#define SETPOINT 25376
 #define DEADZONELOWER 20400
 #define DEADZONEHIGHER 39000
 
