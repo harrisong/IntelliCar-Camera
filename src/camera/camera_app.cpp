@@ -19,10 +19,15 @@
 namespace camera
 {
 CameraApp::CameraApp():
-	m_gyro(0), m_speed1(0), m_speed2(0),
+	m_gyro(0), m_balance_speed1(0), m_balance_speed2(0),
+	m_speed_speed1(0), m_speed_speed2(0),
 	m_balance_pid(SETPOINT, balance_kp, balance_ki, balance_kd),
 	m_speed_pid(SPEEDSETPOINT, speed_kp, speed_ki, speed_kd),
-	m_count(0)
+	m_position_pid(POSITIONSETPOINT, position_kp, position_ki, position_kd),
+	m_count(0),
+	m_total_speed1(0), m_total_speed2(0),
+	current_time(0), prev_time(0), delta_time(0),
+	m_real_current_speed(0), m_real_prev_speed(0)
 {
 	libutil::Clock::Init();
 	kalman_filter_init(&m_gyro_kf, 0.05, 0.5, 0, 1);
@@ -165,43 +170,54 @@ void CameraApp::BalanceControl()
 	m_gyro = (float) m_car.GetRawAngle();
 	kalman_filtering(&m_gyro_kf, &m_gyro, 1);
 	if(m_car.GetRawAngle() < DEADZONELOWER || m_car.GetRawAngle() >  DEADZONEHIGHER) {
-		m_speed1 = m_speed2 = 0;
+		m_balance_speed1 = m_balance_speed2 = 0;
 	}else{
 		//Speed1 = Speed2 = balance_kp * m_car.GetGyroOffset() + balance_kd * m_car.GetGyroOmega();
-		m_speed1 = m_speed2 = m_balance_pid.Calc( (int16_t) m_gyro );
+		m_balance_speed1 = m_balance_speed2 = m_balance_pid.Calc( (int16_t) m_gyro );
 	}
 
-	if(m_speed1 > 0){
-		m_dir1 = m_dir2 = true;
-	}else if(m_speed1 < 0){
-		m_dir1 = m_dir2 = false;
-	}
-	printf("%d\n\r", m_car.GetRawAngle());
+	//printf("Angle:%d, Speed:%d\n\r", m_car.GetRawAngle(), m_speed1);
+	//DELAY_MS(1);
 	//m_count++;
 
 }
 
 void CameraApp::PositionControl(){
 	///Get values from encoders///
-	//m_car.GetEncoder(1)->refresh();
-	m_car.GetEncoder(1)->refresh();
-	//m_position = (m_car.GetEncoder(1)->GetTotal() + m_car.GetEncoder(2)->GetTotal())/2;
-	m_position = m_car.GetEncoder(1)->GetTotal();
-
-	if(m_position - m_target_position > 0){
-
-	}else if(m_position  - m_target_position < 0){
-
-	}
+	encoder1 = FTM_QUAD_get(FTM1);
+	encoder2 = -FTM_QUAD_get(FTM2);
+	printf("Encoder: %d\n\r", (encoder2+encoder1)/2);
+	int16_t tempspeed = m_position_pid.Calc((encoder2+encoder1)/2);
+	//m_total_speed1 += tempspeed;
+	//m_total_speed2 += tempspeed;
 }
 
 void CameraApp::SpeedControl(){
-	m_count++;
-	m_car.GetEncoder(1)->refresh();
-	m_encoder_speed2 =  m_car.GetEncoderSpeed(1);
-	//if(m_count % 5 == 0) printf("Speed: %d\r\n", m_encoder_speed2);
+	current_time = libutil::Clock::Time();
+	delta_time = current_time - prev_time;
+	static int16_t tempspeed;
 
-	//m_speed_pid.Calc( );
+	if(delta_time >= 100){
+		prev_time = current_time;
+	//m_real_current_speed = (FTM_QUAD_get(FTM1) + (-FTM_QUAD_get(FTM2)))/2;
+	m_real_current_speed = FTM_QUAD_get(FTM1);
+	//int16_t m_real_delta_speed = m_real_current_speed;
+	FTM_QUAD_clean(FTM1);
+	//m_real_prev_speed = m_real_current_speed;
+
+
+	//int16_t tempspeed = speed_kp * (SPEEDSETPOINT - m_real_current_speed);
+	tempspeed = m_speed_pid.Calc(m_real_current_speed);
+	//int16_t tempspeed = 4000;
+
+
+	//printf("Total Speed: %d \t Output Speed: %d \t Encoder Feedback: %d\n\r", m_total_speed1, tempspeed, m_real_current_speed);
+	//printf("Encoder Feedback: %d\n\r",  m_real_current_speed);
+	}
+	m_speed_speed1 = -tempspeed;
+	m_speed_speed2 = -tempspeed;
+	//DELAY_MS(5);
+
 }
 
 void CameraApp::TurnControl(){
@@ -210,12 +226,22 @@ void CameraApp::TurnControl(){
 }
 
 void CameraApp::MoveMotor(){
-		m_car.MotorDir(0, !m_dir1); 			////Right Motor - True Backward  -  False Forward
-		m_car.MoveMotor(0,(uint16_t) abs(m_speed1));
+		//printf("Total Speed: %d \t Balance Output Speed: %d \t Encoder Output Speed: %d \t Encoder Feedback: %d\n\r", m_total_speed1, m_balance_speed1, m_speed_speed1, m_real_current_speed);
+		m_total_speed1 = m_balance_speed1 + m_speed_speed1;
+		m_total_speed2 = m_balance_speed2 + m_speed_speed2;
+
+		if(m_total_speed1 > 0){
+			m_dir1 = m_dir2 = true;
+		}else if(m_total_speed1 < 0){
+			m_dir1 = m_dir2 = false;
+		}
+
+		m_car.MotorDir(0, m_dir1); 			////Right Motor - True Backward  -  False Forward
+		m_car.MoveMotor(0,(uint16_t) abs(m_total_speed1));
 		//m_car.MoveMotor(0,5000);
 
-		m_car.MotorDir(1, m_dir2);			////Left Motor - False Backward  -  True Forward
-	    m_car.MoveMotor(1,(uint16_t) abs(m_speed2));
+		m_car.MotorDir(1, !m_dir2);			////Left Motor - False Backward  -  True Forward
+	    m_car.MoveMotor(1,(uint16_t) abs(m_total_speed2));
 		//m_car.MoveMotor(1,5000);
 
 }
@@ -231,58 +257,63 @@ void CameraApp::Run()
 
 	gpio_init(PTD15, GPI, 1);
 
-
-
-	/*while(gpio_get(PTD15)==1){
-		//n = adc_once(ADC1_SE4a, ADC_16bit);
-		//m_balance_pid.SetSetpoint((int16)n*(DEADZONEHIGHER-DEADZONELOWER)/65535);
-
-	}
-	while(gpio_get(PTD15)==0);*/
-
 	while(gpio_get(PTD15)==1);
-    /*while(gpio_get(PTD15)==0)
-    {m_car.GyroRefresh();
-	m_gyro = (float) m_car.GetRawAngle();
-	kalman_filtering(&m_gyro_kf, &m_gyro, 1);
-	//m_car.GetGyro()->ChangeSetPoint((uint16)m_gyro);
-	m_balance_pid.SetSetpoint((int32)m_gyro);
-	printf("SetPoint: %d", (uint16) m_gyro);
-    }*/
+
+	uint16_t p_time=0, c_time=0;
+	float kp = balance_kp;
 	while (true)
 	{
-		count = 1;
-		switch(count%2){
-		case 0:
-			m_car.ShootOnceTest();
-			break;
-		case 1:
-			//n = adc_once(ADC1_SE4a, ADC_16bit);
-			//n2 = n*(DEADZONEHIGHER - DEADZONELOWER)/65535;
-			//m_car.GetGyro()->ChangeSetPoint(n2+DEADZONELOWER);
-			//m_balance_pid.SetKd(n2);
-			while(gpio_get(PTD15)==0){
-			n = adc_once(ADC1_SE4a, ADC_16bit);
-			m_balance_pid.SetSetpoint((int16)n*(DEADZONEHIGHER-DEADZONELOWER)/65535);
-			printf("SP:%d\n\r", n*(DEADZONEHIGHER-DEADZONELOWER)/65535);
+		c_time = libutil::Clock::Time();
+		if(libutil::Clock::TimeDiff(c_time,p_time)>=1){
+			//m_total_speed1 = m_total_speed2 = 0;
+			p_time = c_time;
+			switch(count%2){
+			case 0:
+				//m_car.ShootOnceTest();
+				break;
+			case 1:
+			{
+				//n = adc_once(ADC1_SE4a, ADC_16bit);
+				//n2 = n*(DEADZONEHIGHER - DEADZONELOWER)/65535;
+				//m_car.GetGyro()->ChangeSetPoint(n2+DEADZONELOWER);
+				//m_balance_pid.SetKd(n2);
+
+				while(gpio_get(PTD15)==0){
+				n = adc_once(ADC1_SE4a, ADC_16bit);
+				m_balance_pid.SetSetpoint((int16)n*(DEADZONEHIGHER-DEADZONELOWER)/65535+DEADZONELOWER);
+				printf("SP:%d\n\r", n*(DEADZONEHIGHER-DEADZONELOWER)/65535+DEADZONELOWER);
+				}
+				char ch;
+				if(m_car.GetBluetooth()->PeekChar(&ch)){
+					if(ch=='1'){
+						kp += 0.01;
+						m_balance_pid.SetKp(kp);
+					}else if(ch=='2'){
+						kp -= 0.01;
+						m_balance_pid.SetKp(kp);
+					}
+					printf("Kp:%f\n\r",kp);
+				}
+
+				BalanceControl();
+				SpeedControl();
+
+				break;
 			}
-			BalanceControl();
 
-			break;
-		case 2:
-			SpeedControl();
-			break;
-		default:
-			break;
+			default:
+				break;
+			}
+			//if(count%4==3)
+				//SpeedControl();
+			count++;
+
+			//DrawCenterPixelAndPrintEquation();
+			//int instruction = GetRotationInstruction();
+			//TurnControl();
+			//PositionControl();
+			MoveMotor();
 		}
-		//count++;
-
-		//DrawCenterPixelAndPrintEquation();
-		//int instruction = GetRotationInstruction();
-		//TurnControl();
-		//PositionControl();
-		MoveMotor();
-
 
 	}
 

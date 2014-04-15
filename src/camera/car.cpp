@@ -29,13 +29,13 @@ Car::Car()
 		  m_lcd(true)
 {
 	libutil::InitDefaultFwriteHandler(&m_uart);
-	//m_uart.StartReceive();
+	m_uart.StartReceive();
 	while (!m_cam.Init())
 	{
 		LOG_E("Camera fucked up!!!!!");
 		DELAY_MS(250);
 	}
-	//camera.ShootContinuously();
+	m_cam.ShootContinuously();
 	m_lcd.Clear(Lcd::GetRgb565(0x33, 0xB5, 0xE5));
 }
 
@@ -182,7 +182,7 @@ void Car::ShootOnceTest(){
 	int frame_count = 0;
 	m_cam.ShootOnce();
 
-		while (!m_cam.IsImageReady())
+		if (!m_cam.IsImageReady())
 		{}
 
 		src = m_cam.LockBuffer();
@@ -190,7 +190,7 @@ void Car::ShootOnceTest(){
 		//uart.SendChar(255);
 		//uart.SendChar(1);
 		//uart.SendChar(0);
-		for (int i = CAM_H - 1; i >= 0; --i)
+		/*for (int i = CAM_H - 1; i >= 0; --i)
 		{
 			const Byte *buf = ExpandPixel(i);
 			//uart.SendBuffer(buf, CAM_W);
@@ -198,12 +198,12 @@ void Car::ShootOnceTest(){
 			m_lcd.DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
 			//uart.SendChar('\n');
 			//delete[] buf;
-		}
+		}*/
 
 	   // printCenterLineEquation(LineCenterXSet);
 
 		m_cam.UnlockBuffer();
-		++frame_count;
+		/*++frame_count;
 		//uart.SendStr("\n\n\n");
 
 		if (libutil::Clock::TimeDiff(libutil::Clock::Time(), prev_time) >= 1000)
@@ -211,7 +211,7 @@ void Car::ShootOnceTest(){
 			prev_time = libutil::Clock::Time();
 			printf("FPS: %d\n", frame_count);
 			frame_count = 0;
-		}
+		}*/
 
 
 }
