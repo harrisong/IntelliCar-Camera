@@ -12,19 +12,19 @@
 /*#define balance_kp 7.7f
 #define balance_kd 0.0f
 #define balance_ki 0.0f*/
-#define balance_kp 30.0f
-#define balance_kd 3.0f
+#define balance_kp 15.0f
+#define balance_kd 1.0f
 #define balance_ki 0.0f
 
-#define SETPOINT 25361
+#define SETPOINT 25360
 #define DEADZONELOWER 20000
 #define DEADZONEHIGHER 35700
 
 //speed pid vars//
 #define speed_kp 20.0f
 #define speed_kd 0.0f
-#define speed_ki 4.07f
-#define SPEEDSETPOINT 0
+#define speed_ki 2.0f
+#define SPEEDSETPOINT 250
 
 
 #define position_kp 0.7f
