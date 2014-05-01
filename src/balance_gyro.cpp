@@ -5,34 +5,103 @@
  *      Author: harrison
  */
 #include <balance_gyro.h>
+#include <FIRE_MK60_conf.h>
+#include <float.h>
 
-BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p2, ADCn_Ch_e p3, ADCn_Ch_e p4, int16 sp):
-	raw_gyro_port(p1), raw_angle_port(p2), raw_z_port(p3), raw_x_port(p4),
+#define Q_angle	2.7f //0.28  //0.091500963 //gyro vari
+#define	Q_bias	0.0000107f      //0.003  //0.004 //gyro shift
+#define	R_measure	0.22f //0.000833 //0.000384534 //accel vari
+
+float  angle = 0; // Reset the angle
+float  bias = 0; // Reset bias
+float 	innoY;
+float 	S;
+float 	P[2][2];
+float   K[2];
+float		 rate;
+
+
+
+float getAngle(float newAngle, float newRate, float dt) {
+
+       float rate = newRate - bias;
+				P[0][0] = 0;
+				P[0][1] = 0;
+				P[1][0] = 0;
+				P[1][1] = 0;
+       angle += dt * rate;
+       // Update estimation error covariance - Project the error covariance ahead
+       P[0][0] += dt * (dt*P[1][1] - P[0][1] - P[1][0] + Q_angle);
+       P[0][1] -= dt * P[1][1];
+       P[1][0] -= dt * P[1][1];
+       P[1][1] += Q_bias * dt;
+			 // Discrete Kalman filter measurement update equations - Measurement Update ("Correct")
+       S = P[0][0] + R_measure;
+       // Calculate Kalman gain - Compute the Kalman gain
+			 K[0] = P[0][0] / S;
+       K[1] = P[1][0] / S;
+       // Calculate angle and bias - Update estimate with measurement zk (newAngle)
+       innoY = newAngle - angle;
+       angle += K[0] * innoY;
+       bias += K[1] * innoY;
+       // Calculate estimation error covariance - Update the error covariance
+       P[0][0] -= K[0] * P[0][0];
+       P[0][1] -= K[0] * P[0][1];
+       P[1][0] -= K[1] * P[0][0];
+       P[1][1] -= K[1] * P[0][1];
+
+			return angle;
+    }
+
+
+BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p3, ADCn_Ch_e p4, int16 sp):
+	raw_gyro_port(p1), raw_z_port(p4), raw_x_port(p3),
 	raw_setpoint(sp), raw_gyro(0), raw_offset(0), old_raw_offset(0), omega(0),
-	Vmax(3.3), Adc16max(65535), Gyrozero(1.23), Gyroscale(0.00067), Accelzero(1.65), Accelscale(0.4785) {
+	raw_gyro_angle(0),
+	raw_accel_angle(0),
+	Rx(0), Rz(0),
+	Vmax(3.3), Adc16max(65535), Gyrozero(1.796), Gyroscale(0.0010), Accelzero(1.48), Accelscale(0.206) {
 
-	//adc_init(raw_gyro_port);
-	adc_init(raw_angle_port);
-	//adc_init(raw_z_port);
-	//adc_init(raw_x_port);
+	adc_init(ADC0_SE14);
+	//adc_init(raw_angle_port);
+	//adc_init(ADC1_SE4a);
+	adc_init(ADC0_SE15);
 	
 	Refresh();
+
 }
 
 void BalanceGyro::Refresh(){
+	c_time = libutil::Clock::Time();
+	d_time = libutil::Clock::TimeDiff(c_time,p_time);
+
 	totalsample++;
-	raw_angle = adc_once(raw_angle_port, ADC_16bit);
-	raw_offset = raw_angle - raw_setpoint;
-	omega = raw_offset - old_raw_offset;
-	old_raw_offset = raw_offset;
+	//raw_angle = adc_once(raw_angle_port, ADC_16bit);
+	//raw_offset = raw_angle - raw_setpoint;
+	//omega = raw_offset - old_raw_offset;
+	//old_raw_offset = raw_offset;
 
 	//raw_gyro = ((int16) adc_once(raw_gyro_port, ADC_16bit) + raw_gyro)/totalsample;
 	////Use Kalman filter now, no need values for complementary filter////
-	/*raw_gyro = (adc_once(raw_gyro_port, ADC_16bit) * Vmax / Adc16max - Gyrozero) / Gyroscale;
-	
-	Rx =  (adc_once(raw_x_port, ADC_16bit) * Vmax / Adc16max - Accelzero) / Accelscale;
-	Rz =  (adc_once(raw_z_port, ADC_16bit) * Vmax / Adc16max - Accelzero) / Accelscale;
-	accel = sqrt(pow(Rx,2) + pow(Rz,2));*/
+
+	if(d_time>=20){
+
+		p_time = c_time;
+		raw_gyro = ((float) adc_once(ADC0_SE14, ADC_10bit) * Vmax / 1023 - Gyrozero) / 0.00067 ;
+		Rz =  ((float) adc_once(ADC0_SE15, ADC_10bit) * Vmax/ 1023 - Accelzero) / 0.8;
+
+		raw_gyro_angle += raw_gyro*20/1000;
+		raw_accel_angle = acos(Rz) * 180 / 3.14;
+		kalman_angle = getAngle(raw_accel_angle, raw_gyro, 0.02);
+		printf("%f \t %f \t %f \t %f\n\r", raw_accel_angle , raw_gyro_angle, raw_gyro, kalman_angle);
+
+	}
+	count++;
+
+
+	//printf("%f, %f\n\r", xangle/3.14*180, raw_gyro);
+	//DELAY_MS(100);
+
 }
 
 void BalanceGyro::ChangeSetPoint(uint16 n){
@@ -43,19 +112,19 @@ float BalanceGyro::get_raw_gyro(){
 	return raw_gyro;
 }
 
-int16 BalanceGyro::GetRawAngle(){
-	return raw_angle;
+float BalanceGyro::GetRawAngle(){
+	return raw_gyro_angle;
 }
 
-int16 BalanceGyro::GetOffset(){
+float BalanceGyro::GetOffset(){
 	return raw_offset;
 }
 
-int16 BalanceGyro::GetOmega(){
-	return omega;
+float BalanceGyro::GetOmega(){
+	return raw_gyro;
 }
 
 float BalanceGyro::get_accel(){
-	return accel;
+	return R;
 }
 

@@ -11,16 +11,19 @@
 #include <mini_common.h>
 #include <MK60_adc.h>
 #include <math.h>
+#include <cstdint>
+#include <libutil/clock.h>
 
 
 
 class BalanceGyro{
 private:
 	ADCn_Ch_e raw_gyro_port, raw_angle_port, raw_z_port, raw_x_port;
-	float raw_gyro;
-	uint16 raw_angle, raw_setpoint;
-	float Rz, Rx, accel;
-	int16 raw_offset, old_raw_offset, omega;
+	float raw_gyro, raw_gyro_angle, raw_setpoint;
+	float raw_accel_angle;
+	float kalman_angle;
+	float Rz, Rx, R;
+	float raw_offset, old_raw_offset, omega;
 
 	int totalsample;
 	
@@ -30,15 +33,17 @@ private:
 	float Gyroscale;
 	float Accelzero;
 	float Accelscale;
+	int count = 0;
+	uint16_t c_time, p_time, d_time;
 
 
 public:
-	BalanceGyro(ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, int16);
+	BalanceGyro(ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, int16);
 	void Refresh();
 	float get_raw_gyro();
-	int16 GetRawAngle();
-	int16 GetOffset();
-	int16 GetOmega();
+	float GetRawAngle();
+	float GetOffset();
+	float GetOmega();
 	float get_accel();
 	void ChangeSetPoint(uint16);
 

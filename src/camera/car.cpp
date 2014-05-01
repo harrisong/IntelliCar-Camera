@@ -23,13 +23,13 @@ Car::Car()
 		: m_leds{Led(0), Led(1), Led(2), Led(3)}, m_uart(3, 115200),
 		  m_motor1(0), m_motor2(1),
 		  m_cam(CAM_W, CAM_H),
-		  m_gyro(GYROADC, ANGLEADC, RZADC, RXADC, SETPOINT),
+		  m_gyro(GYROADC, RXADC, RZADC, SETPOINT),
 		  m_encoder1(0),
 		  m_encoder2(1),
 		  m_lcd(true)
 {
 	libutil::InitDefaultFwriteHandler(&m_uart);
-	m_uart.StartReceive();
+	//m_uart.StartReceive();
 	while (!m_cam.Init())
 	{
 		LOG_E("Camera fucked up!!!!!");
@@ -53,15 +53,15 @@ void Car::GyroRefresh(){
 	m_gyro.Refresh();
 }
 
-int16 Car::GetGyroOffset(){
+float Car::GetGyroOffset(){
 	return m_gyro.GetOffset();
 }
 
-uint16 Car::GetRawAngle(){
+float Car::GetRawAngle(){
 	return m_gyro.GetRawAngle();
 }
 
-int16 Car::GetGyroOmega(){
+float Car::GetGyroOmega(){
 	return m_gyro.GetOmega();
 }
 

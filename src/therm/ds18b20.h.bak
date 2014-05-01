@@ -1,0 +1,16 @@
+#include "stm32f10x.h"
+#include "main.h"
+#define DS18B20_IN 0
+#define DS18B20_OUT 1
+#define DS18B20_PORT GPIOE
+//#define DS18B20_PIN 0x00ff //GPIO_Pin_0 to GPIO_Pin_7
+void ds18b20_init(u16 pin);
+void ds18b20_io_init(void);
+void ds18b20_change_mode(u16 pin, u8 mode);
+u8 ds18b20_read_bit(u16 pin);
+void ds18b20_convert(u8 index);
+u16 ds18b20_get_temp(u8 index);
+void ds18b20_write_byte(u16 pin, u8 data);
+u8 ds18b20_read_byte(u16 pin);
+void ds18b20_search_rom(u16 pin);
+//void ds18b20_config(void);

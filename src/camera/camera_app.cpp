@@ -166,7 +166,7 @@ void CameraApp::BalanceControl()
 {
 	///Get values from gyro///
 	m_car.GyroRefresh();
-
+	//if(m_count%100 == 99) printf("%f, %f\n\r", m_car.GetRawAngle(), m_car.GetGyroOmega());
 	///PD equation
 	m_gyro = (float) m_car.GetRawAngle();
 	kalman_filtering(&m_gyro_kf, &m_gyro, 1);
@@ -178,8 +178,8 @@ void CameraApp::BalanceControl()
 	}
 
 	//printf("Angle:%d, Speed:%d\n\r", (int16_t) m_gyro, m_balance_speed1);
-	//printf("%d\n\r", m_car.GetRawAngle());
-	//DELAY_MS(1);
+
+
 	//m_count++;
 
 }
@@ -200,10 +200,10 @@ void CameraApp::SpeedControl(){
 	static int32_t error, total_error;
 	if(m_count%100==99){
 		prev_time = current_time;
-		//m_real_current_speed = (FTM_QUAD_get(FTM1) + (-FTM_QUAD_get(FTM2)))/2;
-		m_real_current_speed = - FTM_QUAD_get(FTM2);
+		m_real_current_speed = (FTM_QUAD_get(FTM1) + (-FTM_QUAD_get(FTM2)))/2;
+		//m_real_current_speed = - FTM_QUAD_get(FTM2);
 		//int16_t m_real_delta_speed = m_real_current_speed;
-		//FTM_QUAD_clean(FTM1);
+		FTM_QUAD_clean(FTM1);
 		FTM_QUAD_clean(FTM2);
 		//m_real_prev_speed = m_real_current_speed;
 		error = SPEEDSETPOINT - m_real_current_speed;
@@ -235,7 +235,7 @@ void CameraApp::MoveMotor(){
 		//printf("Total Speed: %d \t Balance Output Speed: %d \t Encoder Output Speed: %d \t Encoder Feedback: %d\n\r", m_total_speed1, m_balance_speed1, m_speed_speed1, m_real_current_speed);
 		m_total_speed1 = m_balance_speed1 - m_speed_speed1;
 		m_total_speed2 = m_balance_speed2 - m_speed_speed2;
-		//m_total_speed1 = m_total_speed2 = m_speed_speed2;
+		m_total_speed1 = m_total_speed2 = 0;
 
 
 		if(m_total_speed1 > 0){
@@ -256,7 +256,7 @@ void CameraApp::MoveMotor(){
 
 void CameraApp::Run()
 {
-
+	printf("test");
 	adc_init(ADC1_SE4a);
 
 	gpio_init(PTD15, GPI, 1);
@@ -283,9 +283,9 @@ void CameraApp::Run()
 				//m_balance_pid.SetKd(n2);
 
 				while(gpio_get(PTD15)==0){
-				n = adc_once(ADC1_SE4a, ADC_16bit);
-				m_balance_pid.SetSetpoint((int16)n*(DEADZONEHIGHER-DEADZONELOWER)/65535+DEADZONELOWER);
-				printf("SP:%d\n\r", n*(DEADZONEHIGHER-DEADZONELOWER)/65535+DEADZONELOWER);
+				//n = adc_once(ADC1_SE4a, ADC_16bit);
+				//m_balance_pid.SetSetpoint((int16)n*(DEADZONEHIGHER-DEADZONELOWER)/65535+DEADZONELOWER);
+				//printf("SP:%d\n\r", n*(DEADZONEHIGHER-DEADZONELOWER)/65535+DEADZONELOWER);
 				}
 				/*char ch;
 				if(m_car.GetBluetooth()->PeekChar(&ch)){
@@ -301,7 +301,7 @@ void CameraApp::Run()
 
 				BalanceControl();
 				//printf("Total Speed: %d \t Balance Output Speed: %d \t Encoder Output Speed: %d \t Encoder Feedback: %d\n\r", m_total_speed1, m_balance_speed1, m_speed_speed1, m_real_current_speed);
-				SpeedControl();
+				//SpeedControl();
 
 				break;
 			}

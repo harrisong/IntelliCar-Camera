@@ -75,9 +75,9 @@ public:
 
 	BalanceGyro* GetGyro();
 	void GyroRefresh();
-	int16 GetGyroOffset();
-	int16 GetGyroOmega();
-	uint16 GetRawAngle();
+	float GetGyroOffset();
+	float GetGyroOmega();
+	float GetRawAngle();
 
 	BalanceEncoder* GetEncoder(int n);
 	int32 GetEncoderSpeed(int);
