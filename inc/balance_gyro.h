@@ -21,7 +21,8 @@ private:
 	ADCn_Ch_e raw_gyro_port, raw_angle_port, raw_z_port, raw_x_port;
 	float raw_gyro, raw_gyro_angle, raw_setpoint;
 	float raw_accel_angle;
-	float kalman_angle;
+	float kalman_angle, comp_angle;
+	float VR;
 	float Rz, Rx, R;
 	float raw_offset, old_raw_offset, omega;
 

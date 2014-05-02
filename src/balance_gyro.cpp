@@ -60,7 +60,7 @@ BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p3, ADCn_Ch_e p4, int16 sp):
 	raw_gyro_angle(0),
 	raw_accel_angle(0),
 	Rx(0), Rz(0),
-	Vmax(3.3), Adc16max(65535), Gyrozero(1.796), Gyroscale(0.0010), Accelzero(1.48), Accelscale(0.206) {
+	Vmax(3.3), Adc16max(65535), Gyrozero(1.796), Gyroscale(0.0010), Accelzero(1.616812667), Accelscale(0.206) {
 
 	adc_init(ADC0_SE14);
 	//adc_init(raw_angle_port);
@@ -87,13 +87,14 @@ void BalanceGyro::Refresh(){
 	if(d_time>=20){
 
 		p_time = c_time;
-		raw_gyro = ((float) adc_once(ADC0_SE14, ADC_10bit) * Vmax / 1023 - Gyrozero) / 0.00067 ;
-		Rz =  ((float) adc_once(ADC0_SE15, ADC_10bit) * Vmax/ 1023 - Accelzero) / 0.8;
-
+		raw_gyro = ((float) adc_once(ADC0_SE15, ADC_10bit) * Vmax / 1023 - Gyrozero) / 0.00067f ;
+		//Rz =  (((float) adc_once(ADC0_SE15, ADC_10bit) * Vmax/ 1023));// - Accelzero)/ 0.8f;
+		Rx =  (((float) adc_once(ADC0_SE14, ADC_10bit) * Vmax/ 1023) - Accelzero)/ 0.84f;
 		raw_gyro_angle += raw_gyro*20/1000;
-		raw_accel_angle = acos(Rz) * 180 / 3.14;
-		kalman_angle = getAngle(raw_accel_angle, raw_gyro, 0.02);
-		printf("%f \t %f \t %f \t %f\n\r", raw_accel_angle , raw_gyro_angle, raw_gyro, kalman_angle);
+		raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
+		//kalman_angle = getAngle(raw_accel_angle, raw_gyro, 0.02);
+		comp_angle = 0.87 * raw_accel_angle + (1-0.87) * raw_gyro_angle;
+		printf("%f \t %f \t %f \t %f\n\r", comp_angle ,  raw_accel_angle, raw_gyro , raw_gyro_angle);
 
 	}
 	count++;
