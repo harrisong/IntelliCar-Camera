@@ -31,7 +31,7 @@ CameraApp::CameraApp():
 	prev_tempspeed(0), current_tempspeed(0)
 {
 	libutil::Clock::Init();
-	kalman_filter_init(&m_gyro_kf, 1000, 1911.92083f, 0, 1);
+	//kalman_filter_init(&m_gyro_kf, 1000, 1911.92083f, 0, 1);
 }
 
 CameraApp::~CameraApp()
@@ -168,14 +168,15 @@ void CameraApp::BalanceControl()
 	m_car.GyroRefresh();
 	//if(m_count%100 == 99) printf("%f, %f\n\r", m_car.GetRawAngle(), m_car.GetGyroOmega());
 	///PD equation
-	m_gyro = (float) m_car.GetRawAngle();
-	kalman_filtering(&m_gyro_kf, &m_gyro, 1);
-	if(m_car.GetRawAngle() < DEADZONELOWER || m_car.GetRawAngle() >  DEADZONEHIGHER) {
+	m_gyro = m_car.GetRawAngle();
+	//printf("%f\n\r", m_gyro);
+	//kalman_filtering(&m_gyro_kf, &m_gyro, 1);
+	/*if(m_car.GetRawAngle() < DEADZONELOWER || m_car.GetRawAngle() >  DEADZONEHIGHER) {
 		m_balance_speed1 = m_balance_speed2 = 0;
-	}else{
+	}else{*/
 		//Speed1 = Speed2 = balance_kp * m_car.GetGyroOffset() + balance_kd * m_car.GetGyroOmega();
 		m_balance_speed1 = m_balance_speed2 = m_balance_pid.Calc( (int16_t) m_gyro );
-	}
+	//}
 
 	//printf("Angle:%d, Speed:%d\n\r", (int16_t) m_gyro, m_balance_speed1);
 
@@ -232,11 +233,17 @@ void CameraApp::TurnControl(){
 }
 
 void CameraApp::MoveMotor(){
-		//printf("Total Speed: %d \t Balance Output Speed: %d \t Encoder Output Speed: %d \t Encoder Feedback: %d\n\r", m_total_speed1, m_balance_speed1, m_speed_speed1, m_real_current_speed);
-		m_total_speed1 = m_balance_speed1 - m_speed_speed1;
-		m_total_speed2 = m_balance_speed2 - m_speed_speed2;
-		m_total_speed1 = m_total_speed2 = 0;
 
+		//m_total_speed1 = m_balance_speed1 - m_speed_speed1;
+		//m_total_speed2 = m_balance_speed2 - m_speed_speed2;
+
+		m_total_speed1 = m_balance_speed1;
+		m_total_speed2 = m_balance_speed2;
+		if(m_count%5==0) {
+			//printf("%f \t %f\n\r", m_gyro, m_car.GetGyro()->GetOmega());
+		}
+		//m_total_speed1 = m_total_speed2 = 0;
+		//printf("Total Speed: %d \t Balance Output Speed: %d \t Encoder Output Speed: %d \t Encoder Feedback: %d\n\r", m_total_speed1, m_balance_speed1, m_speed_speed1, m_real_current_speed);
 
 		if(m_total_speed1 > 0){
 			m_dir1 = m_dir2 = true;
@@ -256,9 +263,9 @@ void CameraApp::MoveMotor(){
 
 void CameraApp::Run()
 {
-	printf("test");
+	bool move_motor=false;
 	adc_init(ADC1_SE4a);
-
+	gpio_init(PTD11, GPI, 1);
 	gpio_init(PTD15, GPI, 1);
 
 	while(gpio_get(PTD15)==1);
@@ -299,6 +306,7 @@ void CameraApp::Run()
 					printf("Kp:%f\n\r",kp);
 				}*/
 
+				m_balance_pid.SetSetpoint( (int16_t) m_car.GetGyro()->init_angle - 58);
 				BalanceControl();
 				//printf("Total Speed: %d \t Balance Output Speed: %d \t Encoder Output Speed: %d \t Encoder Feedback: %d\n\r", m_total_speed1, m_balance_speed1, m_speed_speed1, m_real_current_speed);
 				//SpeedControl();
@@ -317,7 +325,8 @@ void CameraApp::Run()
 			//int instruction = GetRotationInstruction();
 			//TurnControl();
 			//PositionControl();
-			MoveMotor();
+			if(gpio_get(PTD11)==0) move_motor=true;
+			if(move_motor) MoveMotor();
 		}
 
 	}

@@ -8,6 +8,16 @@
 #include <FIRE_MK60_conf.h>
 #include <float.h>
 
+#include <mini_common.h>
+#include <hw_common.h>
+#include <MK60_pit.h>
+#include <vectors.h>
+
+//#define TIMECONST 0.2f
+#define TIMECONST 2.0f
+#define DT 20
+#define ITERATIONS 200
+
 #define Q_angle	2.7f //0.28  //0.091500963 //gyro vari
 #define	Q_bias	0.0000107f      //0.003  //0.004 //gyro shift
 #define	R_measure	0.22f //0.000833 //0.000384534 //accel vari
@@ -53,27 +63,68 @@ float getAngle(float newAngle, float newRate, float dt) {
 			return angle;
     }
 
+float drift_offset=0, drift_offset_error=0;
+int acount=0;
+__ISR void Pit2Handler()
+{
+
+	if(acount<ITERATIONS){
+
+		drift_offset += ( ((float) adc_once(ADC0_SE15, ADC_10bit) * 3.3 / 1023 - 1.793121206) / 0.00268f )*DT/1000;
+		acount++;
+	}
+
+	if(acount==ITERATIONS) drift_offset_error = drift_offset * 50/(ITERATIONS-1);
+	PIT_Flag_Clear(PIT2);
+}
 
 BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p3, ADCn_Ch_e p4, int16 sp):
 	raw_gyro_port(p1), raw_z_port(p4), raw_x_port(p3),
 	raw_setpoint(sp), raw_gyro(0), raw_offset(0), old_raw_offset(0), omega(0),
-	raw_gyro_angle(0),
-	raw_accel_angle(0),
+	raw_gyro_angle(90),
+	raw_accel_angle(90),
 	Rx(0), Rz(0),
-	Vmax(3.3), Adc16max(65535), Gyrozero(1.796), Gyroscale(0.0010), Accelzero(1.616812667), Accelscale(0.206) {
+	comp_angle(0),
+	c_time(0), p_time(0), p_time_2(0), d_time(0), d_time_2(0),
+	Vmax(3.3), Adc16max(65535), Gyrozero(1.793121206),
+	Gyroscale(0.00268), ////MAGIC CONSTANT FOR GYRO HERE, REMEMBER
+	Accelzero(1.616812667), Accelscale(0.206) {
 
 	adc_init(ADC0_SE14);
 	//adc_init(raw_angle_port);
 	//adc_init(ADC1_SE4a);
 	adc_init(ADC0_SE15);
-	
-	Refresh();
+
+
+
+	SetIsr(PIT2_VECTORn, Pit2Handler);
+	pit_init_ms(PIT2, 20);
+	EnableIsr(PIT2_VECTORn);
+
+
+	//printf("Gyrozero Before: %f\n\r", Gyrozero);
+
+	//Gyrozero -= drift_offset_error;
+	//printf("Gyrozero After: %f\n\r", Gyrozero);
+
+	int icount=0;
+	float total_acce=0;
+
+	while(icount<=50){
+		Refresh();
+
+		total_acce+=raw_accel_angle;
+		icount++;
+		raw_gyro_angle = total_acce/icount;
+		init_angle = raw_gyro_angle;
+	}
 
 }
 
 void BalanceGyro::Refresh(){
 	c_time = libutil::Clock::Time();
 	d_time = libutil::Clock::TimeDiff(c_time,p_time);
+	d_time_2 = libutil::Clock::TimeDiff(c_time,p_time_2);
 
 	totalsample++;
 	//raw_angle = adc_once(raw_angle_port, ADC_16bit);
@@ -84,21 +135,32 @@ void BalanceGyro::Refresh(){
 	//raw_gyro = ((int16) adc_once(raw_gyro_port, ADC_16bit) + raw_gyro)/totalsample;
 	////Use Kalman filter now, no need values for complementary filter////
 
-	if(d_time>=20){
+	if(d_time>=DT){
 
 		p_time = c_time;
-		raw_gyro = ((float) adc_once(ADC0_SE15, ADC_10bit) * Vmax / 1023 - Gyrozero) / 0.00067f ;
+		raw_gyro = ((float) adc_once(ADC0_SE15, ADC_10bit) * Vmax / 1023 - Gyrozero) / 0.00268f ;
 		//Rz =  (((float) adc_once(ADC0_SE15, ADC_10bit) * Vmax/ 1023));// - Accelzero)/ 0.8f;
-		Rx =  (((float) adc_once(ADC0_SE14, ADC_10bit) * Vmax/ 1023) - Accelzero)/ 0.84f;
-		raw_gyro_angle += raw_gyro*20/1000;
-		raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
+
+		raw_gyro_angle += (raw_gyro - drift_offset_error) *DT/1000;
+		//printf("%f \t %f\n\r", raw_gyro_angle, drift_offset_error);
 		//kalman_angle = getAngle(raw_accel_angle, raw_gyro, 0.02);
-		comp_angle = 0.87 * raw_accel_angle + (1-0.87) * raw_gyro_angle;
-		printf("%f \t %f \t %f \t %f\n\r", comp_angle ,  raw_accel_angle, raw_gyro , raw_gyro_angle);
+		printf("%f, %f, %f\n\r", comp_angle, drift_offset_error, (float) adc_once(ADC0_SE15, ADC_10bit));
 
 	}
-	count++;
 
+		Rx =  (((float) adc_once(ADC0_SE14, ADC_10bit) * Vmax/ 1023) - Accelzero)/ 0.8f;
+		if(Rx > 1.0){
+			Rx = 1.0;
+		}else if(Rx < -1.0){
+			Rx = -1.0;
+		}
+		raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
+
+
+		if(d_time_2 >= 8) {
+				p_time_2 = c_time;
+				comp_angle = 1/TIMECONST * raw_accel_angle + (1- 1/TIMECONST) * raw_gyro_angle;
+		}
 
 	//printf("%f, %f\n\r", xangle/3.14*180, raw_gyro);
 	//DELAY_MS(100);
@@ -114,7 +176,7 @@ float BalanceGyro::get_raw_gyro(){
 }
 
 float BalanceGyro::GetRawAngle(){
-	return raw_gyro_angle;
+	return comp_angle;
 }
 
 float BalanceGyro::GetOffset(){
