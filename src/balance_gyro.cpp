@@ -14,7 +14,7 @@
 #include <vectors.h>
 
 //#define TIMECONST 0.2f
-#define TIMECONST 2.0f
+#define TIMECONST 8.0f
 #define DT 20
 #define ITERATIONS 200
 
@@ -70,11 +70,11 @@ __ISR void Pit2Handler()
 
 	if(acount<ITERATIONS){
 
-		drift_offset += ( ((float) adc_once(ADC0_SE15, ADC_10bit) * 3.3 / 1023 - 1.793121206) / 0.00268f )*DT/1000;
+		drift_offset += ( ((float) adc_once(ADC0_SE15, ADC_10bit) * 3.3 / 1023 - 1.795) / 0.00268f )*DT/1000;
 		acount++;
 	}
 
-	if(acount==ITERATIONS) drift_offset_error = drift_offset * 50/(ITERATIONS-1);
+	if(acount==ITERATIONS) drift_offset_error = drift_offset * 50/(ITERATIONS);
 	PIT_Flag_Clear(PIT2);
 }
 
@@ -144,7 +144,7 @@ void BalanceGyro::Refresh(){
 		raw_gyro_angle += (raw_gyro - drift_offset_error) *DT/1000;
 		//printf("%f \t %f\n\r", raw_gyro_angle, drift_offset_error);
 		//kalman_angle = getAngle(raw_accel_angle, raw_gyro, 0.02);
-		printf("%f, %f, %f\n\r", comp_angle, drift_offset_error, (float) adc_once(ADC0_SE15, ADC_10bit));
+		printf("%f, %f, %f, %f\n\r", comp_angle, drift_offset_error, raw_accel_angle, raw_gyro_angle);
 
 	}
 
