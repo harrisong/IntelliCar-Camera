@@ -102,8 +102,8 @@ private:
 	libsc::Led m_leds[4];
 	libsc::UartDevice m_uart;
 	libsc::Motor m_motor1, m_motor2;
-	libsc::Ov7725 m_cam;
-	libsc::Lcd m_lcd;
+	//libsc::Ov7725 m_cam;
+	//libsc::Lcd m_lcd;
 	BalanceGyro m_gyro;
 	BalanceEncoder m_encoder1;
 	BalanceEncoder m_encoder2;

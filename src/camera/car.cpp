@@ -22,21 +22,21 @@ namespace camera
 Car::Car()
 		: m_leds{Led(0), Led(1), Led(2), Led(3)}, m_uart(3, 115200),
 		  m_motor1(0), m_motor2(1),
-		  m_cam(CAM_W, CAM_H),
+		  //m_cam(CAM_W, CAM_H),
 		  m_gyro(GYROADC, RXADC, RZADC, SETPOINT),
 		  m_encoder1(0),
-		  m_encoder2(1),
-		  m_lcd(true)
+		  m_encoder2(1)//,
+		 // m_lcd(true)
 {
 	libutil::InitDefaultFwriteHandler(&m_uart);
 	//m_uart.StartReceive();
-	while (!m_cam.Init())
+	/*while (!m_cam.Init())
 	{
 		LOG_E("Camera fucked up!!!!!");
 		DELAY_MS(250);
 	}
 	m_cam.ShootContinuously();
-	m_lcd.Clear(Lcd::GetRgb565(0x33, 0xB5, 0xE5));
+	m_lcd.Clear(Lcd::GetRgb565(0x33, 0xB5, 0xE5));*/
 }
 
 Car::~Car()
@@ -145,7 +145,7 @@ libsc::Led* Car::GetLed(int n)
 
 libsc::Lcd* Car::GetLcd()
 {
-	return &m_lcd;
+	//return &m_lcd;
 }
 
 libsc::UartDevice* Car::GetBluetooth()
@@ -178,7 +178,7 @@ Byte* Car::ExpandPixel(const int line)
 }
 
 void Car::ShootOnceTest(){
-	libutil::Clock::ClockInt prev_time = libutil::Clock::Time();
+	/*libutil::Clock::ClockInt prev_time = libutil::Clock::Time();
 	int frame_count = 0;
 	m_cam.ShootOnce();
 
@@ -202,7 +202,7 @@ void Car::ShootOnceTest(){
 
 	   // printCenterLineEquation(LineCenterXSet);
 
-		m_cam.UnlockBuffer();
+		//m_cam.UnlockBuffer();
 		/*++frame_count;
 		//uart.SendStr("\n\n\n");
 

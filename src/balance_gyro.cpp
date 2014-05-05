@@ -4,6 +4,7 @@
  *  Created on: Mar 14, 2014
  *      Author: harrison
  */
+#include <cstdlib>
 #include <balance_gyro.h>
 #include <FIRE_MK60_conf.h>
 #include <float.h>
@@ -11,10 +12,12 @@
 #include <mini_common.h>
 #include <hw_common.h>
 #include <MK60_pit.h>
+#include <MK60_gpio.h>
+#include <MK60_i2c.h>
 #include <vectors.h>
 
 //#define TIMECONST 0.2f
-#define TIMECONST 8.0f
+#define TIMECONST 10.0f
 #define DT 20
 #define ITERATIONS 200
 
@@ -29,9 +32,9 @@ float 	S;
 float 	P[2][2];
 float   K[2];
 float		 rate;
-
-
-
+float gso=1.793548;
+float sf=0.00358;
+float a,b;
 float getAngle(float newAngle, float newRate, float dt) {
 
        float rate = newRate - bias;
@@ -65,28 +68,33 @@ float getAngle(float newAngle, float newRate, float dt) {
 
 float drift_offset=0, drift_offset_error=0;
 int acount=0;
+float i_offset=0;
 __ISR void Pit2Handler()
 {
 
 	if(acount<ITERATIONS){
-
-		drift_offset += ( ((float) adc_once(ADC0_SE15, ADC_10bit) * 3.3 / 1023 - 1.795) / 0.00268f )*DT/1000;
+		i_offset = ((float) adc_once(ADC0_SE15, ADC_12bit));
+		drift_offset += i_offset;
+		//printf("%.2f\n\r", i_offset );
 		acount++;
 	}
 
-	if(acount==ITERATIONS) drift_offset_error = drift_offset * 50/(ITERATIONS);
+	if(acount==ITERATIONS) {
+		drift_offset_error = drift_offset / ITERATIONS;
+		gpio_set(PTE9, 0);
+	}
 	PIT_Flag_Clear(PIT2);
 }
 
 BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p3, ADCn_Ch_e p4, int16 sp):
 	raw_gyro_port(p1), raw_z_port(p4), raw_x_port(p3),
 	raw_setpoint(sp), raw_gyro(0), raw_offset(0), old_raw_offset(0), omega(0),
-	raw_gyro_angle(90),
+	raw_gyro_angle(0),
 	raw_accel_angle(90),
 	Rx(0), Rz(0),
 	comp_angle(0),
 	c_time(0), p_time(0), p_time_2(0), d_time(0), d_time_2(0),
-	Vmax(3.3), Adc16max(65535), Gyrozero(1.793121206),
+	Vmax(3.3), Adc16max(65535), Gyrozero(gso),
 	Gyroscale(0.00268), ////MAGIC CONSTANT FOR GYRO HERE, REMEMBER
 	Accelzero(1.616812667), Accelscale(0.206) {
 
@@ -95,6 +103,10 @@ BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p3, ADCn_Ch_e p4, int16 sp):
 	//adc_init(ADC1_SE4a);
 	adc_init(ADC0_SE15);
 
+	gpio_init (PTC2, GPO, 1);
+	gpio_init(PTE9, GPO, 1);
+
+	i2c_init(I2C1, 400000);
 
 
 	SetIsr(PIT2_VECTORn, Pit2Handler);
@@ -115,13 +127,17 @@ BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p3, ADCn_Ch_e p4, int16 sp):
 
 		total_acce+=raw_accel_angle;
 		icount++;
-		raw_gyro_angle = total_acce/icount;
+		//raw_gyro_angle = total_acce/icount;
 		init_angle = raw_gyro_angle;
 	}
 
 }
 
+static float voltage;
+bool flag=false;
+
 void BalanceGyro::Refresh(){
+
 	c_time = libutil::Clock::Time();
 	d_time = libutil::Clock::TimeDiff(c_time,p_time);
 	d_time_2 = libutil::Clock::TimeDiff(c_time,p_time_2);
@@ -136,16 +152,20 @@ void BalanceGyro::Refresh(){
 	////Use Kalman filter now, no need values for complementary filter////
 
 	if(d_time>=DT){
+		flag=!flag;
+		gpio_set(PTC2, flag);
 
 		p_time = c_time;
-		raw_gyro = ((float) adc_once(ADC0_SE15, ADC_10bit) * Vmax / 1023 - Gyrozero) / 0.00268f ;
+		voltage = (float) adc_once(ADC0_SE15, ADC_12bit) - drift_offset_error;
+		voltage = abs(voltage) < 5 ? 0 : voltage;
+		raw_gyro = ( voltage * Vmax / 4095) * 289 ;
 		//Rz =  (((float) adc_once(ADC0_SE15, ADC_10bit) * Vmax/ 1023));// - Accelzero)/ 0.8f;
 
-		raw_gyro_angle += (raw_gyro - drift_offset_error) *DT/1000;
+		raw_gyro_angle += (raw_gyro) *DT/1000;
 		//printf("%f \t %f\n\r", raw_gyro_angle, drift_offset_error);
 		//kalman_angle = getAngle(raw_accel_angle, raw_gyro, 0.02);
-		printf("%f, %f, %f, %f\n\r", comp_angle, drift_offset_error, raw_accel_angle, raw_gyro_angle);
 
+		//printf("%f, %f, %f, %f, %f, %f\n\r", comp_angle, drift_offset_error, raw_accel_angle, raw_gyro_angle, raw_gyro, voltage);
 	}
 
 		Rx =  (((float) adc_once(ADC0_SE14, ADC_10bit) * Vmax/ 1023) - Accelzero)/ 0.8f;

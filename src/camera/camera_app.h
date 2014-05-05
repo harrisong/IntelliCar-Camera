@@ -36,7 +36,6 @@ public:
 
 private:
 	Car m_car;
-	KF m_gyro_kf;
 	float m_gyro;
 	uint16 n;
 	uint16 n2;
