@@ -44,7 +44,7 @@ private:
 
 public:
 	float init_angle;
-	BalanceGyro(ADCn_Ch_e, ADCn_Ch_e, ADCn_Ch_e, int16);
+	BalanceGyro(ADCn_Ch_e, int16);
 	void Refresh();
 	float get_raw_gyro();
 	float GetRawAngle();

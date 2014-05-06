@@ -72,22 +72,22 @@ float i_offset=0;
 __ISR void Pit2Handler()
 {
 
-	if(acount<ITERATIONS){
-		i_offset = ((float) adc_once(ADC0_SE15, ADC_12bit));
-		drift_offset += i_offset;
-		//printf("%.2f\n\r", i_offset );
-		acount++;
-	}
-
-	if(acount==ITERATIONS) {
-		drift_offset_error = drift_offset / ITERATIONS;
-		gpio_set(PTE9, 0);
-	}
-	PIT_Flag_Clear(PIT2);
+//	if(acount<ITERATIONS){
+//		i_offset = ((float) adc_once(ADC0_SE15, ADC_12bit));
+//		drift_offset += i_offset;
+//		//printf("%.2f\n\r", i_offset );
+//		acount++;
+//	}
+//
+//	if(acount==ITERATIONS) {
+//		drift_offset_error = drift_offset / ITERATIONS;
+////		gpio_set(PTE9, 0);
+//	}
+//	PIT_Flag_Clear(PIT2);
 }
 
-BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p3, ADCn_Ch_e p4, int16 sp):
-	raw_gyro_port(p1), raw_z_port(p4), raw_x_port(p3),
+BalanceGyro::BalanceGyro(ADCn_Ch_e p3, int16 sp):
+	raw_x_port(p3),
 	raw_setpoint(sp), raw_gyro(0), raw_offset(0), old_raw_offset(0), omega(0),
 	raw_gyro_angle(0),
 	raw_accel_angle(90),
@@ -99,19 +99,17 @@ BalanceGyro::BalanceGyro(ADCn_Ch_e p1, ADCn_Ch_e p3, ADCn_Ch_e p4, int16 sp):
 	Accelzero(1.616812667), Accelscale(0.206) {
 
 	adc_init(ADC0_SE14);
-	//adc_init(raw_angle_port);
-	//adc_init(ADC1_SE4a);
-	adc_init(ADC0_SE15);
-
-	gpio_init (PTC2, GPO, 1);
-	gpio_init(PTE9, GPO, 1);
-
-	i2c_init(I2C1, 400000);
 
 
-	SetIsr(PIT2_VECTORn, Pit2Handler);
-	pit_init_ms(PIT2, 20);
-	EnableIsr(PIT2_VECTORn);
+//	gpio_init (PTC2, GPO, 1);
+//	gpio_init(PTE9, GPO, 1);
+
+//	i2c_init(I2C1, 400000);
+
+
+//	SetIsr(PIT2_VECTORn, Pit2Handler);
+//	pit_init_ms(PIT2, 20);
+//	EnableIsr(PIT2_VECTORn);
 
 
 	//printf("Gyrozero Before: %f\n\r", Gyrozero);
@@ -152,8 +150,7 @@ void BalanceGyro::Refresh(){
 	////Use Kalman filter now, no need values for complementary filter////
 
 	if(d_time>=DT){
-		flag=!flag;
-		gpio_set(PTC2, flag);
+
 
 		p_time = c_time;
 		voltage = (float) adc_once(ADC0_SE15, ADC_12bit) - drift_offset_error;
@@ -196,7 +193,7 @@ float BalanceGyro::get_raw_gyro(){
 }
 
 float BalanceGyro::GetRawAngle(){
-	return comp_angle;
+	return raw_accel_angle;
 }
 
 float BalanceGyro::GetOffset(){

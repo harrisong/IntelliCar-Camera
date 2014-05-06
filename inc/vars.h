@@ -12,11 +12,11 @@
 /*#define balance_kp 7.7f
 #define balance_kd 0.0f
 #define balance_ki 0.0f*/
-#define balance_kp 1200.0f
-#define balance_kd 0.0f
+#define balance_kp 2500.0f
+#define balance_kd 20000.0f
 #define balance_ki 0.0f
 
-#define SETPOINT 40
+#define SETPOINT 44
 #define DEADZONELOWER 90
 #define DEADZONEHIGHER -20
 
