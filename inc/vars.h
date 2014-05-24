@@ -23,7 +23,7 @@
 //speed pid vars//
 #define speed_kp 0.0f
 #define speed_kd 0.0f
-#define speed_ki 2.0f
+#define speed_ki 1.0f
 #define SPEEDSETPOINT 0
 
 

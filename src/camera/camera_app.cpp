@@ -21,6 +21,7 @@
 KF m_gyro_kf[3];
 KF m_acc_kf;
 
+#define SPEEDCONTROLPERIOD 100
 
 namespace camera
 {
@@ -220,7 +221,7 @@ void mpu6050_init(){
 
 CameraApp::CameraApp():
 	m_gyro(0), m_balance_speed1(0), m_balance_speed2(0),
-	m_speed_speed1(0), m_speed_speed2(0),
+	m_control_speed1(0), m_control_speed2(0),
 	m_balance_pid(SETPOINT, balance_kp, balance_ki, balance_kd),
 	m_speed_pid(SPEEDSETPOINT, speed_kp, speed_ki, speed_kd),
 	m_position_pid(POSITIONSETPOINT, position_kp, position_ki, position_kd),
@@ -392,47 +393,35 @@ void CameraApp::BalanceControl()
 
 }
 
-void CameraApp::PositionControl(){
-	///Get values from encoders///
-	encoder1 = FTM_QUAD_get(FTM1);
-	encoder2 = -FTM_QUAD_get(FTM2);
-	printf("Encoder: %d\n\r", (encoder2+encoder1)/2);
-	int16_t tempspeed = m_position_pid.Calc((encoder2+encoder1)/2);
-	//m_total_speed1 += tempspeed;
-	//m_total_speed2 += tempspeed;
-}
 
 void CameraApp::SpeedControl(){
 	current_time = libutil::Clock::Time();
 	delta_time = current_time - prev_time;
 	static int32_t error, total_error;
-	if(m_count%100==99){
-		prev_time = current_time;
-		m_real_current_speed = (FTM_QUAD_get(FTM1) + (-FTM_QUAD_get(FTM2)))/2;
-		//m_real_current_speed = - FTM_QUAD_get(FTM2);
-		//int16_t m_real_delta_speed = m_real_current_speed;
-		FTM_QUAD_clean(FTM1);
-		FTM_QUAD_clean(FTM2);
-		//m_real_prev_speed = m_real_current_speed;
-		error = SPEEDSETPOINT - m_real_current_speed;
-		total_error += error;
 
-		prev_tempspeed = current_tempspeed;
-		current_tempspeed = speed_kp * error + speed_ki * total_error;
-	}
+	prev_time = current_time;
+	//m_real_current_speed = (FTM_QUAD_get(FTM1) + (-FTM_QUAD_get(FTM2)))/2;
+	m_real_current_speed = - FTM_QUAD_get(FTM2);
+	if(libutil::Clock::Time()%100==0) printf("%d \n", m_real_current_speed);
+	//int16_t m_real_delta_speed = m_real_current_speed;
+	//FTM_QUAD_clean(FTM1);
+	FTM_QUAD_clean(FTM2);
+	//m_real_prev_speed = m_real_current_speed;
+	error = SPEEDSETPOINT - m_real_current_speed;
+	total_error += error;
 
-	//printf("Encoder Feedback: %d \t P: %d\n\r",  m_real_current_speed, tempspeed);
-
-	//tempspeed = m_speed_pid.Calc(m_real_current_speed);
-
-
-		m_speed_speed1 = m_speed_speed2 = (current_tempspeed - prev_tempspeed) * (++m_speed_control_count) / 100 + prev_tempspeed;
-		if(m_speed_control_count==100) m_speed_control_count = 0;
-
-	//printf("Total Speed: %d \t Output Speed: %d \t Encoder Feedback: %d\n\r", m_total_speed1, -tempspeed, m_real_current_speed);
-	//DELAY_MS(5);
+	prev_tempspeed = current_tempspeed;
+	current_tempspeed = speed_kp * error + speed_ki * total_error;
 
 }
+
+void CameraApp::SpeedControlOutput(){
+    static int32_t speed_control_count;
+
+    m_control_speed1 = m_control_speed2 = (current_tempspeed - prev_tempspeed) * (++speed_control_count) / SPEEDCONTROLPERIOD + prev_tempspeed;
+    if(speed_control_count==SPEEDCONTROLPERIOD) speed_control_count = 0;
+}
+
 
 void CameraApp::TurnControl(){
 
@@ -442,10 +431,10 @@ void CameraApp::TurnControl(){
 void CameraApp::MoveMotor(){
 
 		//m_total_speed1 = m_balance_speed1 - m_speed_speed1;
-		//m_total_speed2 = m_balance_speed2 - m_speed_speed2;
+		//m_total_speed2 = m_balance_speed2 - m_control_speed2;
 
-		m_total_speed1 = m_balance_speed1;
-		m_total_speed2 = m_balance_speed2;
+		m_total_speed1 = m_balance_speed1 + m_control_speed1;
+		m_total_speed2 = m_balance_speed2 + m_control_speed2;
 		if(m_count%5==0) {
 			//printf("%f \t %f\n\r", m_gyro, m_car.GetGyro()->GetOmega());
 			//printf("Total Speed: %d \t Balance Output Speed: %d\n", m_total_speed1, m_balance_speed1);
@@ -508,24 +497,35 @@ void CameraApp::Run()
 //			printf("acc:%g,%g,%g\n", acc[0], acc[1], acc[2]);
 		}
 
-		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),p_time)>0){
-			p_time = libutil::Clock::Time();
-			switch(m_count%2){
-			case 0:
-				//m_car.ShootOnceTest();
-				break;
-			case 1:
-			{
-				BalanceControl();
-				//SpeedControl();
-				break;
-			}
+		///System loop - 1ms///
+		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),prev_time)>0){
+			prev_time = libutil::Clock::Time();
 
-			default:
-				break;
-			}
-			//if(m_count%4==3)
-				//SpeedControl();
+			///Speed PID update every 100ms///
+			if(prev_time%SPEEDCONTROLPERIOD==0) SpeedControl();
+			SpeedControlOutput();
+			BalanceControl();
+
+			///Update Gyro every 2ms///
+			if(prev_time % 2 == 0)	mpu6050_update();
+
+//			switch(prev_time%5){
+//			///1st ms - Balance///
+//			case 0:
+//
+//				break;
+//			case 1:
+//				break;
+//			///2nd ms - Turn algorithm///
+//			case 2:
+//				TurnControl();
+//				break;
+//			case 3:
+//			case 4:
+//			default:
+//				break;
+//			}
+
 			m_count++;
 
 			MoveMotor();

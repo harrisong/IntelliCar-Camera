@@ -25,6 +25,7 @@ public:
 	void BalanceControl();
 	void PositionControl();
 	void SpeedControl();
+	void SpeedControlOutput();
 	void TurnControl();
 	void MoveMotor();
 
@@ -40,7 +41,7 @@ private:
 	uint16 n;
 	uint16 n2;
 	int32_t m_balance_speed1, m_balance_speed2;
-	int32_t m_speed_speed1, m_speed_speed2, m_total_speed1, m_total_speed2;
+	int32_t m_control_speed1, m_control_speed2, m_total_speed1, m_total_speed2;
 	int32_t m_real_current_speed, m_real_prev_speed, m_real_total_speed;
 	int32_t prev_tempspeed, current_tempspeed;
 	int32 m_position, m_target_position;
