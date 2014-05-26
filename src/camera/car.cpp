@@ -22,7 +22,7 @@ namespace camera
 Car::Car()
 		: m_leds{Led(0), Led(1), Led(2), Led(3)}, m_uart(3, 115200),
 		  m_motor1(0), m_motor2(1),
-		  m_cam(CAM_W, CAM_H),
+//		  m_cam(CAM_W, CAM_H),
 		  m_gyro(RXADC, SETPOINT),
 		  m_encoder1(0),
 		  m_encoder2(1)//,
@@ -30,12 +30,12 @@ Car::Car()
 {
 	libutil::InitDefaultFwriteHandler(&m_uart);
 	//m_uart.StartReceive();
-	while (!m_cam.Init())
-	{
-		LOG_E("Camera fucked up!!!!!");
-		DELAY_MS(250);
-	}
-	m_cam.ShootContinuously();
+//	while (!m_cam.Init())
+//	{
+//		LOG_E("Camera fucked up!!!!!");
+//		DELAY_MS(250);
+//	}
+//	m_cam.ShootContinuously();
 //	m_lcd.Clear(Lcd::GetRgb565(0x33, 0xB5, 0xE5));
 }
 
@@ -66,7 +66,7 @@ float Car::GetGyroOmega(){
 }
 
 libsc::Ov7725* Car::GetCamera(){
-	return &m_cam;
+//	return &m_cam;
 }
 
 BalanceEncoder* Car::GetEncoder(int n){

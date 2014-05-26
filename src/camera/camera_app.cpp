@@ -166,7 +166,7 @@ void CameraApp::BalanceControl()
 
 void CameraApp::SpeedControl(){
 	static int32_t error, total_error;
-	m_encoder_2 = -FTM_QUAD_get(FTM2);
+	m_encoder_2 = FTM_QUAD_get(FTM2);
 	FTM_QUAD_clean(FTM2);
 
 	error = SPEEDSETPOINT - m_encoder_2;
@@ -204,18 +204,16 @@ Byte* ExpandPixel(const Byte *src, const int line)
 }
 
 void CameraApp::TurnControl(){
-
-}
-void CameraApp::PrintCam(){
 	static int areaPrevError;
 	const Byte* src = m_car.GetCamera()->LockBuffer();
 
-
+		/*
 	    for (int i = CAM_H - 1; i >= 0; --i)
 	    {
 	        const Byte *buf = ExpandPixel(src, i);
-	        m_lcd.DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
+	        m_car.GetLcd()->DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
 	    }
+	    */
 
 
 		int LeftWhiteDot = 0;
@@ -249,18 +247,73 @@ void CameraApp::PrintCam(){
 		}
 		else if(degree < 0)
 		{
-			m_turn_speed1 = -1 * degree * 10;
-			m_turn_speed2 = 1 * degree * 10;
+			m_turn_speed1 = 1 * degree * 20;
+			m_turn_speed2 = -1 * degree * 20;
 		}
 		else
 		{
-			m_turn_speed1 = 1 * degree * 10;
-			m_turn_speed2 = -1 * degree * 10;
+			m_turn_speed1 = 1 * degree * 20;
+			m_turn_speed2 = -1 * degree * 20;
 		}
 
 		m_car.GetCamera()->UnlockBuffer();
+		//DELAY_MS(10);
+}
+void CameraApp::PrintCam(){
+	static int areaPrevError;
+	const Byte* src = m_car.GetCamera()->LockBuffer();
 
 
+	    for (int i = CAM_H - 1; i >= 0; --i)
+	    {
+	        const Byte *buf = ExpandPixel(src, i);
+	        m_lcd.DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
+	    }
+
+
+
+		int LeftWhiteDot = 0;
+		int RightWhiteDot = 0;
+
+		for(int y=0; y<CAM_H; y++)
+		{
+			for(int x=0; x<CAM_W; x++)
+			{
+				if(GetPixel(src, x, y) == WHITE_BYTE)
+				{
+					x>=80 ? RightWhiteDot++ : LeftWhiteDot++;
+				}
+			}
+		}
+
+		int areaCurrentError = RightWhiteDot - LeftWhiteDot;
+		int degree = (int) round((float)(0.028*areaCurrentError+0.0155*(areaPrevError - areaCurrentError)));
+		//http://notepad.cc/smartcar
+		areaPrevError = areaCurrentError;
+
+		if(degree<0 && degree < -100)
+			degree = -100;
+
+		else if(degree>0 && degree > 100)
+			degree = 100;
+
+		if(degree==0)
+		{
+			m_turn_speed1 = m_turn_speed2 = 0;
+		}
+		else if(degree < 0)
+		{
+			m_turn_speed1 = 1 * degree * 20;
+			m_turn_speed2 = -1 * degree * 20;
+		}
+		else
+		{
+			m_turn_speed1 = 1 * degree * 20;
+			m_turn_speed2 = -1 * degree * 20;
+		}
+
+		m_car.GetCamera()->UnlockBuffer();
+		DELAY_MS(10);
 }
 
 void CameraApp::TurnControlOutput(){
@@ -348,9 +401,9 @@ void CameraApp::Run()
 	s[0] = "Choose Mode:";
 	s[1] = "Auto";
 	s[2] = "PID";
-	s[3] = "Gyro Debug";
-	s[4] = "Speed Debug";
-	s[5] = "Camera Debug";
+	s[3] = "Accel & Gyro";
+	s[4] = "Speed";
+	s[5] = "Camera";
 	s[6] = "Parade";
 	s[7] = "Balance Only";
 
@@ -436,7 +489,7 @@ void CameraApp::Run()
 
 				///Speed PID update every 100ms///
 				if(t%SPEEDCONTROLPERIOD==0) SpeedControl();
-				if(t%5==0) MoveMotor();
+				MoveMotor();
 
 				m_count++;
 			}
@@ -448,10 +501,8 @@ void CameraApp::Run()
 	case 2:
 		break;
 	case 3:
-		break;
-	case 4:
-		///////////////////////////Speed///////////////////////////
-		Printline(m_lcd.FONT_H * 0, "Speed Mode");
+		Printline(m_lcd.FONT_H * 0, "Accel & Gyro");
+		///////////////////////////Accel & Gyro///////////////////////////
 		while (true)
 		{
 
@@ -459,14 +510,65 @@ void CameraApp::Run()
 			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 				t = libutil::Clock::Time();
 
-				///Speed Control Output every 1ms///
-				SpeedControlOutput();
+				///Update Gyro every 2ms///
+				if(t % 2 == 0)	{
+					mpu6050_update();
+					for(int i = 0; i < 3; i++){
+						angle[i] += omega[i] * 0.002f / 2;
+					}
 
-				///Speed PID update every 100ms///
-				if(t%SPEEDCONTROLPERIOD==0) SpeedControl();
-				if(t%5==0) MoveMotor();
+					BalanceControl();
+				}
 
+
+				if(t%150==0) {
+					const char* s = libutil::String::Format("Angle: %d",(int)m_gyro).c_str();
+					Printline(m_lcd.FONT_H * 1, s);
+					s = libutil::String::Format("Accel: %d",(int)m_car.GetRawAngle()).c_str();
+					Printline(m_lcd.FONT_H * 2, s);
+					s = libutil::String::Format("Gyro: %d", (int)angle[1]).c_str();
+					Printline(m_lcd.FONT_H * 3, s);
+
+				}
+
+
+
+				m_count++;
 			}
+
+		}
+		///////////////////////////Gyro///////////////////////////
+		break;
+	case 4:
+		///////////////////////////Speed///////////////////////////
+		Printline(m_lcd.FONT_H * 0, "Speed Mode");
+		const char* s;
+		FTM_QUAD_Init(FTM1);
+		FTM_QUAD_Init(FTM2);
+		int16 encoder1, encoder2;
+		while (true)
+		{
+			encoder1 = -FTM_QUAD_get(FTM1);
+			encoder2 = -FTM_QUAD_get(FTM2);
+			s = libutil::String::Format("Encoder1: %d",encoder1).c_str();
+			Printline(m_lcd.FONT_H * 1, s);
+			s = libutil::String::Format("Encoder2: %d",encoder2).c_str();
+			Printline(m_lcd.FONT_H * 2, s);
+			s = libutil::String::Format("Time: %d",libutil::Clock::Time()/1000).c_str();
+			Printline(m_lcd.FONT_H * 3, s);
+
+			///System loop - 1ms///
+//			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
+//				t = libutil::Clock::Time();
+//
+//				///Speed Control Output every 1ms///
+//				SpeedControlOutput();
+//
+//				///Speed PID update every 100ms///
+//				if(t%SPEEDCONTROLPERIOD==0) SpeedControl();
+//				if(t%5==0) MoveMotor();
+//
+//			}
 
 		}
 		///////////////////////////Speed///////////////////////////
@@ -479,9 +581,10 @@ void CameraApp::Run()
 		{
 
 					///System loop - 1ms///
-					if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
+					if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>9){
 						t = libutil::Clock::Time();
 						PrintCam();
+						DELAY_MS(10);
 //						static int deg = GetRotationInstruction();
 //
 //						if(t%150==0) {
@@ -610,7 +713,7 @@ void CameraApp::Run()
 							break;
 						}
 
-						if(t%5==0) MoveMotor();
+						MoveMotor();
 
 						m_count++;
 					}
