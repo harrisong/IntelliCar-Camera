@@ -8,6 +8,8 @@
 #ifndef VARS_H_
 #define VARS_H_
 
+#define TIMECONST 100.0f
+
 //balance pid vars//
 /*#define balance_kp 7.7f
 #define balance_kd 0.0f
@@ -24,7 +26,7 @@
 #define speed_kp 0.0f
 #define speed_kd 0.0f
 #define speed_ki 1.0f
-#define SPEEDSETPOINT 0
+#define SPEEDCONTROLPERIOD 100
 
 
 #define position_kp 0.7f
