@@ -120,7 +120,7 @@ CameraApp::CameraApp():
 	m_total_speed1(0), m_total_speed2(0),
 	prev_tempspeed(0), current_tempspeed(0),
 	m_lcd(true),
-	m_turn1(0), m_turn2(0)
+	m_turn_speed1(0), m_turn_speed2(0)
 {
 	libutil::Clock::Init();
 	kalman_filter_init(&m_gyro_kf[0], 0.0012, 0.012, 0, 1);
@@ -144,63 +144,6 @@ int CameraApp::GetPixel(const Byte* src, const int x, const int y)
 
     return (src[offset] >> (x%8) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
 }
-
-int CameraApp::GetRotationInstruction()
-{
-	const Byte* src = m_car.GetImage();
-
-	int LeftBlackDot = 0;
-	int RightBlackDot = 0;
-	int LeftWhiteDot = 0;
-	int RightWhiteDot = 0;
-
-	for(int y=0; y<CAM_H; y++)
-	{
-		for(int x=0; x<CAM_W; x++)
-		{
-			if(GetPixel(src, x, y) == BLACK_BYTE)
-			{
-				if(x>=80)
-					RightBlackDot++;
-				else
-					LeftBlackDot++;
-			}
-			else
-			{
-				if(x>=80)
-					RightWhiteDot++;
-				else
-					LeftWhiteDot++;
-			}
-		}
-	}
-
-	int Difference_Black = abs(LeftBlackDot-RightBlackDot);
-	int Difference_White = abs(LeftWhiteDot-RightWhiteDot);
-
-	if(Difference_Black<=3000)
-	{
-		m_car.GetBluetooth()->SendStr("No Turn ");
-		Difference_Black=0;
-	}
-	else
-	{
-		if(LeftBlackDot>RightBlackDot)
-			m_car.GetBluetooth()->SendStr("Right ");
-		else if(RightBlackDot>LeftBlackDot)
-			m_car.GetBluetooth()->SendStr("Left ");
-	}
-
-	m_car.GetBluetooth()->SendStr(
-		libutil::String::Format(
-			"LB:%d RB:%d LW:%d RW:%d\r\n",
-			LeftBlackDot, RightBlackDot, LeftWhiteDot, RightWhiteDot
-		).c_str()
-	);
-
-	return (int) round((float)((LeftBlackDot - RightBlackDot))*90/19200);
-}
-
 
 
 void CameraApp::BalanceControl()
@@ -241,8 +184,81 @@ void CameraApp::SpeedControlOutput(){
     if(speed_control_count==SPEEDCONTROLPERIOD) speed_control_count = 0;
 }
 
+Byte* ExpandPixel(const Byte *src, const int line)
+{
+    static Byte product[CAM_W];
+    Byte *it = product;
+    const int offset = line * CAM_W / 8;
+    for (int i = 0; i < CAM_W / 8; ++i)
+    {
+        *(it++) = ((src[i + offset] >> 7) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
+        *(it++) = ((src[i + offset] >> 6) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
+        *(it++) = ((src[i + offset] >> 5) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
+        *(it++) = ((src[i + offset] >> 4) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
+        *(it++) = ((src[i + offset] >> 3) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
+        *(it++) = ((src[i + offset] >> 2) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
+        *(it++) = ((src[i + offset] >> 1) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
+        *(it++) = ((src[i + offset] >> 0) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
+    }
+    return product;
+}
 
 void CameraApp::TurnControl(){
+
+}
+void CameraApp::PrintCam(){
+	static int areaPrevError;
+	const Byte* src = m_car.GetCamera()->LockBuffer();
+
+
+	    for (int i = CAM_H - 1; i >= 0; --i)
+	    {
+	        const Byte *buf = ExpandPixel(src, i);
+	        m_lcd.DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
+	    }
+
+
+		int LeftWhiteDot = 0;
+		int RightWhiteDot = 0;
+
+		for(int y=0; y<CAM_H; y++)
+		{
+			for(int x=0; x<CAM_W; x++)
+			{
+				if(GetPixel(src, x, y) == WHITE_BYTE)
+				{
+					x>=80 ? RightWhiteDot++ : LeftWhiteDot++;
+				}
+			}
+		}
+
+		int areaCurrentError = RightWhiteDot - LeftWhiteDot;
+		int degree = (int) round((float)(0.028*areaCurrentError+0.0155*(areaPrevError - areaCurrentError)));
+		//http://notepad.cc/smartcar
+		areaPrevError = areaCurrentError;
+
+		if(degree<0 && degree < -100)
+			degree = -100;
+
+		else if(degree>0 && degree > 100)
+			degree = 100;
+
+		if(degree==0)
+		{
+			m_turn_speed1 = m_turn_speed2 = 0;
+		}
+		else if(degree < 0)
+		{
+			m_turn_speed1 = -1 * degree * 10;
+			m_turn_speed2 = 1 * degree * 10;
+		}
+		else
+		{
+			m_turn_speed1 = 1 * degree * 10;
+			m_turn_speed2 = -1 * degree * 10;
+		}
+
+		m_car.GetCamera()->UnlockBuffer();
 
 
 }
@@ -254,8 +270,8 @@ void CameraApp::TurnControlOutput(){
 void CameraApp::MoveMotor(){
 
 
-		m_total_speed1 = m_balance_speed1 + m_control_speed1 + m_turn1;
-		m_total_speed2 = m_balance_speed2 + m_control_speed2 + m_turn2;
+		m_total_speed1 = m_balance_speed1 + m_control_speed1 + m_turn_speed1;
+		m_total_speed2 = m_balance_speed2 + m_control_speed2 + m_turn_speed2;
 		m_total_speed2 = m_total_speed2 * 80 / 100;
 
 		if(m_count%5==0) {
@@ -282,15 +298,22 @@ void CameraApp::MoveMotor(){
 
 void CameraApp::Printline(uint8_t y, const char* s){
 	uint8_t x=m_lcd.FONT_W;
+	if(y<m_lcd.FONT_H){
+		for(int i=0; i<x; i++) m_lcd.DrawChar(i, y, ' ', 0xFFFF, 0);
+	}
 	while(*s){
-		m_lcd.DrawChar(x, y, *s, 0, 0xFFFF);
+		if(y==0) m_lcd.DrawChar(x, y, *s, 0xFFFF, 0);
+		else m_lcd.DrawChar(x, y, *s, 0, 0xFFFF);
 		x+=m_lcd.FONT_W;
 		s++;
+	}
+	if(y<m_lcd.FONT_H){
+		for(int i=x; i<m_lcd.W; i++) m_lcd.DrawChar(i, y, ' ', 0xFFFF, 0);
 	}
 }
 
 void CameraApp::PrintPtr(uint8_t y){
-	for(int i=0; i<m_lcd.H; i++) m_lcd.DrawChar(0, i, ' ', 0xFFFF, 0xFFFF);
+	for(int i=m_lcd.FONT_H+1; i<m_lcd.H; i++) m_lcd.DrawChar(0, i, ' ', 0xFFFF, 0xFFFF);
 	m_lcd.DrawChar(0, y, '>', 0, 0xFFFF);
 }
 
@@ -303,8 +326,8 @@ void CameraApp::Run()
 	gpio_init(PTD10, GPI, 1);
 	gpio_init(PTD14, GPI, 1);
 
-	int maxh = m_lcd.H/m_lcd.FONT_H;
-	int maxw = m_lcd.W/m_lcd.FONT_W;
+	int maxh = m_lcd.H/m_lcd.FONT_H - 1;
+	int maxw = m_lcd.W/m_lcd.FONT_W - 1;
 
 	m_lcd.Clear(0xFFFF);
 
@@ -331,22 +354,22 @@ void CameraApp::Run()
 	s[6] = "Parade";
 	s[7] = "Balance Only";
 
+	for(int i=0; i<=maxchoices; i++) Printline(m_lcd.FONT_H * i, s[i]);
+
 	PrintPtr(ptr_pos * m_lcd.FONT_H);
 
 	while(mode==-1){
-		for(int i=0; i<=maxchoices; i++) Printline(m_lcd.FONT_H * i, s[i]);
-
 
 		if(gpio_get(PTD10)==0 && ptr_pos + 1 <= maxchoices){
 			++ptr_pos;
 			PrintPtr(ptr_pos * m_lcd.FONT_H);
-			DELAY_MS(100);
+			DELAY_MS(150);
 		}
 
 		if(gpio_get(PTD11)==0 && ptr_pos - 1 >= 1){
 			--ptr_pos;
 			PrintPtr(ptr_pos * m_lcd.FONT_H);
-			DELAY_MS(100);
+			DELAY_MS(150);
 		}
 
 		if(gpio_get(PTD14)==0){
@@ -458,15 +481,14 @@ void CameraApp::Run()
 					///System loop - 1ms///
 					if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 						t = libutil::Clock::Time();
-
-						static int deg = GetRotationInstruction();
-
-
-						if(t%150==0) {
-							const char* s = libutil::String::Format("Degree: %d",deg).c_str();
-							Printline(m_lcd.FONT_H * 1, s);
-
-						}
+						PrintCam();
+//						static int deg = GetRotationInstruction();
+//
+//						if(t%150==0) {
+//							const char* s = libutil::String::Format("Degree: %d",deg).c_str();
+//							Printline(m_lcd.FONT_H * 1, s);
+//
+//						}
 					}
 		}
 		///////////////////////////Camera///////////////////////////
@@ -523,8 +545,8 @@ void CameraApp::Run()
 				case 1:
 //					static uint16_t cycle = t%10000;
 //					if(cycle<=5000){
-						m_turn1 = 1000;
-						m_turn2 = -m_turn1;
+						m_turn_speed1 = 1000;
+						m_turn_speed2 = -m_turn_speed1;
 //					}
 					break;
 				default:

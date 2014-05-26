@@ -31,6 +31,8 @@ public:
 	void TurnControlOutput();
 	void MoveMotor();
 
+	void PrintCam();
+
 	void DrawCenterPixelAndPrintEquation();
 	int GetRotationInstruction();
 	int GetPixel(const Byte* src, const int x, const int y);
@@ -50,7 +52,7 @@ private:
 	int32_t m_encoder_2;
 	int32_t prev_tempspeed, current_tempspeed;
 
-	int32_t m_turn1, m_turn2;
+	int32_t m_turn_speed1, m_turn_speed2;
 
 	bool m_dir1, m_dir2;
 	libutil::PidController<int16_t, int32_t> m_balance_pid;

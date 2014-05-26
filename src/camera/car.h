@@ -93,6 +93,8 @@ public:
 	libsc::Lcd* GetLcd();
 	libsc::UartDevice* GetBluetooth();
 
+	libsc::Ov7725* GetCamera();
+
 
 	void ShootOnceTest();
 	void ShootContinuouslyTest();

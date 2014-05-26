@@ -30,13 +30,13 @@ Car::Car()
 {
 	libutil::InitDefaultFwriteHandler(&m_uart);
 	//m_uart.StartReceive();
-	/*while (!m_cam.Init())
+	while (!m_cam.Init())
 	{
 		LOG_E("Camera fucked up!!!!!");
 		DELAY_MS(250);
 	}
 	m_cam.ShootContinuously();
-	m_lcd.Clear(Lcd::GetRgb565(0x33, 0xB5, 0xE5));*/
+//	m_lcd.Clear(Lcd::GetRgb565(0x33, 0xB5, 0xE5));
 }
 
 Car::~Car()
@@ -63,6 +63,10 @@ float Car::GetRawAngle(){
 
 float Car::GetGyroOmega(){
 	return m_gyro.GetOmega();
+}
+
+libsc::Ov7725* Car::GetCamera(){
+	return &m_cam;
 }
 
 BalanceEncoder* Car::GetEncoder(int n){
