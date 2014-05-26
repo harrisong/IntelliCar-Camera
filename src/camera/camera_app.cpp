@@ -284,7 +284,7 @@ void CameraApp::MoveMotor(){
 
 		m_total_speed1 = m_balance_speed1 + m_control_speed1 + m_turn_speed1;
 		m_total_speed2 = m_balance_speed2 + m_control_speed2 + m_turn_speed2;
-		m_total_speed2 = m_total_speed2 * 80 / 100;
+		//m_total_speed2 = m_total_speed2 * 80 / 100;
 
 		if(m_total_speed1 > 0){
 			m_dir1 = m_dir2 = true;
@@ -345,7 +345,7 @@ void CameraApp::Run()
 
 	int mode = -1;
 	int ptr_pos = 1;
-	int maxchoices = 7;
+	int maxchoices = 8;
 
 
 
@@ -358,6 +358,7 @@ void CameraApp::Run()
 	s[5] = "Camera";
 	s[6] = "Parade";
 	s[7] = "Balance Only";
+	s[8] = "Camera Move";
 
 	for(int i=0; i<=maxchoices; i++) Printline(m_lcd.FONT_H * i, s[i]);
 
@@ -669,6 +670,35 @@ void CameraApp::Run()
 
 				}
 				///////////////////////////Balance Only///////////////////////////
+		break;
+	case 8:
+		Printline(m_lcd.FONT_H * 0, "Camera Move");
+		m_balance_speed1 = m_balance_speed2 = 2000;
+		m_control_speed1 = m_control_speed2 = 0;
+		///////////////////////////Camera Move///////////////////////////
+		while (true)
+		{
+			///System loop - 1ms///
+			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
+				t = libutil::Clock::Time();
+				if(t%150==0) {
+					const char* s = libutil::String::Format("Turn: %d,%d",m_turn_speed1,m_turn_speed2).c_str();
+					Printline(m_lcd.FONT_H * 1, s);
+					s = libutil::String::Format("Balance: %d, %d",m_balance_speed1, m_balance_speed2).c_str();
+					Printline(m_lcd.FONT_H * 2, s);
+					s = libutil::String::Format("Speed: %d, %d",m_control_speed1, m_control_speed2).c_str();
+					Printline(m_lcd.FONT_H * 3, s);
+					s = libutil::String::Format("Motor: %d, %d",m_total_speed1, m_total_speed2).c_str();
+					Printline(m_lcd.FONT_H * 4, s);
+				}
+
+				if(t%45==0) TurnControl();
+				MoveMotor();
+				m_count++;
+			}
+		}
+
+		///////////////////////////Camera Move///////////////////////////
 		break;
 	default:break;
 	}
