@@ -26,8 +26,10 @@
 
 #include "kalman.h"
 
-#define CAM_W 160
-#define CAM_H 120
+//#define CAM_W 160
+//#define CAM_H 120
+#define CAM_W 80
+#define CAM_H 60
 #define WHITE_BYTE 0xFF
 #define BLACK_BYTE 0						//online RGB 565 calculator
 #define RED_BYTE 0xF800						//http://www.henningkarlsen.com/electronics/calc_rgb565.php
