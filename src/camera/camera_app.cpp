@@ -238,7 +238,7 @@ void CameraApp::TurnControl(){
 		}
 
 		int areaCurrentError = RightWhiteDot - LeftWhiteDot;
-		int degree = (int) round((float)(0.028*4*areaCurrentError+0.0155*(areaPrevError - areaCurrentError)));
+		int degree = (int) round(0.028f*3*areaCurrentError+0.0155f*(areaPrevError - areaCurrentError));
 		//http://notepad.cc/smartcar
 		areaPrevError = areaCurrentError;
 
@@ -403,7 +403,7 @@ void CameraApp::Run()
 
 	}
 
-	uint16_t t = 0;
+	uint16_t t = 0, st = 0;
 	uint16_t nt = 0;
 	bool autoprint = false;
 	m_lcd.Clear(0XFFFF);
@@ -413,7 +413,7 @@ void CameraApp::Run()
 
 		///////////////////////////AUTO///////////////////////////
 		while(gpio_get(PTD15)==1);
-
+		st = libutil::Clock::Time();
 		while (true)
 		{
 
@@ -422,22 +422,22 @@ void CameraApp::Run()
 				t = libutil::Clock::Time();
 
 				if(t%1000==0){
-					if(SPEEDSETPOINT - 5 >= -50){
+					if(SPEEDSETPOINT - 5 >= -100){
 						SPEEDSETPOINT-=5;
 					}
 				}
 
 
-//				if(t%150==0 && autoprint) {
-//					const char* s = libutil::String::Format("Speed: %d,%d",m_control_speed1,m_control_speed2).c_str();
-//					Printline(m_lcd.FONT_H * 1, s);
-//					s = libutil::String::Format("Motor: %d, %d",m_total_speed1, m_total_speed2).c_str();
-//					Printline(m_lcd.FONT_H * 2, s);
-//					s = libutil::String::Format("Angle: %d",(int)m_gyro).c_str();
-//					Printline(m_lcd.FONT_H * 3, s);
-//					s = libutil::String::Format("SSP: %d",SPEEDSETPOINT).c_str();
-//					Printline(m_lcd.FONT_H * 4, s);
-//				}
+				/*if(t%150==0 && autoprint) {
+					const char* s = libutil::String::Format("Speed: %d,%d",m_control_speed1,m_control_speed2).c_str();
+					Printline(m_lcd.FONT_H * 1, s);
+					s = libutil::String::Format("Motor: %d, %d",m_total_speed1, m_total_speed2).c_str();
+					Printline(m_lcd.FONT_H * 2, s);
+					s = libutil::String::Format("Angle: %d",(int)m_gyro).c_str();
+					Printline(m_lcd.FONT_H * 3, s);
+					s = libutil::String::Format("SSP: %d",SPEEDSETPOINT).c_str();
+					Printline(m_lcd.FONT_H * 4, s);
+				}*/
 
 				///Speed Control Output every 1ms///
 				SpeedControlOutput();
@@ -469,7 +469,7 @@ void CameraApp::Run()
 				if(t%45==0) TurnControl();
 
 				///Speed PID update every 100ms///
-				if(t%SPEEDCONTROLPERIOD==0) SpeedControl();
+				if(st >= 5000 && t%SPEEDCONTROLPERIOD==0) SpeedControl();
 				MoveMotor();
 
 				m_count++;
@@ -531,6 +531,7 @@ void CameraApp::Run()
 		FTM_QUAD_Init(FTM1);
 		FTM_QUAD_Init(FTM2);
 		int16 encoder1, encoder2;
+		t = libutil::Clock::Time();
 		while (true)
 		{
 			encoder1 = -FTM_QUAD_get(FTM1);
@@ -539,7 +540,7 @@ void CameraApp::Run()
 			Printline(m_lcd.FONT_H * 1, s);
 			s = libutil::String::Format("Encoder2: %d",encoder2).c_str();
 			Printline(m_lcd.FONT_H * 2, s);
-			s = libutil::String::Format("Time: %d",libutil::Clock::Time()/1000).c_str();
+			s = libutil::String::Format("Time: %d",libutil::Clock::Time() - t).c_str();
 			Printline(m_lcd.FONT_H * 3, s);
 
 			///System loop - 1ms///
