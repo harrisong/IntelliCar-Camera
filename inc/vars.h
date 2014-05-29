@@ -28,7 +28,7 @@
 #define speed_ki 3.0f
 #define SPEEDCONTROLPERIOD 20
 
-#define degree_kp 0.112f
+#define degree_kp 0.154f
 #define degree_kd 0.0155f
 
 #define position_kp 0.7f

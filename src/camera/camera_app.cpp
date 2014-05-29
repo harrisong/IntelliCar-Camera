@@ -243,14 +243,13 @@ void CameraApp::TurnControl(){
 	areaPrevError = areaCurrentError;
 	encoderPrevError = encoderCurrentError;
 
-
 	if(degree < 0)
 		degree = degree < -100 ? -100 : degree;
 	else
 		degree = degree > 100 ? 100 : degree;
 
-	m_turn_speed1 = 1 * degree * 29;
-	m_turn_speed2 = -1 * degree * 29;
+	m_turn_speed1 = 1 * degree * 17;
+	m_turn_speed2 = -1 * degree * 17;
 
 	m_car.GetCamera()->UnlockBuffer();
 	//DELAY_MS(10);
@@ -424,14 +423,14 @@ void CameraApp::Run()
 				if(t - pt> 5000){
 					if(!speedInit)
 					{
-						SPEEDSETPOINT = -50;
+						SPEEDSETPOINT = -60;
 						speedInit = true;
 					}
 					else if(t%1000 == 0)
 					{
-						if(SPEEDSETPOINT-10 > -100)
+						if(SPEEDSETPOINT-5 >= -100)
 						{
-							SPEEDSETPOINT -= 10;
+							SPEEDSETPOINT -= 5;
 						}
 					}
 				}
