@@ -169,7 +169,9 @@ void CameraApp::BalanceControl()
 
 void CameraApp::SpeedControl(){
 	static int32_t error, total_error, delta_error, o_error = 0;
-	m_encoder_2 = FTM_QUAD_get(FTM2);
+
+	m_encoder_2 = (FTM_QUAD_get(FTM1)+FTM_QUAD_get(FTM2))/2;
+	FTM_QUAD_clean(FTM1);
 	FTM_QUAD_clean(FTM2);
 
 	error = SPEEDSETPOINT - m_encoder_2;
@@ -209,7 +211,8 @@ Byte* ExpandPixel(const Byte *src, const int line)
 
 void CameraApp::TurnControl(){
 
-	static int areaPrevError;
+	static int areaPrevError = 0;
+	static int encoderPrevError = 0;
 	const Byte* src = m_car.GetCamera()->LockBuffer();
 
 	/*
@@ -235,25 +238,19 @@ void CameraApp::TurnControl(){
 	}
 
 	int areaCurrentError = RightWhiteDot - LeftWhiteDot;			//http://notepad.cc/smartcar
-	int degree = (int) round((degree_kp * areaCurrentError + degree_kd*(areaPrevError - areaCurrentError)));
+	double encoderCurrentError = m_encoder_2 * 2;
+	int degree = (int) round((degree_kp * areaCurrentError + degree_kd * ((areaPrevError - areaCurrentError) /*+ (encoderCurrentError - encoderPrevError)*/)));
 	areaPrevError = areaCurrentError;
+	encoderPrevError = encoderCurrentError;
 
-	if(degree==0)
-	{
-		m_turn_speed1 = m_turn_speed2 = 0;
-	}
-	else if(degree < 0)
-	{
+
+	if(degree < 0)
 		degree = degree < -100 ? -100 : degree;
-		m_turn_speed1 = 1 * degree * 20;
-		m_turn_speed2 = -1 * degree * 20;
-	}
 	else
-	{
 		degree = degree > 100 ? 100 : degree;
-		m_turn_speed1 = 1 * degree * 20;
-		m_turn_speed2 = -1 * degree * 20;
-	}
+
+	m_turn_speed1 = 1 * degree * 29;
+	m_turn_speed2 = -1 * degree * 29;
 
 	m_car.GetCamera()->UnlockBuffer();
 	//DELAY_MS(10);
@@ -404,7 +401,9 @@ void CameraApp::Run()
 
 	uint16_t t = 0;
 	uint16_t nt = 0;
+	uint16_t pt = 0;
 	bool autoprint = false;
+	bool speedInit = false;
 	m_lcd.Clear(0XFFFF);
 	switch(mode){
 	case 1:
@@ -413,6 +412,8 @@ void CameraApp::Run()
 		///////////////////////////AUTO///////////////////////////
 		while(gpio_get(PTD15)==1);
 
+		pt = libutil::Clock::Time();
+
 		while (true)
 		{
 
@@ -420,9 +421,18 @@ void CameraApp::Run()
 			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 				t = libutil::Clock::Time();
 
-				if(t%1000==0){
-					if(SPEEDSETPOINT - 5 >= -50){
-						SPEEDSETPOINT-=5;
+				if(t - pt> 5000){
+					if(!speedInit)
+					{
+						SPEEDSETPOINT = -50;
+						speedInit = true;
+					}
+					else if(t%1000 == 0)
+					{
+						if(SPEEDSETPOINT-10 > -100)
+						{
+							SPEEDSETPOINT -= 10;
+						}
 					}
 				}
 
@@ -465,10 +475,10 @@ void CameraApp::Run()
 				}
 
 
-				if(t%45==0) TurnControl();
+				if(t%45==0){ TurnControl(); }
 
 				///Speed PID update every 100ms///
-				if(t%SPEEDCONTROLPERIOD==0) SpeedControl();
+				if(t%SPEEDCONTROLPERIOD==0){ SpeedControl(); }
 				MoveMotor();
 
 				m_count++;
