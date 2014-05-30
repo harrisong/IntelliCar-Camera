@@ -423,7 +423,7 @@ void CameraApp::Run()
 				if(t - pt> 5000){
 					if(!speedInit)
 					{
-						SPEEDSETPOINT = -60;
+						SPEEDSETPOINT = -100;
 						speedInit = true;
 					}
 					else if(t%1000 == 0)
