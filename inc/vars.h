@@ -18,7 +18,7 @@
 #define balance_kd 30000.0f
 #define balance_ki 0.0f
 
-#define SETPOINT 47
+#define SETPOINT 54
 #define DEADZONELOWER 90
 #define DEADZONEHIGHER -20
 
