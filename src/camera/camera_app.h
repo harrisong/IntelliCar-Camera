@@ -33,9 +33,9 @@ public:
 
 	void PrintCam();
 
-	void DrawCenterPixelAndPrintEquation();
-	int GetRotationInstruction();
 	int GetPixel(const Byte* src, const int x, const int y);
+	int GetCenterPoint(const Byte* src);
+	int GetEdge(const Byte* src, const int center, const int direction);
 
 	void Printline(uint8_t y, const char* s);
 	void PrintPtr(uint8_t y);

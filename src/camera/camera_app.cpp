@@ -18,6 +18,8 @@
 #include <libutil/string.h>
 #include "mpu6050.h"
 #include <libsc/com/lcd.h>
+#include <libsc/com/joystick.h>
+#include <libsc/com/button.h>
 #include "sw_i2c.h"
 
 
@@ -222,19 +224,58 @@ Byte* ExpandPixel(const Byte *src, const int line)
     return product;
 }
 
+int CameraApp::GetEdge(const Byte* src, const int center, int direction)
+{
+	/*
+	for(int y=0; y<CAM_H; y++)
+	{
+		for(int x=0; x<CAM_W; x++)
+		{
+			if(GetPixel(src, x, y) == BLACK_BYTE)
+			{
+				BlackCount++;
+				BlackSum+=x;
+			}
+		}
+		sum+= (int) round(BlackSum / BlackCount);
+	}
+	*/
+
+	return 0;
+}
+
+int CameraApp::GetCenterPoint(const Byte* src)
+{
+	int BlackCount = 0;
+	int BlackSum = 0;
+
+	int sum=0;
+
+	for(int y=0; y<CAM_H; y++)
+	{
+		for(int x=0; x<CAM_W; x++)
+		{
+			if(GetPixel(src, x, y) == BLACK_BYTE)
+			{
+				BlackCount++;
+				BlackSum+=x;
+			}
+		}
+		sum+= (int) round(BlackSum / BlackCount);
+	}
+
+	return (int) round(sum/CAM_H);
+}
+
 void CameraApp::TurnControl(){
 
 	static int areaPrevError = 0;
 	static int encoderPrevError = 0;
 	const Byte* src = m_car.GetCamera()->LockBuffer();
 
-	/*
-	for (int i = CAM_H - 1; i >= 0; --i)
-	{
-		const Byte *buf = ExpandPixel(src, i);
-		m_car.GetLcd()->DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
-	}
-	*/
+	int center = GetCenterPoint(src);
+	//int left = GetEdge(src, center, -1);
+	//int right = GetEdge(src, center, 1);
 
 	int LeftWhiteDot = 0;
 	int RightWhiteDot = 0;
@@ -269,6 +310,7 @@ void CameraApp::TurnControl(){
 	m_car.GetCamera()->UnlockBuffer();
 	//DELAY_MS(10);
 }
+
 void CameraApp::PrintCam(){
 
 	const Byte* src = m_car.GetCamera()->LockBuffer();
@@ -349,10 +391,9 @@ void CameraApp::PrintPtr(uint8_t y){
 
 void CameraApp::Run()
 {
-	gpio_init(LIBSC_LED0, GPO, 1);
-	gpio_init(LIBSC_JOY_UP, GPI, 1);
-	gpio_init(LIBSC_JOY_DOWN, GPI, 1);
-	gpio_init(LIBSC_JOY_SEL, GPI, 1);
+	libsc::Button m_start_but(0);
+	libsc::Joystick m_joystick(0);
+
 
 	int maxh = m_lcd.H/m_lcd.FONT_H - 1;
 	int maxw = m_lcd.W/m_lcd.FONT_W - 1;
@@ -360,13 +401,10 @@ void CameraApp::Run()
 
 
 	i2c_init(I2C1, 400000);
-//	sw_i2c_init();
 	DELAY_MS(100);
 	mpu6050_init();
 
-
-	gpio_set(LIBSC_LED0, 0);
-
+	m_lcd.Clear(0xFFFF);
 
 
 	int mode = -1;
@@ -374,8 +412,7 @@ void CameraApp::Run()
 	int maxchoices = 9;
 
 
-
-	char* s[maxh];
+	const char* s[maxh];
 	s[0] = "Choose Mode:";
 	s[1] = "Auto";
 	s[2] = "PID";
@@ -393,20 +430,27 @@ void CameraApp::Run()
 
 	while(mode==-1){
 
-		if(gpio_get(LIBSC_JOY_DOWN)==0 && ptr_pos + 1 <= maxchoices){
-			++ptr_pos;
-			PrintPtr(ptr_pos * m_lcd.FONT_H);
-			DELAY_MS(150);
-		}
+		switch (m_joystick.GetState())
+		{
+		case libsc::Joystick::UP:
+			if(ptr_pos + 1 <= maxchoices){
+				++ptr_pos;
+				PrintPtr(ptr_pos * m_lcd.FONT_H);
+				DELAY_MS(150);
+			}
+			break;
 
-		if(gpio_get(LIBSC_JOY_UP)==0 && ptr_pos - 1 >= 1){
-			--ptr_pos;
-			PrintPtr(ptr_pos * m_lcd.FONT_H);
-			DELAY_MS(150);
-		}
+		case libsc::Joystick::DOWN:
+			if(ptr_pos - 1 >= 1){
+				--ptr_pos;
+				PrintPtr(ptr_pos * m_lcd.FONT_H);
+				DELAY_MS(150);
+			}
+			break;
 
-		if(gpio_get(LIBSC_JOY_SEL)==0){
+		case libsc::Joystick::SELECT:
 			mode = ptr_pos;
+			break;
 		}
 
 	}
@@ -417,19 +461,19 @@ void CameraApp::Run()
 
 	bool autoprint = false;
 	bool speedInit = false;
-	m_lcd.Clear(0XFFFF);
+
 	switch(mode){
 	case 1:
 		Printline(m_lcd.FONT_H * 0, "AUTO Mode");
 
 		///////////////////////////AUTO///////////////////////////
 
+		while(m_start_but.IsUp());
 
 		pt = libutil::Clock::Time();
 
 		while (true)
 		{
-
 			///System loop - 1ms///
 			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 				t = libutil::Clock::Time();
@@ -437,18 +481,14 @@ void CameraApp::Run()
 				if(t - pt> 5000){
 					if(!speedInit)
 					{
-						SPEEDSETPOINT = -120;
+						SPEEDSETPOINT = -60;
 						speedInit = true;
-						const char* s = libutil::String::Format("SSP: %d,%d",SPEEDSETPOINT).c_str();
-						Printline(m_lcd.FONT_H * 1, s);
 					}
 					else if(t%1000 == 0)
 					{
-						if(SPEEDSETPOINT-5 >= -120)
+						if(SPEEDSETPOINT-5 >= -100)
 						{
 							SPEEDSETPOINT -= 5;
-							const char* s = libutil::String::Format("SSP: %d,%d",SPEEDSETPOINT).c_str();
-							Printline(m_lcd.FONT_H * 1, s);
 						}
 					}
 				}
@@ -499,10 +539,11 @@ void CameraApp::Run()
 				m_count++;
 			}
 
-/*			if(gpio_get(PTD15)==0) {
+
+			if(m_start_but.IsDown()) {
 				autoprint = !autoprint;
-				while(gpio_get(PTD15)==0);
-			}*/
+				while(m_start_but.IsDown());
+			}
 
 		}
 		///////////////////////////AUTO///////////////////////////
@@ -523,6 +564,7 @@ void CameraApp::Run()
 				///Update Gyro every 2ms///
 				if(t % 2 == 0)	{
 					mpu6050_update();
+
 				}
 
 
@@ -532,6 +574,7 @@ void CameraApp::Run()
 					Printline(m_lcd.FONT_H * 1, s);
 					s = libutil::String::Format("Accel: %03d",(int)m_car.GetRawAngle()).c_str();
 					Printline(m_lcd.FONT_H * 2, s);
+
 					/*s = libutil::String::Format("Gyro: %03d", (int)angle[0]).c_str();
 					Printline(m_lcd.FONT_H * 3, s);*/
 					s = libutil::String::Format("A0: %03d", (int)angle[0]).c_str();
@@ -541,7 +584,9 @@ void CameraApp::Run()
 					s = libutil::String::Format("A2: %03d", (int)angle[2]).c_str();
 					Printline(m_lcd.FONT_H * 6, s);
 
+
 				}
+
 
 				m_count++;
 			}
@@ -595,6 +640,7 @@ void CameraApp::Run()
 				t = libutil::Clock::Time();
 				PrintCam();
 			}
+
 			MoveMotor();
 
 		}
@@ -604,12 +650,16 @@ void CameraApp::Run()
 		///////////////////////////Parade///////////////////////////
 		Printline(m_lcd.FONT_H * 0, "Parade Mode");
 
+
 		///////////////////////////Parade///////////////////////////
 		break;
 	case 7:
 		Printline(m_lcd.FONT_H * 0, "Balance Only");
 
 		///////////////////////////Balance Only///////////////////////////
+
+		while(m_start_but.IsUp());
+
 		m_control_speed1 = m_control_speed1 = m_turn_speed1 = m_turn_speed2 = 0;
 
 		while (true)
@@ -698,6 +748,8 @@ void CameraApp::Run()
 		Printline(m_lcd.FONT_H * 0, "Balance & Speed");
 
 		///////////////////////////Balance & Speed///////////////////////////
+
+		while(m_start_but.IsUp());
 
 
 		while (true)
