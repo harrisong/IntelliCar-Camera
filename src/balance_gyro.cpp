@@ -136,11 +136,11 @@ bool flag=false;
 
 void BalanceGyro::Refresh(){
 
-	c_time = libutil::Clock::Time();
-	d_time = libutil::Clock::TimeDiff(c_time,p_time);
-	d_time_2 = libutil::Clock::TimeDiff(c_time,p_time_2);
-
-	totalsample++;
+//	c_time = libutil::Clock::Time();
+//	d_time = libutil::Clock::TimeDiff(c_time,p_time);
+//	d_time_2 = libutil::Clock::TimeDiff(c_time,p_time_2);
+//
+//	totalsample++;
 	//raw_angle = adc_once(raw_angle_port, ADC_16bit);
 	//raw_offset = raw_angle - raw_setpoint;
 	//omega = raw_offset - old_raw_offset;
@@ -149,7 +149,7 @@ void BalanceGyro::Refresh(){
 	//raw_gyro = ((int16) adc_once(raw_gyro_port, ADC_16bit) + raw_gyro)/totalsample;
 	////Use Kalman filter now, no need values for complementary filter////
 
-	if(d_time>=DT){
+	/*if(d_time>=DT){
 
 
 		p_time = c_time;
@@ -163,9 +163,9 @@ void BalanceGyro::Refresh(){
 		//kalman_angle = getAngle(raw_accel_angle, raw_gyro, 0.02);
 
 		//printf("%f, %f, %f, %f, %f, %f\n\r", comp_angle, drift_offset_error, raw_accel_angle, raw_gyro_angle, raw_gyro, voltage);
-	}
+	}*/
 
-		Rx =  (((float) adc_once(ADC0_SE14, ADC_10bit) * Vmax/ 1023) - Accelzero)/ 0.8f;
+		Rx =  (((float) adc_once(raw_x_port, ADC_10bit) * Vmax/ 1023) - Accelzero)/ 0.8f;
 		if(Rx > 1.0){
 			Rx = 1.0;
 		}else if(Rx < -1.0){
@@ -174,10 +174,10 @@ void BalanceGyro::Refresh(){
 		raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
 
 
-		if(d_time_2 >= 8) {
+		/*if(d_time_2 >= 8) {
 				p_time_2 = c_time;
 				comp_angle = 1/TIMECONST * raw_accel_angle + (1- 1/TIMECONST) * raw_gyro_angle;
-		}
+		}*/
 
 	//printf("%f, %f\n\r", xangle/3.14*180, raw_gyro);
 	//DELAY_MS(100);
