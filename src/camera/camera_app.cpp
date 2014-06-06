@@ -480,7 +480,7 @@ void CameraApp::Run()
 
 	bool autoprint = false;
 	bool speedInit = false;
-
+	m_lcd.Clear(0xFFFF);
 	switch(mode){
 	case 1:
 		Printline(m_lcd.FONT_H * 0, "AUTO Mode");
