@@ -11,6 +11,7 @@
 
 #include "mini_common.h"
 #include "hw_common.h"
+#include <cstring>
 #include "camera/camera_app.h"
 #include <MK60_gpio.h>
 #include <MK60_adc.h>
@@ -32,6 +33,9 @@ uint16_t c_time_img = 0;
 
 int16_t omega_offset[3] = {0,0,0};
 int32_t gyro_cal_sum[3] = {0,0,0};
+int16_t LeftEdgeX[CAM_H];
+int16_t RightEdgeX[CAM_H];
+int16_t CenterX[CAM_H];
 
 uint8_t data[14];
 int16_t raw_acc[3] = {0,0,0};
@@ -125,6 +129,9 @@ CameraApp::CameraApp():
 	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_gyro_kf[2], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_acc_kf, 0.0005, 0.05, 0, 1);
+	memset(CenterX, -1, CAM_H);
+	memset(LeftEdgeX, -1, CAM_H);
+	memset(RightEdgeX, -1, CAM_H);
 }
 
 CameraApp::~CameraApp()
@@ -209,19 +216,52 @@ Byte* ExpandPixel(const Byte *src, const int line)
     return product;
 }
 
+void CameraApp::EdgeDetection(const Byte* src, const int y)
+{
+	LeftEdgeX[y] = -1;
+	RightEdgeX[y] = -1;
+
+	if(y-2>=0)
+		CenterX[y] = CenterX[y-1] + CenterX[y-1] - CenterX[y-2];
+	else
+		CenterX[y] = CAM_W/2;
+
+	for(int x=CenterX[y]; x>=0; x--)
+	{
+		if(GetPixel(src, x, y) != WHITE_BYTE && x-1>=0 && x-2>=0 && GetPixel(src, x-1, y) != WHITE_BYTE && GetPixel(src, x-2, y) != WHITE_BYTE)
+		{
+			LeftEdgeX[y] = x+1;
+		}
+	}
+
+	for(int x=CenterX[y]; x<CAM_W; x++)
+	{
+		if(x+1<CAM_W && x-2<CAM_W && GetPixel(src, x, y) != WHITE_BYTE && GetPixel(src, x+1, y) != WHITE_BYTE && GetPixel(src, x+2, y) != WHITE_BYTE)
+		{
+			RightEdgeX[y] = x-1;
+		}
+	}
+
+	if(LeftEdgeX[y]==-1 || RightEdgeX[y]==-1)
+	{
+		if(LeftEdgeX[y]==-1)
+			LeftEdgeX[y] = 0;
+		if(RightEdgeX[y]==-1)
+			RightEdgeX[y] = CAM_W-1;
+
+		CenterX[y] = (int) round((((int) round( (LeftEdgeX[y] + RightEdgeX[y]) / 2)) + CenterX[y])/2);
+	}
+	else
+	{
+		CenterX[y] = (int) round((LeftEdgeX[y] + RightEdgeX[y])/2);
+	}
+}
+
 void CameraApp::TurnControl(){
 
 	static int areaPrevError = 0;
 	static int encoderPrevError = 0;
 	const Byte* src = m_car.GetCamera()->LockBuffer();
-
-	/*
-	for (int i = CAM_H - 1; i >= 0; --i)
-	{
-		const Byte *buf = ExpandPixel(src, i);
-		m_car.GetLcd()->DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
-	}
-	*/
 
 	int LeftWhiteDot = 0;
 	int RightWhiteDot = 0;
@@ -238,10 +278,10 @@ void CameraApp::TurnControl(){
 	}
 
 	int areaCurrentError = RightWhiteDot - LeftWhiteDot;			//http://notepad.cc/smartcar
-	double encoderCurrentError = m_encoder_2 * 2;
+	//double encoderCurrentError = m_encoder_2 * 2;
 	int degree = (int) round((degree_kp * areaCurrentError + degree_kd * ((areaPrevError - areaCurrentError) /*+ (encoderCurrentError - encoderPrevError)*/)));
 	areaPrevError = areaCurrentError;
-	encoderPrevError = encoderCurrentError;
+	//encoderPrevError = encoderCurrentError;
 
 	if(degree < 0)
 		degree = degree < -100 ? -100 : degree;
@@ -258,7 +298,6 @@ void CameraApp::PrintCam(){
 
 	const Byte* src = m_car.GetCamera()->LockBuffer();
 
-
 	for (int i = CAM_H - 1; i >= 0; --i)
 	{
 		const Byte *buf = ExpandPixel(src, i);
@@ -267,10 +306,14 @@ void CameraApp::PrintCam(){
 
 	for(int y=0; y<CAM_H; y++)
 	{
-		for(int x=0; x<CAM_W; x++)
-		{
-			gpio_set(PTE4, GetPixel(src, x, y));
-		}
+		EdgeDetection(src, y);
+
+		if(LeftEdgeX[y]!=-1)
+			m_lcd.DrawPixel(LeftEdgeX[y], y, RED_BYTE);
+		if(RightEdgeX[y]!=-1)
+			m_lcd.DrawPixel(RightEdgeX[y], y, RED_BYTE);
+		if(CenterX[y]!=-1)
+			m_lcd.DrawPixel(RightEdgeX[y], y, RED_BYTE);
 	}
 
 

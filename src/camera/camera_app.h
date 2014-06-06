@@ -33,8 +33,7 @@ public:
 
 	void PrintCam();
 
-	void DrawCenterPixelAndPrintEquation();
-	int GetRotationInstruction();
+	void EdgeDetection(const Byte* src, const int y);
 	int GetPixel(const Byte* src, const int x, const int y);
 
 	void Printline(uint8_t y, const char* s);
