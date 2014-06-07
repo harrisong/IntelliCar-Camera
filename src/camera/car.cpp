@@ -23,9 +23,10 @@ Car::Car()
 		: m_leds{Led(0), Led(1), Led(2), Led(3)}, m_uart(3, LIBSC_BT_UART_BAUD),
 		  m_motor1(0), m_motor2(1),
 		  m_cam(CAM_W, CAM_H),
-		  m_gyro(RXADC, SETPOINT),
-		  m_encoder1(0),
-		  m_encoder2(1)
+		  m_gyro(RXADC)
+
+		  //m_encoder1(0),
+		  //m_encoder2(1)
 {
 	libutil::InitDefaultFwriteHandler(&m_uart);
 
@@ -44,7 +45,7 @@ Car::~Car()
 }
 
 
-BalanceGyro* Car::GetGyro(){
+BalanceAccel* Car::GetGyro(){
 	return &m_gyro;
 }
 
@@ -52,22 +53,14 @@ void Car::GyroRefresh(){
 	m_gyro.Refresh();
 }
 
-float Car::GetGyroOffset(){
-	return m_gyro.GetOffset();
-}
-
 float Car::GetRawAngle(){
 	return m_gyro.GetRawAngle();
-}
-
-float Car::GetGyroOmega(){
-	return m_gyro.GetOmega();
 }
 
 libsc::Ov7725* Car::GetCamera(){
 	return &m_cam;
 }
-
+/*
 BalanceEncoder* Car::GetEncoder(int n){
 	switch(n){
 	case 0:
@@ -101,7 +94,7 @@ int32 Car::GetEncoderSpeed(int n){
 	m_prev_speed = m_current_speed;
 	m_prev_time = m_current_time;
 	return m_delta_speed;
-}
+}*/
 
 libsc::Motor* Car::GetMotor(int n){
 	switch(n){
@@ -156,7 +149,7 @@ const Byte* Car::GetImage()
 	return src;
 }
 
-Byte* Car::ExpandPixel(const int line)
+Byte* Car::ExpandPixel(const Byte *src, const int line)
 {
     static Byte product[CAM_W];
     Byte *it = product;
@@ -175,43 +168,18 @@ Byte* Car::ExpandPixel(const int line)
     return product;
 }
 
-void Car::ShootOnceTest(){
-	/*libutil::Clock::ClockInt prev_time = libutil::Clock::Time();
-	int frame_count = 0;
-	m_cam.ShootOnce();
+Byte* Car::ExpandPixel(const int line)
+{
 
-		if (!m_cam.IsImageReady())
-		{}
+	return ExpandPixel(src, line);
 
-		src = m_cam.LockBuffer();
-		//uart.SendChar(0);
-		//uart.SendChar(255);
-		//uart.SendChar(1);
-		//uart.SendChar(0);
-		/*for (int i = CAM_H - 1; i >= 0; --i)
-		{
-			const Byte *buf = ExpandPixel(i);
-			//uart.SendBuffer(buf, CAM_W);
+}
 
-			m_lcd.DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
-			//uart.SendChar('\n');
-			//delete[] buf;
-		}*/
+int Car::GetPixel(const Byte* src, const int x, const int y)
+{
+    const int offset = x/8 + (y * CAM_W / 8);
 
-	   // printCenterLineEquation(LineCenterXSet);
-
-		//m_cam.UnlockBuffer();
-		/*++frame_count;
-		//uart.SendStr("\n\n\n");
-
-		if (libutil::Clock::TimeDiff(libutil::Clock::Time(), prev_time) >= 1000)
-		{
-			prev_time = libutil::Clock::Time();
-			printf("FPS: %d\n", frame_count);
-			frame_count = 0;
-		}*/
-
-
+    return (src[offset] >> (x%8) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
 }
 
 }

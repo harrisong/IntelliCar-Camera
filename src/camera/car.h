@@ -67,14 +67,12 @@ public:
 		return m_uart.PeekChar(out_ch);
 	}
 
-	BalanceGyro* GetGyro();
+	BalanceAccel* GetGyro();
 	void GyroRefresh();
-	float GetGyroOffset();
-	float GetGyroOmega();
 	float GetRawAngle();
 
-	BalanceEncoder* GetEncoder(int n);
-	int32 GetEncoderSpeed(int);
+//	BalanceEncoder* GetEncoder(int n);
+//	int32 GetEncoderSpeed(int);
 
 	libsc::Motor* GetMotor(int n);
 	void MoveMotor(int, const uint16_t);
@@ -82,15 +80,14 @@ public:
 
 	libsc::Led* GetLed(int n);
 
-	Byte* ExpandPixel(const int);
+
 	
 	libsc::Lcd* GetLcd();
 
+	Byte* ExpandPixel(const int);
+	Byte* ExpandPixel(const Byte *src, const int line);
+	int GetPixel(const Byte* src, const int x, const int y);
 	libsc::Ov7725* GetCamera();
-
-
-	void ShootOnceTest();
-	void ShootContinuouslyTest();
 	const Byte* GetImage();
 
 private:
@@ -99,9 +96,9 @@ private:
 	libsc::Motor m_motor1, m_motor2;
 	libsc::Ov7725 m_cam;
 	libsc::Lcd m_lcd;
-	BalanceGyro m_gyro;
-	BalanceEncoder m_encoder1;
-	BalanceEncoder m_encoder2;
+	BalanceAccel m_gyro;
+//	BalanceEncoder m_encoder1;
+//	BalanceEncoder m_encoder2;
 
 	uint16_t m_current_time, m_prev_time, m_delta_time;
 

@@ -34,7 +34,6 @@ public:
 	void PrintCam();
 
 	void EdgeDetection(const Byte* src, const int y);
-	int GetPixel(const Byte* src, const int x, const int y);
 	int GetCenterPoint(const Byte* src);
 	int GetEdge(const Byte* src, const int center, const int direction);
 
@@ -42,10 +41,15 @@ public:
 
 	void Printline(uint8_t y, const char* s);
 	void PrintlineI(uint8_t y, const char* s);
-	void Printline(uint8_t x, uint8_t y, const char* s);
+	void Printline(uint8_t x, uint8_t y, const char* s){
+		Printline(&x, y, s);
+	}
 	void Printline(uint8_t* x, uint8_t y, const char* s);
 
-	void PrintPtr(uint8_t y);
+	void PrintPtr(uint8_t y){
+		for(int i=m_lcd.FONT_H+1; i<m_lcd.H; i++) m_lcd.DrawChar(0, i, ' ', WHITE, WHITE);
+		m_lcd.DrawChar(0, y, '>', 0, WHITE);
+	}
 
 	void Run();
 

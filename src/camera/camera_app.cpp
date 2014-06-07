@@ -63,13 +63,6 @@ int abs(const int num)
 	return num>0 ? num : -1*num;
 }
 
-int CameraApp::GetPixel(const Byte* src, const int x, const int y)
-{
-    const int offset = x/8 + (y * CAM_W / 8);
-
-    return (src[offset] >> (x%8) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-}
-
 
 void CameraApp::BalanceControl()
 {
@@ -87,8 +80,6 @@ void CameraApp::BalanceControl()
 
 
 	m_balance_speed1 = m_balance_speed2 = balance_kp * e + balance_kd * delta;
-//	m_balance_speed1 = m_balance_speed2 = m_balance_pid.Calc( (int16_t) m_gyro );
-
 
 }
 
@@ -116,24 +107,7 @@ void CameraApp::SpeedControlOutput(){
     if(speed_control_count==SPEEDCONTROLPERIOD) speed_control_count = 0;
 }
 
-Byte* ExpandPixel(const Byte *src, const int line)
-{
-    static Byte product[CAM_W];
-    Byte *it = product;
-    const int offset = line * CAM_W / 8;
-    for (int i = 0; i < CAM_W / 8; ++i)
-    {
-        *(it++) = ((src[i + offset] >> 7) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 6) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 5) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 4) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 3) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 2) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 1) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 0) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-    }
-    return product;
-}
+
 
 
 void CameraApp::EdgeDetection(const Byte* src, const int y)
@@ -148,7 +122,7 @@ void CameraApp::EdgeDetection(const Byte* src, const int y)
 
 	for(int x=CenterX[y]; x>=0; x--)
 	{
-		if(GetPixel(src, x, y) != WHITE_BYTE && x-1>=0 && x-2>=0 && GetPixel(src, x-1, y) != WHITE_BYTE && GetPixel(src, x-2, y) != WHITE_BYTE)
+		if(m_car.GetPixel(src, x, y) != WHITE_BYTE && x-1>=0 && x-2>=0 && m_car.GetPixel(src, x-1, y) != WHITE_BYTE && m_car.GetPixel(src, x-2, y) != WHITE_BYTE)
 		{
 			LeftEdgeX[y] = x+1;
 		}
@@ -156,7 +130,7 @@ void CameraApp::EdgeDetection(const Byte* src, const int y)
 
 	for(int x=CenterX[y]; x<CAM_W; x++)
 	{
-		if(x+1<CAM_W && x-2<CAM_W && GetPixel(src, x, y) != WHITE_BYTE && GetPixel(src, x+1, y) != WHITE_BYTE && GetPixel(src, x+2, y) != WHITE_BYTE)
+		if(x+1<CAM_W && x-2<CAM_W && m_car.GetPixel(src, x, y) != WHITE_BYTE && m_car.GetPixel(src, x+1, y) != WHITE_BYTE && m_car.GetPixel(src, x+2, y) != WHITE_BYTE)
 		{
 			RightEdgeX[y] = x-1;
 		}
@@ -192,7 +166,7 @@ void CameraApp::TurnControl(){
 	{
 		for(int x=0; x<CAM_W; x++)
 		{
-			if(GetPixel(src, x, y) == WHITE_BYTE)
+			if(m_car.GetPixel(src, x, y) == WHITE_BYTE)
 			{
 				x>=(CAM_W/2) ? RightWhiteDot++ : LeftWhiteDot++;
 			}
@@ -227,7 +201,7 @@ void CameraApp::PrintCam(){
 
 	for (int i = CAM_H - 1; i >= 0; --i)
 	{
-		const Byte *buf = ExpandPixel(src, i);
+		const Byte *buf = m_car.ExpandPixel(src, i);
 		m_lcd.DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
 	}
 
@@ -288,7 +262,6 @@ void CameraApp::MoveMotor(){
 
 void CameraApp::PrintlineI(uint8_t y, const char* s){
 	uint8_t x=0;
-//	for(int i=0; i<x; i++) m_lcd.DrawChar(i, y, ' ', WHITE, 0x7E3D);
 	while(*s){
 		m_lcd.DrawChar(x, y, *s, WHITE, INVERTED_BG_COLOR);
 		x+=m_lcd.FONT_W;
@@ -309,10 +282,6 @@ void CameraApp::Printline(uint8_t* x, uint8_t y, const char* s){
 
 }
 
-void CameraApp::Printline(uint8_t x, uint8_t y, const char* s){
-	Printline(&x, y, s);
-}
-
 void CameraApp::Printline(uint8_t y, const char* s){
 	uint8_t x=0;
 	if(y==0){
@@ -327,12 +296,6 @@ void CameraApp::Printline(uint8_t y, const char* s){
 		for(int i=x; i<m_lcd.W; i++) m_lcd.DrawChar(i, y, ' ', BLACK, WHITE);
 	}
 }
-
-void CameraApp::PrintPtr(uint8_t y){
-	for(int i=m_lcd.FONT_H+1; i<m_lcd.H; i++) m_lcd.DrawChar(0, i, ' ', WHITE, WHITE);
-	m_lcd.DrawChar(0, y, '>', 0, WHITE);
-}
-
 
 void CameraApp::Run()
 {
@@ -466,7 +429,12 @@ void CameraApp::Run()
 	switch(mode){
 	case 1:
 		Printline(m_lcd.FONT_H * 0, "AUTO Mode");
-
+		Printline(m_lcd.FONT_H * 1, "Speed1: ");
+		Printline(m_lcd.FONT_H * 2, "Speed2: ");
+		Printline(m_lcd.FONT_H * 3, "Motor1: ");
+		Printline(m_lcd.FONT_H * 4, "Motor2: ");
+		Printline(m_lcd.FONT_H * 5, "Angle: ");
+		Printline(m_lcd.FONT_H * 6, "SSP: ");
 		///////////////////////////AUTO///////////////////////////
 
 		while(m_start_but.IsUp());
@@ -497,16 +465,20 @@ void CameraApp::Run()
 				SPEEDSETPOINT = 50;
 
 
-	//			if(t%150==0 && autoprint) {
-	//				const char* s = libutil::String::Format("Speed: %d,%d",m_control_speed1,m_control_speed2).c_str();
-	//				Printline(m_lcd.FONT_H * 1, s);
-	//				s = libutil::String::Format("Motor: %d, %d",m_total_speed1, m_total_speed2).c_str();
-	//				Printline(m_lcd.FONT_H * 2, s);
-	//				s = libutil::String::Format("Angle: %d",(int)m_gyro).c_str();
-	//				Printline(m_lcd.FONT_H * 3, s);
-	//				s = libutil::String::Format("SSP: %d",SPEEDSETPOINT).c_str();
-	//				Printline(m_lcd.FONT_H * 4, s);
-	//			}
+				if(t%1500==0 && autoprint) {
+					const char* s = libutil::String::Format("%06d",m_control_speed1).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 1, s);
+					s = libutil::String::Format("%06d",m_control_speed2).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 2, s);
+					s = libutil::String::Format("%06d",m_total_speed1).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 3, s);
+					s = libutil::String::Format("%06d",m_total_speed2).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 4, s);
+					s = libutil::String::Format("%d",(int)m_gyro).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 5, s);
+					s = libutil::String::Format("%d",SPEEDSETPOINT).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 6, s);
+				}
 
 				///Speed Control Output every 1ms///
 				SpeedControlOutput();
