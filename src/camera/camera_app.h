@@ -39,6 +39,7 @@ public:
 	int GetEdge(const Byte* src, const int center, const int direction);
 
 	void Printline(uint8_t y, const char* s);
+	void Printline(uint8_t y, const char* s, bool inverted);
 	void PrintPtr(uint8_t y);
 
 	void Run();

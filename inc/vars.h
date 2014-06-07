@@ -21,16 +21,15 @@
 #define balance_kd 30000.0f
 #define balance_ki 0.0f
 
-#define SETPOINT 54
+#define SETPOINT 60
 #define DEADZONELOWER 90
 #define DEADZONEHIGHER -20
 
 //speed pid vars//
 #define speed_kp 2.5f
 #define speed_kd 0.0f
-#define speed_ki 1.0f
-#define SPEEDCONTROLPERIOD 20
-extern int16_t SPEEDSETPOINT;
+#define speed_ki 1.5f
+#define SPEEDCONTROLPERIOD 100
 
 #define degree_kp 1.0f
 #define degree_kd 1.0f
@@ -42,6 +41,11 @@ extern int16_t SPEEDSETPOINT;
 #define WHITE_BYTE 0xFF
 #define BLACK_BYTE 0						//online RGB 565 calculator
 #define RED_BYTE 0xF800						//http://www.henningkarlsen.com/electronics/calc_rgb565.php
+
+#define INVERTED_BG_COLOR 	0xDE10
+#define WHITE 0xFFFF
+#define BLACK 0
+
 
 extern KF m_gyro_kf[3];
 extern KF m_acc_kf;
@@ -56,6 +60,8 @@ extern float omega[3];
 extern float acc[3];
 extern float angle[3];
 extern volatile int gyro_cal_ok;
+
+
 
 
 #endif /* VARS_H_ */
