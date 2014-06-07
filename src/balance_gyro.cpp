@@ -21,7 +21,9 @@
 #define DT 20
 #define ITERATIONS 200
 
-#define Q_angle	2.7f //0.28  //0.091500963 //gyro vari
+float gso=1.793548;
+float sf=0.00358;
+/*#define Q_angle	2.7f //0.28  //0.091500963 //gyro vari
 #define	Q_bias	0.0000107f      //0.003  //0.004 //gyro shift
 #define	R_measure	0.22f //0.000833 //0.000384534 //accel vari
 
@@ -32,8 +34,7 @@ float 	S;
 float 	P[2][2];
 float   K[2];
 float		 rate;
-float gso=1.793548;
-float sf=0.00358;
+
 float a,b;
 float getAngle(float newAngle, float newRate, float dt) {
 
@@ -84,7 +85,7 @@ __ISR void Pit2Handler()
 ////		gpio_set(PTE9, 0);
 //	}
 //	PIT_Flag_Clear(PIT2);
-}
+}*/
 
 BalanceGyro::BalanceGyro(ADCn_Ch_e p3, int16 sp):
 	raw_x_port(p3),

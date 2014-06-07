@@ -7,7 +7,7 @@
  */
 
 #include <syscall.h>
-
+#include "vars.h"
 #include <libsc/com/config/2014_camera.h>
 #include "mini_common.h"
 #include "hw_common.h"
@@ -21,112 +21,14 @@
 #include <libsc/com/lcd.h>
 #include <libsc/com/joystick.h>
 #include <libsc/com/button.h>
-#include "sw_i2c.h"
-
-
-
-KF m_gyro_kf[3];
-KF m_acc_kf;
-
-int16_t SPEEDSETPOINT = 0;
 
 namespace camera
 {
+int16_t SPEEDSETPOINT = 0;
 
-uint16_t c_time_img = 0;
-
-int16_t omega_offset[3] = {0,0,0};
-int32_t gyro_cal_sum[3] = {0,0,0};
 int16_t LeftEdgeX[CAM_H];
 int16_t RightEdgeX[CAM_H];
 int16_t CenterX[CAM_H];
-
-unsigned char data[14];
-int16_t raw_acc[3] = {0,0,0};
-int16_t raw_omega[3] = {0,0,0};
-float omega[3] = {0,0,0};
-float acc[3] = {0,0,0};
-float angle[3] = {90,0,0};
-volatile int gyro_cal_ok = 0;
-
-void  mpu6050_update(){
-//	sw_i2c_read_nbytes(MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
-	i2c_read_nbytes(I2C1, MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
-
-	for(int i = 0; i < 14; i += 2){
-		if(i >= 0 && i <= 5){
-			int j = i / 2;
-			raw_acc[j] = data[i + 1] | (data[i] << 8);
-			acc[j] = (float)raw_acc[j] * 0.000244140625f;
-		}
-		else if(i >= 8 && i <= 13){
-			raw_omega[(i - 8) / 2] = data[i + 1] | (data[i] << 8);
-			raw_omega[(i - 8) / 2] -= omega_offset[(i - 8) / 2];
-			omega[(i - 8) / 2] = (float)raw_omega[(i - 8) / 2] * 0.061f;
-		}
-	}
-	for(int i = 0; i < 3; i++){
-		omega[i] = omega[i] < 5.0f && omega[i] > -5.0f ? 0 : omega[i];
-	}
-	if(gyro_cal_ok){
-		kalman_filtering(m_gyro_kf, omega, 3);
-	}
-
-	for(int i = 0; i < 3; i++){
-		if(i==0) angle[i] -= omega[i] * 0.002f / 2;
-		else angle[i] += omega[i] * 0.002f / 2;
-	}
-}
-
-void gyro_cal(void){
-	int i = 0;
-	for(int j = 0; j < 3; j++){
-		gyro_cal_sum[j] = 0;
-	}
-
-	uint16_t c_time_img = 0;
-	while(i < 512){
-		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),c_time_img) > 0){
-			c_time_img = libutil::Clock::Time();
-			if(c_time_img % 2 == 0){
-				mpu6050_update();
-				if(i >= 256){
-					for(int j = 0; j < 3; j++){
-						gyro_cal_sum[j] += (uint32_t)raw_omega[j];
-					}
-				}
-				i++;
-			}
-		}
-	}
-	for(int j = 0; j < 3; j++){
-		omega_offset[j] = (uint16_t)(gyro_cal_sum[j] / 256);
-	}
-	printf("omega_offset:%d,%d,%d", omega_offset[0], omega_offset[1], omega_offset[2]);
-	gyro_cal_ok = 1;
-
-}
-
-void mpu6050_init(){
-	printf("init start\n");
-
-	/*sw_i2c_write(MPU6050_ADDRESS, MPU6050_PWR_MGMT_1, 0x00);		//use PLL with Z axis gyro ref
-	sw_i2c_write(MPU6050_ADDRESS, MPU6050_SMPLRT_DIV, 0x00);		//sampling frequence=1000K
-	sw_i2c_write(MPU6050_ADDRESS, MPU6050_CONFIG, 0x00);			//bandwith: gyro=256hz, acc=260hz
-	sw_i2c_write(MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
-	sw_i2c_write(MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g*/
-
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_PWR_MGMT_1, 0x00);		//use PLL with Z axis gyro ref
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_SMPLRT_DIV, 0x00);		//sampling frequence=1000K
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_CONFIG, 0x00);			//bandwith: gyro=256hz, acc=260hz
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g
-
-	DELAY_MS(100);
-	gyro_cal();
-	printf("init ends\n");
-
-}
 
 CameraApp::CameraApp():
 	m_gyro(0), m_balance_speed1(0), m_balance_speed2(0),
@@ -361,7 +263,7 @@ void CameraApp::MoveMotor(){
 	m_total_speed1 = m_balance_speed1 + m_control_speed1 + m_turn_speed1;
 	m_total_speed2 = m_balance_speed2 + m_control_speed2 + m_turn_speed2;
 	sum+=(m_total_speed1 + m_total_speed2)/2;
-	m_total_speed1 = m_total_speed1 * 70 / 100;
+	m_total_speed1 = m_total_speed1 * 90 / 100;
 
 	/*if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t) >= 50){
 		t = libutil::Clock::Time();
@@ -419,8 +321,7 @@ void CameraApp::Run()
 
 
 
-	i2c_init(I2C1, 400000);
-	DELAY_MS(100);
+
 	mpu6050_init();
 
 	m_lcd.Clear(0xFFFF);
@@ -428,10 +329,12 @@ void CameraApp::Run()
 
 	int mode = -1;
 	int ptr_pos = 1;
-	int maxchoices = 9;
+	int ptr_output_pos = 1;
+	int maxchoices = 11;
+	int viewport[2] = {1, 9};
 
 
-	const char* s[maxh];
+	const char* s[maxchoices];
 	s[0] = "Choose Mode:";
 	s[1] = "Auto";
 	s[2] = "PID";
@@ -442,29 +345,54 @@ void CameraApp::Run()
 	s[7] = "Balance Only";
 	s[8] = "Camera Move";
 	s[9] = "Balance & Speed";
+	s[10] = "Move motor";
+	s[11] = "UART";
 
-	for(int i=0; i<=maxchoices; i++) Printline(m_lcd.FONT_H * i, s[i]);
+	for(int i=0; i<=maxh; i++) Printline(m_lcd.FONT_H * i, s[i]);
 
-	PrintPtr(ptr_pos * m_lcd.FONT_H);
+	PrintPtr(ptr_output_pos * m_lcd.FONT_H);
 
 	while(mode==-1){
-
 		switch (m_joystick.GetState())
 		{
-		case libsc::Joystick::UP:
+		case libsc::Joystick::DOWN:
+
 			if(ptr_pos + 1 <= maxchoices){
 				++ptr_pos;
-				PrintPtr(ptr_pos * m_lcd.FONT_H);
-				DELAY_MS(150);
+				++ptr_output_pos;
+				ptr_output_pos = ptr_output_pos > maxh ? maxh : ptr_output_pos;
+
+				if(ptr_pos > viewport[1]){
+					viewport[0]++;
+					viewport[1]++;
+					for(int i=1; i<=maxchoices; i++) Printline(m_lcd.FONT_H * i, "                ");
+					for(int i=1; i<=maxchoices; i++) Printline(m_lcd.FONT_H * i, s[viewport[0]+i-1]);
+				}
+
+				PrintPtr(ptr_output_pos * m_lcd.FONT_H);
 			}
+
+			DELAY_MS(150);
 			break;
 
-		case libsc::Joystick::DOWN:
+		case libsc::Joystick::UP:
 			if(ptr_pos - 1 >= 1){
 				--ptr_pos;
-				PrintPtr(ptr_pos * m_lcd.FONT_H);
-				DELAY_MS(150);
+				--ptr_output_pos;
+				ptr_output_pos = ptr_output_pos < 1 ? 1 : ptr_output_pos;
+
+				if(ptr_pos < viewport[0]){
+					viewport[0]--;
+					viewport[1]--;
+					for(int i=1; i<=maxchoices; i++) Printline(m_lcd.FONT_H * i, "                ");
+					for(int i=1; i<=maxchoices; i++) Printline(m_lcd.FONT_H * i, s[viewport[0]+i-1]);
+				}
+
+				PrintPtr(ptr_output_pos * m_lcd.FONT_H);
 			}
+
+			DELAY_MS(150);
+
 			break;
 
 		case libsc::Joystick::SELECT:
@@ -531,22 +459,16 @@ void CameraApp::Run()
 				//TurnControlOutput();
 
 
-				///Update Gyro every 2ms///
-				/*if(t % 2 == 0)	{
-					mpu6050_update();
-				}*/
+				if(t%2==0){
 
-				switch(t%2){
-				case 0:
 					mpu6050_update();
-					break;
-				case 1:
+				}
+
+				if(t%5==0){
 
 					BalanceControl();
-					break;
-				default:
-					break;
 				}
+
 
 
 				if(t%45==0){ TurnControl(); }
@@ -768,9 +690,6 @@ void CameraApp::Run()
 
 		///////////////////////////Balance & Speed///////////////////////////
 
-		while(m_start_but.IsUp());
-
-
 		while (true)
 		{
 
@@ -796,15 +715,12 @@ void CameraApp::Run()
 
 
 				///Update Gyro every 2ms///
-				switch(t%2){
-				case 0:
+				if(t%2==0){
 					mpu6050_update();
-					break;
-				case 1:
+				}
+
+				if(t%5==0){
 					BalanceControl();
-					break;
-				default:
-					break;
 				}
 
 

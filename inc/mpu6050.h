@@ -120,6 +120,8 @@
 #define MPU6050_FIFO_R_W         0x74
 #define MPU6050_WHO_AM_I         0x75
 
-
+void mpu6050_init();
+void gyro_cal(void);
+void  mpu6050_update();
 
 #endif /* MPU6050_H_ */
