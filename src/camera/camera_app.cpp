@@ -260,25 +260,21 @@ void CameraApp::MoveMotor(){
 	m_car.MoveMotor(1,(uint16_t) abs(m_total_speed2));
 }
 
-void CameraApp::PrintlineI(uint8_t y, const char* s){
-	uint8_t x=0;
-	while(*s){
-		m_lcd.DrawChar(x, y, *s, WHITE, INVERTED_BG_COLOR);
-		x+=m_lcd.FONT_W;
-		s++;
-	}
-	for(int i=x; i<m_lcd.W; i++) m_lcd.DrawChar(i, y, ' ', WHITE, INVERTED_BG_COLOR);
-
-}
-
-void CameraApp::Printline(uint8_t* x, uint8_t y, const char* s){
+void CameraApp::Printline(uint8_t* x, uint8_t y, const char* s, const uint16_t TXT_COLOR = BLACK, const uint16_t BG_COLOR = WHITE){
 
 	while(*s){
 		if(y==0) m_lcd.DrawChar(*x, y, *s, WHITE, BLACK);
-		else m_lcd.DrawChar(*x, y, *s, BLACK, WHITE);
+		else m_lcd.DrawChar(*x, y, *s, TXT_COLOR, BG_COLOR);
 		*x+=m_lcd.FONT_W;
 		s++;
 	}
+
+}
+
+void CameraApp::Printline(uint8_t y, const char* s, bool inverted){
+	uint8_t x=0;
+	Printline(&x, y, s, WHITE, INVERTED_BG_COLOR);
+	for(int i=x; i<m_lcd.W; i++) m_lcd.DrawChar(i, y, ' ', WHITE, INVERTED_BG_COLOR);
 
 }
 
@@ -337,7 +333,7 @@ void CameraApp::Run()
 	for(int i=0; i<=maxh; i++) Printline(m_lcd.FONT_H * i, s[i]);
 	uint8_t mx;
 
-	PrintlineI(m_lcd.FONT_H * ptr_output_pos, s[viewport[0]+ptr_output_pos-1]);
+	Printline(m_lcd.FONT_H * ptr_output_pos, s[viewport[0]+ptr_output_pos-1], true);
 
 	while(mode==-1){
 		mx = m_lcd.FONT_W * 6;
@@ -356,7 +352,7 @@ void CameraApp::Run()
 					viewport[1]++;
 					for(int i=1; i<=maxh; i++) {
 						//Printline(m_lcd.FONT_H * i, "                ");
-						if(ptr_output_pos == i) PrintlineI(m_lcd.FONT_H * i, s[viewport[0]+i-1]);
+						if(ptr_output_pos == i) Printline(m_lcd.FONT_H * i, s[viewport[0]+i-1], true);
 						else Printline(m_lcd.FONT_H * i, s[viewport[0]+i-1]);
 					}
 				}
@@ -368,12 +364,12 @@ void CameraApp::Run()
 				viewport[1] = maxh;
 				for(int i=1; i<=maxh; i++) {
 					//Printline(m_lcd.FONT_H * i, "                ");
-					if(ptr_output_pos == i) PrintlineI(m_lcd.FONT_H * i, s[viewport[0]+i-1]);
+					if(ptr_output_pos == i) Printline(m_lcd.FONT_H * i, s[viewport[0]+i-1], true);
 					else Printline(m_lcd.FONT_H * i, s[viewport[0]+i-1]);
 				}
 			}
 			if(ptr_output_pos != 1) Printline(m_lcd.FONT_H * (ptr_output_pos-1), s[viewport[0]+ptr_output_pos-1-1]);
-			PrintlineI(m_lcd.FONT_H * ptr_output_pos, s[viewport[0]+ptr_output_pos-1]);
+			Printline(m_lcd.FONT_H * ptr_output_pos, s[viewport[0]+ptr_output_pos-1], true);
 			//PrintPtr(ptr_output_pos * m_lcd.FONT_H);
 			DELAY_MS(100);
 			break;
@@ -389,7 +385,7 @@ void CameraApp::Run()
 					viewport[1]--;
 					for(int i=1; i<=maxh; i++) {
 						//Printline(m_lcd.FONT_H * i, "                ");
-						if(ptr_output_pos == i) PrintlineI(m_lcd.FONT_H * i, s[viewport[0]+i-1]);
+						if(ptr_output_pos == i) Printline(m_lcd.FONT_H * i, s[viewport[0]+i-1], true);
 						else Printline(m_lcd.FONT_H * i, s[viewport[0]+i-1]);
 					}
 				}
@@ -401,12 +397,12 @@ void CameraApp::Run()
 				viewport[1] = maxchoices;
 				for(int i=1; i<=maxh; i++) {
 					//Printline(m_lcd.FONT_H * i, "                ");
-					if(ptr_output_pos == i) PrintlineI(m_lcd.FONT_H * i, s[viewport[0]+i-1]);
+					if(ptr_output_pos == i) Printline(m_lcd.FONT_H * i, s[viewport[0]+i-1], true);
 					else Printline(m_lcd.FONT_H * i, s[viewport[0]+i-1]);
 				}
 			}
 			if(ptr_output_pos != maxh) Printline(m_lcd.FONT_H * (ptr_output_pos+1), s[viewport[0]+ptr_output_pos-1+1]);
-			PrintlineI(m_lcd.FONT_H * ptr_output_pos, s[viewport[0]+ptr_output_pos-1]);
+			Printline(m_lcd.FONT_H * ptr_output_pos, s[viewport[0]+ptr_output_pos-1], true);
 			//PrintPtr(ptr_output_pos * m_lcd.FONT_H);
 			DELAY_MS(100);
 

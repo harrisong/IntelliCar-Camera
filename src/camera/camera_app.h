@@ -40,11 +40,11 @@ public:
 
 
 	void Printline(uint8_t y, const char* s);
-	void PrintlineI(uint8_t y, const char* s);
+	void Printline(uint8_t y, const char* s, bool);
 	void Printline(uint8_t x, uint8_t y, const char* s){
 		Printline(&x, y, s);
 	}
-	void Printline(uint8_t* x, uint8_t y, const char* s);
+	void Printline(uint8_t* x, uint8_t y, const char* s, const uint16_t TXT_COLOR, const uint16_t BG_COLOR);
 
 	void PrintPtr(uint8_t y){
 		for(int i=m_lcd.FONT_H+1; i<m_lcd.H; i++) m_lcd.DrawChar(0, i, ' ', WHITE, WHITE);
