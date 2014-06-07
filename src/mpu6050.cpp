@@ -23,7 +23,7 @@ int16_t raw_acc[3] = {0,0,0};
 int16_t raw_omega[3] = {0,0,0};
 float omega[3] = {0,0,0};
 float acc[3] = {0,0,0};
-float angle[3] = {90,0,0};
+float angle[3] = {36,0,0};
 volatile int gyro_cal_ok = 0;
 
 void  mpu6050_update(){
