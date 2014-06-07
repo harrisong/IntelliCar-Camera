@@ -59,7 +59,7 @@ extern int16_t raw_omega[3];
 extern float omega[3];
 extern float acc[3];
 extern float angle[3];
-extern volatile int gyro_cal_ok;
+
 
 
 

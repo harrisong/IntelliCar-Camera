@@ -23,8 +23,8 @@ int16_t raw_acc[3] = {0,0,0};
 int16_t raw_omega[3] = {0,0,0};
 float omega[3] = {0,0,0};
 float acc[3] = {0,0,0};
-float angle[3] = {36,0,0};
-volatile int gyro_cal_ok = 0;
+float angle[3] = {18,0,0};
+int gyro_cal_ok = 0;
 
 void  mpu6050_update(){
 //	sw_i2c_read_nbytes(MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
@@ -86,7 +86,7 @@ void gyro_cal(void){
 
 void mpu6050_init(){
 	i2c_init(I2C1, 400000);
-	DELAY_MS(100);
+	DELAY_MS(1000);
 	printf("init start\n");
 
 	/*sw_i2c_write(MPU6050_ADDRESS, MPU6050_PWR_MGMT_1, 0x00);		//use PLL with Z axis gyro ref
@@ -101,7 +101,7 @@ void mpu6050_init(){
 	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
 	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g
 
-	DELAY_MS(100);
+	DELAY_MS(1000);
 	gyro_cal();
 	printf("init ends\n");
 
