@@ -260,7 +260,7 @@ void CameraApp::MoveMotor(){
 	m_car.MoveMotor(1,(uint16_t) abs(m_total_speed2));
 }
 
-void CameraApp::Printline(uint8_t* x, uint8_t y, const char* s, const uint16_t TXT_COLOR = BLACK, const uint16_t BG_COLOR = WHITE){
+void CameraApp::Printline(uint8_t* x, uint8_t y, const char* s, const uint16_t TXT_COLOR, const uint16_t BG_COLOR){
 
 	while(*s){
 		if(y==0) m_lcd.DrawChar(*x, y, *s, WHITE, BLACK);
