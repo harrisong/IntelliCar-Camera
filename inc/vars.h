@@ -21,14 +21,14 @@
 #define balance_kd 30000.0f
 #define balance_ki 0.0f
 
-#define SETPOINT 60
+#define SETPOINT 47
 #define DEADZONELOWER 90
 #define DEADZONEHIGHER -20
 
 //speed pid vars//
-#define speed_kp 2.5f
+#define speed_kp 4.5f
 #define speed_kd 0.0f
-#define speed_ki 1.5f
+#define speed_ki 0.8f
 #define SPEEDCONTROLPERIOD 100
 
 #define degree_kp 1.0f

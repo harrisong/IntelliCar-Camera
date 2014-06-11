@@ -37,6 +37,9 @@ Car::Car()
 	}
 	m_cam.ShootContinuously();
 
+	FTM_QUAD_Init(FTM1);
+	FTM_QUAD_Init(FTM2);
+
 }
 
 Car::~Car()
