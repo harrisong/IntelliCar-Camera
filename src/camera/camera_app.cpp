@@ -92,6 +92,13 @@ void CameraApp::SpeedControl(){
 
 	prev_tempspeed = current_tempspeed;
 	current_tempspeed = (int32_t) (speed_kp * error + speed_kd * delta_error + total_error);
+
+	if(m_encoder_2 > 350)
+	{
+		m_car.MoveMotor(0, 0);
+		m_car.MoveMotor(1, 0);
+		while(true);
+	}
 }
 
 void CameraApp::SpeedControlOutput(){
@@ -127,7 +134,7 @@ void CameraApp::TurnControl(){
 //	double encoderCurrentError = m_encoder_2 * 2;
 
 //	int degree = (int) round(degree_kp * areaCurrentError + degree_kd * -omega[1]);
-	int degree = (int) round((degree_kp * areaCurrentError + degree_kd * ((areaPrevError - areaCurrentError) /*+ (encoderCurrentError - encoderPrevError)*/)));
+	int degree = (int) round((degree_kp * areaCurrentError + degree_kd * (0.8*(areaPrevError - areaCurrentError) + 0.2 * -omega[1] /*+ (encoderCurrentError - encoderPrevError)*/)));
 
 	areaPrevError = areaCurrentError;
 	//encoderPrevError = encoderCurrentError;
@@ -136,6 +143,9 @@ void CameraApp::TurnControl(){
 
 	prev_turn = current_turn;
 	current_turn = - 1 * degree * 10;
+
+//	m_turn_speed1 = - degree * 10;
+//	m_turn_speed2 = m_turn_speed1;
 
 	m_car.GetCamera()->UnlockBuffer();
 	//DELAY_MS(10);
@@ -475,6 +485,7 @@ void CameraApp::Run()
 
 		while (true)
 		{
+
 			///System loop - 1ms///
 			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 				t = libutil::Clock::Time();
@@ -494,11 +505,11 @@ void CameraApp::Run()
 					}
 				}*/
 
-				SPEEDSETPOINT = 50;
+				SPEEDSETPOINT = 60;
 
 
 				if(t%1500==0 && autoprint) {
-					const char* s = libutil::String::Format("%06d",m_control_speed1).c_str();
+					/*const char* s = libutil::String::Format("%06d",m_control_speed1).c_str();
 					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 1, s);
 					s = libutil::String::Format("%06d",m_control_speed2).c_str();
 					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 2, s);
@@ -509,7 +520,7 @@ void CameraApp::Run()
 					s = libutil::String::Format("%d",(int)m_gyro).c_str();
 					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 5, s);
 					s = libutil::String::Format("%d",SPEEDSETPOINT).c_str();
-					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 6, s);
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 6, s);*/
 				}
 
 				///Speed Control Output every 1ms///
