@@ -26,10 +26,6 @@ namespace camera
 {
 int16_t SPEEDSETPOINT = 0;
 
-int16_t LeftEdgeX[CAM_H];
-int16_t RightEdgeX[CAM_H];
-int16_t CenterX[CAM_H];
-
 CameraApp::CameraApp():
 	m_gyro(0), m_balance_speed1(0), m_balance_speed2(0),
 	m_control_speed1(0), m_control_speed2(0),
@@ -47,9 +43,6 @@ CameraApp::CameraApp():
 	kalman_filter_init(&m_gyro_kf[2], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_acc_kf, 0.0005, 0.05, 0, 1);
 	mpu6050_init();
-	memset(CenterX, -1, CAM_H);
-	memset(LeftEdgeX, -1, CAM_H);
-	memset(RightEdgeX, -1, CAM_H);
 	m_lcd.Clear(WHITE);
 
 }
@@ -106,51 +99,6 @@ void CameraApp::SpeedControlOutput(){
 
     m_control_speed1 = m_control_speed2 = (current_tempspeed - prev_tempspeed) * (++speed_control_count) / SPEEDCONTROLPERIOD + prev_tempspeed;
     if(speed_control_count==SPEEDCONTROLPERIOD) speed_control_count = 0;
-}
-
-
-
-
-void CameraApp::EdgeDetection(const Byte* src, const int y)
-{
-	LeftEdgeX[y] = -1;
-	RightEdgeX[y] = -1;
-
-	if(y-2>=0)
-		CenterX[y] = CenterX[y-1] + CenterX[y-1] - CenterX[y-2];
-	else
-		CenterX[y] = CAM_W/2;
-
-	for(int x=CenterX[y]; x>=0; x--)
-	{
-		if(m_car.GetPixel(src, x, y) != WHITE_BYTE && x-1>=0 && x-2>=0 && m_car.GetPixel(src, x-1, y) != WHITE_BYTE && m_car.GetPixel(src, x-2, y) != WHITE_BYTE)
-		{
-			LeftEdgeX[y] = x+1;
-		}
-	}
-
-	for(int x=CenterX[y]; x<CAM_W; x++)
-	{
-		if(x+1<CAM_W && x-2<CAM_W && m_car.GetPixel(src, x, y) != WHITE_BYTE && m_car.GetPixel(src, x+1, y) != WHITE_BYTE && m_car.GetPixel(src, x+2, y) != WHITE_BYTE)
-		{
-			RightEdgeX[y] = x-1;
-		}
-	}
-
-	if(LeftEdgeX[y]==-1 || RightEdgeX[y]==-1)
-	{
-		if(LeftEdgeX[y]==-1)
-			LeftEdgeX[y] = 0;
-		if(RightEdgeX[y]==-1)
-			RightEdgeX[y] = CAM_W-1;
-
-		CenterX[y] = (int) round((((int) round( (LeftEdgeX[y] + RightEdgeX[y]) / 2)) + CenterX[y])/2);
-	}
-	else
-	{
-		CenterX[y] = (int) round((LeftEdgeX[y] + RightEdgeX[y])/2);
-	}
-
 }
 
 void CameraApp::TurnControl(){
