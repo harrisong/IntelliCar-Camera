@@ -26,13 +26,16 @@
 #define DEADZONEHIGHER -20
 
 //speed pid vars//
-#define speed_kp 4.5f
+//#define speed_kp 125.0f
+#define speed_kp 100.0f
 #define speed_kd 0.0f
-#define speed_ki 0.8f
-#define SPEEDCONTROLPERIOD 100
+//#define speed_ki 7.5f
+#define speed_ki 8.5f
+#define SPEEDCONTROLPERIOD 20
 
-#define degree_kp 1.0f
-#define degree_kd 1.0f
+#define degree_kp 0.12f
+#define degree_kd 0.0155f
+#define TURNCONTROLPERIOD 45
 
 //#define CAM_W 160
 //#define CAM_H 120

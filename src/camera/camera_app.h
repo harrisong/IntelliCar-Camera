@@ -62,6 +62,7 @@ private:
 	int32_t m_total_speed1, m_total_speed2;
 	int32_t m_encoder_2;
 	int32_t prev_tempspeed, current_tempspeed;
+	int32_t prev_turn, current_turn;
 
 	int32_t m_turn_speed1, m_turn_speed2;
 

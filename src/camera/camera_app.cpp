@@ -78,7 +78,7 @@ void CameraApp::BalanceControl()
 
 
 void CameraApp::SpeedControl(){
-	static int32_t error, total_error, delta_error, o_error = 0;
+	static int32_t error, total_error = 0, delta_error, o_error = 0;
 	int32_t encoder1 = FTM_QUAD_get(FTM1);
 	int32_t encoder2 = -FTM_QUAD_get(FTM2);
 	m_encoder_2 = (encoder1 + encoder2)/2;
@@ -87,11 +87,11 @@ void CameraApp::SpeedControl(){
 
 	error = SPEEDSETPOINT - m_encoder_2;
 	delta_error = error - o_error;
-	total_error += error;
+	total_error += speed_ki * error;
 	o_error = error;
 
 	prev_tempspeed = current_tempspeed;
-	current_tempspeed = speed_kp * error + speed_kd * delta_error + speed_ki * total_error;
+	current_tempspeed = (int32_t) (speed_kp * error + speed_kd * delta_error + total_error);
 }
 
 void CameraApp::SpeedControlOutput(){
@@ -126,8 +126,8 @@ void CameraApp::TurnControl(){
 
 //	double encoderCurrentError = m_encoder_2 * 2;
 
-	int degree = (int) round(degree_kp * areaCurrentError + degree_kd * -omega[1]);
-//	int degree = (int) round((degree_kp * areaCurrentError + degree_kd * ((areaPrevError - areaCurrentError) /*+ (encoderCurrentError - encoderPrevError)*/)));
+//	int degree = (int) round(degree_kp * areaCurrentError + degree_kd * -omega[1]);
+	int degree = (int) round((degree_kp * areaCurrentError + degree_kd * ((areaPrevError - areaCurrentError) /*+ (encoderCurrentError - encoderPrevError)*/)));
 
 	areaPrevError = areaCurrentError;
 	//encoderPrevError = encoderCurrentError;
@@ -137,11 +137,19 @@ void CameraApp::TurnControl(){
 	else
 		degree = degree > 100 ? 100 : degree;
 
-	m_turn_speed1 = - 1 * degree * 17;
-	m_turn_speed2 = 1 * degree * 17;
+	prev_turn = current_turn;
+	current_turn = - 1 * degree * 10;
 
 	m_car.GetCamera()->UnlockBuffer();
 	//DELAY_MS(10);
+}
+
+void CameraApp::TurnControlOutput(){
+	static int32_t turn_control_count;
+
+	    m_turn_speed1 = (current_turn - prev_turn) * (++turn_control_count) / TURNCONTROLPERIOD + prev_turn;
+	    m_turn_speed2 = -m_turn_speed1;
+	    if(turn_control_count==TURNCONTROLPERIOD) turn_control_count = 0;
 }
 
 void CameraApp::PrintCam(){
@@ -256,17 +264,12 @@ void CameraApp::PrintCam(){
 	//DELAY_MS(10);
 }
 
-void CameraApp::TurnControlOutput(){
-
-}
-
 void CameraApp::MoveMotor(){
 	static uint16_t t = 0;
 	static uint32_t sum = 0;
 	m_total_speed1 = m_balance_speed1 - m_control_speed1 + m_turn_speed1;
 	m_total_speed2 = m_balance_speed2 - m_control_speed2 + m_turn_speed2;
 	//sum+=(m_total_speed1 + m_total_speed2)/2;
-	m_total_speed1 = m_total_speed1 * 90 / 100;
 
 	/*if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t) >= 50){
 		t = libutil::Clock::Time();
@@ -494,7 +497,7 @@ void CameraApp::Run()
 					}
 				}*/
 
-				SPEEDSETPOINT = 300;
+				SPEEDSETPOINT = 50;
 
 
 				if(t%1500==0 && autoprint) {
@@ -516,7 +519,7 @@ void CameraApp::Run()
 				SpeedControlOutput();
 
 				///Turn Control Output every 1 ms///
-				//TurnControlOutput();
+				TurnControlOutput();
 
 
 				if(t%2==0){
@@ -531,7 +534,7 @@ void CameraApp::Run()
 
 
 
-				if(t%45==0){ TurnControl(); }
+				if(t%TURNCONTROLPERIOD==0){ TurnControl(); }
 
 				///Speed PID update every 100ms///
 				if(t%SPEEDCONTROLPERIOD==0){ SpeedControl(); }
@@ -818,17 +821,11 @@ void CameraApp::Run()
 				///Speed Control Output every 1ms///
 				SpeedControlOutput();
 
-				/*if(t%1000==0 && autoprint) {
-					const char* s = libutil::String::Format("Speed: %04d,%04d",m_control_speed1,m_control_speed2).c_str();
+				if(t%2000==0 && autoprint) {
+					const char* s = libutil::String::Format("%04d, %04d",m_total_speed1, m_total_speed2).c_str();
 					Printline(m_lcd.FONT_H * 1, s);
-					s = libutil::String::Format("Motor: %04d, %04d",m_total_speed1, m_total_speed2).c_str();
-					Printline(m_lcd.FONT_H * 2, s);
-					s = libutil::String::Format("Angle: %02d",(int)m_gyro).c_str();
-					Printline(m_lcd.FONT_H * 3, s);
-					s = libutil::String::Format("SSP: %d",SPEEDSETPOINT).c_str();
-					Printline(m_lcd.FONT_H * 4, s);
-				}*/
 
+				}
 
 
 
@@ -853,11 +850,6 @@ void CameraApp::Run()
 				if(t%SPEEDCONTROLPERIOD==0) SpeedControl();
 				MoveMotor();
 
-				/*if(m_start_but.IsDown()) {
-					autoprint = !autoprint;
-					while(m_start_but.IsDown());
-				}*/
-				m_count++;
 			}
 
 
