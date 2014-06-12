@@ -81,14 +81,13 @@ public:
 	libsc::Led* GetLed(int n);
 
 
-	
+
 	libsc::Lcd* GetLcd();
 
-	Byte* ExpandPixel(const int);
 	Byte* ExpandPixel(const Byte *src, const int line);
 	int GetPixel(const Byte* src, const int x, const int y);
+	int Clamp(const int x);
 	libsc::Ov7725* GetCamera();
-	const Byte* GetImage();
 
 private:
 	libsc::Led m_leds[4];
@@ -101,9 +100,6 @@ private:
 //	BalanceEncoder m_encoder2;
 
 	uint16_t m_current_time, m_prev_time, m_delta_time;
-
-	const Byte* src;
-
 
 };
 

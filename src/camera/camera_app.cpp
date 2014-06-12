@@ -206,26 +206,106 @@ void CameraApp::PrintCam(){
 		m_lcd.DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
 	}
 
+	//---------------------Edge Detection---------------------//
+	int LeftEdgeX, CenterX[CAM_H], RightEdgeX;
+	memset(CenterX, -1, CAM_H);
 
-	for(int y=0; y<CAM_H; y++)
+	for(int y=CAM_H-1; y>=0; y--)
 	{
-		EdgeDetection(src, y);
+		LeftEdgeX = -1;
+		RightEdgeX = -1;
+		/*
+		int BlackCount = 0;
+		int BlackSum = 0;
 
-		if(LeftEdgeX[y]!=-1)
-			m_lcd.DrawPixel(LeftEdgeX[y], y, RED_BYTE);
-		if(RightEdgeX[y]!=-1)
-			m_lcd.DrawPixel(RightEdgeX[y], y, RED_BYTE);
-		if(CenterX[y]!=-1)
-			m_lcd.DrawPixel(RightEdgeX[y], y, RED_BYTE);
+		for(int x=0; x<CAM_W; x++)
+		{
+			if(m_car.GetPixel(src, x, y) == BLACK_BYTE)
+			{
+				BlackCount++;
+				BlackSum+=x;
+			}
+		}
+
+		CenterX[y] = (int) round(BlackSum / BlackCount);
+
+		if(CenterX[y] == BLACK_BYTE && y+1<CAM_H && y+2<CAM_H)
+			CenterX[y] = CenterX[y+1] + (CenterX[y+1] - CenterX[y+2]);
+*/
+
+		if(y+2>=CAM_H)
+			CenterX[y] = CenterX[y+1] + (CenterX[y+1] - CenterX[y+2]);
+		else
+			CenterX[y] = CAM_W/2;
+
+		CenterX[y] = m_car.Clamp(CenterX[y]);
+
+		int x = CenterX[y];
+
+		if(
+			m_car.GetPixel(src, x, y)==BLACK_BYTE
+			&& m_car.GetPixel(src, m_car.Clamp(x-1), y)==BLACK_BYTE
+			&& m_car.GetPixel(src, m_car.Clamp(x+1), y)==BLACK_BYTE
+		)
+		{
+			const char* s = libutil::String::Format("%d, %d, %d", x, x-1, x+1).c_str();
+			Printline(m_lcd.FONT_H * 7+30, s);
+			break;
+		}
+
+		for(int x=CenterX[y]; x>=0; x--)
+		{
+			if(
+				x-1>=0 && x-2>=0 && x-3>=0
+				&& m_car.GetPixel(src, x, y) == WHITE_BYTE
+				&& m_car.GetPixel(src, x-1, y) == BLACK_BYTE
+				&& m_car.GetPixel(src, x-2, y) == BLACK_BYTE
+				&& m_car.GetPixel(src, x-3, y) == BLACK_BYTE
+			)
+			{
+				LeftEdgeX = x-1;
+				break;
+			}
+		}
+
+		for(int x=CenterX[y]; x<CAM_W; x++)
+		{
+			if(
+				x+1<CAM_W && x+2<CAM_W && x+3<CAM_W
+				&& m_car.GetPixel(src, x, y) == WHITE_BYTE
+				&& m_car.GetPixel(src, x+1, y) == BLACK_BYTE
+				&& m_car.GetPixel(src, x+2, y) == BLACK_BYTE
+				&& m_car.GetPixel(src, x+3, y) == BLACK_BYTE
+			)
+			{
+				RightEdgeX = x+1;
+				break;
+			}
+		}
+
+		if(LeftEdgeX==-1 || RightEdgeX==-1)
+		{
+			if(LeftEdgeX==-1)
+				LeftEdgeX = 0;
+			if(RightEdgeX==-1)
+				RightEdgeX = CAM_W-1;
+
+		}
+
+		CenterX[y] = (int) round((LeftEdgeX + RightEdgeX)/2);
+
+		m_lcd.DrawPixel((CAM_H - 1) - y, LeftEdgeX, libutil::GetRgb565(0xFF, 0x00, 0x00));
+		m_lcd.DrawPixel((CAM_H - 1) - y, RightEdgeX, libutil::GetRgb565(0x00, 0xFF, 0x00));
+		m_lcd.DrawPixel((CAM_H - 1) - y, CenterX[y], libutil::GetRgb565(0x00, 0x00, 0xFF));
 	}
-
+	//---------------------Edge Detection---------------------//
 
 
 	m_car.GetCamera()->UnlockBuffer();
 	uint16_t sec = libutil::Clock::Time()/1000;
 	const char* s = libutil::String::Format("Time: %02d",sec).c_str();
 	Printline(m_lcd.FONT_H * 7, s);
-//		DELAY_MS(10);
+	//DELAY_MS(10);
 }
 
 void CameraApp::TurnControlOutput(){
