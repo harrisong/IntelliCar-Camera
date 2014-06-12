@@ -86,7 +86,7 @@ public:
 
 	Byte* ExpandPixel(const Byte *src, const int line);
 	int GetPixel(const Byte* src, const int x, const int y);
-	int Clamp(const int x);
+	int Clamp(const int x, const int lowerBound, const int upperBound);
 	libsc::Ov7725* GetCamera();
 
 private:

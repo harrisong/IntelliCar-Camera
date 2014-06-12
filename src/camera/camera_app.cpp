@@ -132,10 +132,7 @@ void CameraApp::TurnControl(){
 	areaPrevError = areaCurrentError;
 	//encoderPrevError = encoderCurrentError;
 
-	if(degree < 0)
-		degree = degree < -100 ? -100 : degree;
-	else
-		degree = degree > 100 ? 100 : degree;
+	degree = m_car.Clamp(degree, -100, 100);
 
 	prev_turn = current_turn;
 	current_turn = - 1 * degree * 10;
@@ -194,14 +191,14 @@ void CameraApp::PrintCam(){
 		else
 			CenterX[y] = CAM_W/2;
 
-		CenterX[y] = m_car.Clamp(CenterX[y]);
+		CenterX[y] = m_car.Clamp(CenterX[y], 0, CAM_W-1);
 
 		int x = CenterX[y];
 
 		if(
 			m_car.GetPixel(src, x, y)==BLACK_BYTE
-			&& m_car.GetPixel(src, m_car.Clamp(x-1), y)==BLACK_BYTE
-			&& m_car.GetPixel(src, m_car.Clamp(x+1), y)==BLACK_BYTE
+			&& m_car.GetPixel(src, m_car.Clamp(x-1, 0, CAM_W-1), y)==BLACK_BYTE
+			&& m_car.GetPixel(src, m_car.Clamp(x+1, 0, CAM_W-1), y)==BLACK_BYTE
 		)
 		{
 			const char* s = libutil::String::Format("%d, %d, %d", x, x-1, x+1).c_str();

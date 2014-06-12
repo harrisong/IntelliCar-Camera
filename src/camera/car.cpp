@@ -146,12 +146,12 @@ libsc::Lcd* Car::GetLcd()
 	//return &m_lcd;
 }
 
-int Car::Clamp(const int x)
+int Car::Clamp(const int x, const int lowerBound, const int upperBound)
 {
-	if(x<0)
+	if(x<lowerBound)
 		return 0;
-	else if(x>=CAM_W)
-		return CAM_W-1;
+	else if(x>upperBound)
+		return upperBound;
 	else
 		return x;
 }
