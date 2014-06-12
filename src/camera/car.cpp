@@ -39,7 +39,6 @@ Car::Car()
 
 	FTM_QUAD_Init(FTM1);
 	FTM_QUAD_Init(FTM2);
-
 }
 
 Car::~Car()
@@ -147,9 +146,14 @@ libsc::Lcd* Car::GetLcd()
 	//return &m_lcd;
 }
 
-const Byte* Car::GetImage()
+int Car::Clamp(const int x)
 {
-	return src;
+	if(x<0)
+		return 0;
+	else if(x>=CAM_W)
+		return CAM_W-1;
+	else
+		return x;
 }
 
 Byte* Car::ExpandPixel(const Byte *src, const int line)
@@ -171,12 +175,6 @@ Byte* Car::ExpandPixel(const Byte *src, const int line)
     return product;
 }
 
-Byte* Car::ExpandPixel(const int line)
-{
-
-	return ExpandPixel(src, line);
-
-}
 
 int Car::GetPixel(const Byte* src, const int x, const int y)
 {
