@@ -249,9 +249,15 @@ void CameraApp::MoveMotor(){
 	}*/
 
 	if(m_total_speed1 > 0){
-		m_dir1 = m_dir2 = true;
-	}else if(m_total_speed1 < 0){
-		m_dir1 = m_dir2 = false;
+		m_dir1 = true;
+	}else{
+		m_dir1 = false;
+	}
+
+	if(m_total_speed2 > 0){
+		m_dir2 = true;
+	}else{
+		m_dir2 = false;
 	}
 
 	m_car.MotorDir(0, m_dir1); 			////Right Motor - True Backward  -  False Forward
@@ -460,7 +466,7 @@ void CameraApp::Run()
 					}
 				}*/
 
-				SPEEDSETPOINT = 50;
+				SPEEDSETPOINT = 300;
 
 
 				if(t%1500==0 && autoprint) {
@@ -490,7 +496,7 @@ void CameraApp::Run()
 					mpu6050_update();
 				}
 
-				if(t%2==0){
+				if(t%2==1){
 
 					BalanceControl();
 				}
@@ -607,7 +613,7 @@ void CameraApp::Run()
 		{
 
 			///System loop - 1ms///
-			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>=45){
+			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>=100){
 				t = libutil::Clock::Time();
 				PrintCam();
 			}
