@@ -142,10 +142,10 @@ void CameraApp::TurnControl(){
 	degree = m_car.Clamp(degree, -100, 100);
 
 	prev_turn = current_turn;
-	current_turn = - 1 * degree * 7;
+	current_turn = - 1 * degree * 10;
 
-//	m_turn_speed1 = - degree * 10;
-//	m_turn_speed2 = m_turn_speed1;
+//	m_turn_speed1 = -1 * degree * 10;
+//	m_turn_speed2 = 1 * degree * 10;
 
 	m_car.GetCamera()->UnlockBuffer();
 	//DELAY_MS(10);
@@ -504,7 +504,7 @@ void CameraApp::Run()
 						}
 					}
 				}*/
-				if(t - pt > 5000) SPEEDSETPOINT = 60;
+				if(t - pt > 5000) SPEEDSETPOINT = 50;
 
 
 				if(t%1500==0 && autoprint) {
