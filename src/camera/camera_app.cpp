@@ -134,7 +134,7 @@ void CameraApp::TurnControl(){
 //	double encoderCurrentError = m_encoder_2 * 2;
 
 //	int degree = (int) round(degree_kp * areaCurrentError + degree_kd * -omega[1]);
-	int degree = (int) round((degree_kp * areaCurrentError + degree_kd * (0.8*(areaPrevError - areaCurrentError) + 0.2 * -omega[1] /*+ (encoderCurrentError - encoderPrevError)*/)));
+	int degree = (int) round((degree_kp * areaCurrentError + degree_kd * (areaPrevError - areaCurrentError))); /*+ (encoderCurrentError - encoderPrevError)*/
 
 	areaPrevError = areaCurrentError;
 	//encoderPrevError = encoderCurrentError;
@@ -142,7 +142,7 @@ void CameraApp::TurnControl(){
 	degree = m_car.Clamp(degree, -100, 100);
 
 	prev_turn = current_turn;
-	current_turn = - 1 * degree * 10;
+	current_turn = - 1 * degree * 7;
 
 //	m_turn_speed1 = - degree * 10;
 //	m_turn_speed2 = m_turn_speed1;
@@ -154,9 +154,9 @@ void CameraApp::TurnControl(){
 void CameraApp::TurnControlOutput(){
 	static int32_t turn_control_count;
 
-	    m_turn_speed1 = (current_turn - prev_turn) * (++turn_control_count) / TURNCONTROLPERIOD + prev_turn;
-	    m_turn_speed2 = -m_turn_speed1;
-	    if(turn_control_count==TURNCONTROLPERIOD) turn_control_count = 0;
+	m_turn_speed1 = (current_turn - prev_turn) * (++turn_control_count) / TURNCONTROLPERIOD + prev_turn;
+	m_turn_speed2 = -m_turn_speed1;
+	if(turn_control_count==TURNCONTROLPERIOD) turn_control_count = 0;
 }
 
 void CameraApp::PrintCam(){
@@ -504,8 +504,7 @@ void CameraApp::Run()
 						}
 					}
 				}*/
-
-				SPEEDSETPOINT = 60;
+				if(t - pt > 5000) SPEEDSETPOINT = 60;
 
 
 				if(t%1500==0 && autoprint) {
