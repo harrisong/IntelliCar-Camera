@@ -24,13 +24,27 @@
 
 namespace camera
 {
-int16_t SPEEDSETPOINT = 0;
+
+int mode_chosen = 0;
+
+float b_kp[num_of_modes] = {3000.0, 3000.0, 3000.0};
+float b_kd[num_of_modes] = {30000.0, 30000.0, 30000.0};
+float b_ki[num_of_modes] = {0.0, 0.0, 0.0};
+
+int16_t SPEEDSETPOINTS[num_of_modes] = {0, 90, 100};
+
+float s_kp[num_of_modes] = {120.0, 120.0, 150.0};
+float s_kd[num_of_modes] = {0.0, 0.0, 0.0};
+float s_ki[num_of_modes] = {11.0, 8.0, 11.0};
+
+float t_kp[num_of_modes] = {0.089, 0.089, 0.089};
+float t_kd[num_of_modes] = {0.0, 0.05, 0.05};
 
 CameraApp::CameraApp():
 	m_gyro(0), m_balance_speed1(0), m_balance_speed2(0),
 	m_control_speed1(0), m_control_speed2(0),
-	m_balance_pid(SETPOINT, balance_kp, balance_ki, balance_kd),
-	m_speed_pid(SPEEDSETPOINT, speed_kp, speed_ki, speed_kd),
+	m_balance_pid(SETPOINT, b_kp[mode_chosen], b_ki[mode_chosen], b_kd[mode_chosen]),
+	m_speed_pid(SPEEDSETPOINTS[0], s_kp[mode_chosen], s_ki[mode_chosen], s_kd[mode_chosen]),
 	m_count(0),
 	m_total_speed1(0), m_total_speed2(0),
 	prev_tempspeed(0), current_tempspeed(0),
@@ -72,7 +86,7 @@ void CameraApp::BalanceControl()
 	o_error = e;
 
 
-	m_balance_speed1 = m_balance_speed2 = balance_kp * e + balance_kd * delta;
+	m_balance_speed1 = m_balance_speed2 = b_kp[mode_chosen] * e + b_kd[mode_chosen] * delta;
 
 }
 
@@ -85,13 +99,13 @@ void CameraApp::SpeedControl(){
 	FTM_QUAD_clean(FTM1);
 	FTM_QUAD_clean(FTM2);
 
-	error = SPEEDSETPOINT - m_encoder_2;
+	error = SPEEDSETPOINTS[mode_chosen] - m_encoder_2;
 	delta_error = error - o_error;
-	total_error += speed_ki * error;
+	total_error += error;
 	o_error = error;
 
 	prev_tempspeed = current_tempspeed;
-	current_tempspeed = (int32_t) (speed_kp * error + speed_kd * delta_error + total_error);
+	current_tempspeed = (int32_t) (s_kp[mode_chosen] * error + s_kd[mode_chosen] * delta_error + s_ki[mode_chosen] * total_error);
 
 	if(m_encoder_2 > 350)
 	{
@@ -136,7 +150,7 @@ void CameraApp::TurnControl(){
 		//	double encoderCurrentError = m_encoder_2 * 2;
 
 //			int degree = (int) round(degree_kp * areaCurrentError + degree_kd * -omega[1]);
-			int degree = (int) round((degree_kp * areaCurrentError + degree_kd * (areaPrevError - areaCurrentError))); /*+ (encoderCurrentError - encoderPrevError)*/
+			int degree = (int) round((t_kp[mode_chosen] * areaCurrentError + t_kd[mode_chosen] * (areaPrevError - areaCurrentError))); /*+ (encoderCurrentError - encoderPrevError)*/
 
 			areaPrevError = areaCurrentError;
 			//encoderPrevError = encoderCurrentError;
@@ -508,7 +522,10 @@ void CameraApp::Run()
 						}
 					}
 				}*/
-				if(t - pt > 5000) SPEEDSETPOINT = 70;
+				if(t - pt > 5000) {
+//					SPEEDSETPOINT = 100;
+					mode_chosen = 1;
+				}
 
 
 				if(t%1500==0 && autoprint) {
@@ -551,7 +568,6 @@ void CameraApp::Run()
 				if(t%SPEEDCONTROLPERIOD==0){ SpeedControl(); }
 				MoveMotor();
 
-				m_count++;
 			}
 
 
@@ -677,7 +693,8 @@ void CameraApp::Run()
 					if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 						t = libutil::Clock::Time();
 
-						SPEEDSETPOINT = 720;
+//						SPEEDSETPOINT = 720;
+						mode_chosen = 2;
 						///Speed Control Output every 1ms///
 						SpeedControlOutput();
 
@@ -688,7 +705,7 @@ void CameraApp::Run()
 							Printline(m_lcd.FONT_H * 2, s);
 							s = libutil::String::Format("Angle: %02d",(int)m_gyro).c_str();
 							Printline(m_lcd.FONT_H * 3, s);
-							s = libutil::String::Format("SSP: %d",SPEEDSETPOINT).c_str();
+							s = libutil::String::Format("SSP: %d",SPEEDSETPOINTS[mode_chosen]).c_str();
 							Printline(m_lcd.FONT_H * 4, s);
 						}*/
 
@@ -751,7 +768,7 @@ void CameraApp::Run()
 //					Printline(m_lcd.FONT_H * 2, s);
 //					s = libutil::String::Format("Angle: %d",(int)m_gyro).c_str();
 //					Printline(m_lcd.FONT_H * 3, s);
-//					s = libutil::String::Format("SSP: %d",SPEEDSETPOINT).c_str();
+//					s = libutil::String::Format("SSP: %d",SPEEDSETPOINTS[mode_chosen]).c_str();
 //					Printline(m_lcd.FONT_H * 4, s);
 //				}
 
@@ -828,7 +845,7 @@ void CameraApp::Run()
 			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 				t = libutil::Clock::Time();
 
-				SPEEDSETPOINT = 0;
+//				SPEEDSETPOINT = 0;
 				///Speed Control Output every 1ms///
 				SpeedControlOutput();
 
@@ -884,7 +901,7 @@ void CameraApp::Run()
 			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 				t = libutil::Clock::Time();
 				m_balance_speed1 = m_balance_speed2 = m_turn_speed1 = m_turn_speed2 = 0;
-				SPEEDSETPOINT = 0;
+//				SPEEDSETPOINT = 0;
 
 				if(t%1000==0 && autoprint) {
 					const char* s = libutil::String::Format("Speed: %d,%d",m_control_speed1,m_control_speed2).c_str();
@@ -892,7 +909,7 @@ void CameraApp::Run()
 					s = libutil::String::Format("Motor: %d, %d",m_total_speed1, m_total_speed2).c_str();
 					Printline(m_lcd.FONT_H * 2, s);
 
-					s = libutil::String::Format("SSP: %d",SPEEDSETPOINT).c_str();
+					s = libutil::String::Format("SSP: %d",SPEEDSETPOINTS[mode_chosen]).c_str();
 					Printline(m_lcd.FONT_H * 4, s);
 				}
 
@@ -923,7 +940,8 @@ void CameraApp::Run()
 				if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 					t = libutil::Clock::Time();
 
-					SPEEDSETPOINT = 200;
+//					SPEEDSETPOINT = 200;
+					mode_chosen = 2;
 
 					if(t%1000==0 && autoprint) {
 						const char* s = libutil::String::Format("Speed: %d,%d",m_control_speed1,m_control_speed2).c_str();
@@ -931,7 +949,7 @@ void CameraApp::Run()
 						s = libutil::String::Format("Motor: %d, %d",m_total_speed1, m_total_speed2).c_str();
 						Printline(m_lcd.FONT_H * 2, s);
 
-						s = libutil::String::Format("SSP: %d",SPEEDSETPOINT).c_str();
+						s = libutil::String::Format("SSP: %d",SPEEDSETPOINTS[mode_chosen]).c_str();
 						Printline(m_lcd.FONT_H * 4, s);
 					}
 
