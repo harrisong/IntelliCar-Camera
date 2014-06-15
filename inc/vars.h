@@ -34,8 +34,8 @@
 #define speed_ki 13.0f
 #define SPEEDCONTROLPERIOD 20
 
-#define degree_kp 0.13f
-#define degree_kd 0.155f
+#define degree_kp 0.12f
+#define degree_kd 0.205f
 #define TURNCONTROLPERIOD 45
 
 //#define CAM_W 160
