@@ -31,14 +31,14 @@ float b_kp[num_of_modes] = {3000.0, 3000.0, 3000.0};
 float b_kd[num_of_modes] = {30000.0, 30000.0, 30000.0};
 float b_ki[num_of_modes] = {0.0, 0.0, 0.0};
 
-int16_t SPEEDSETPOINTS[num_of_modes] = {0, 90, 100};
+int16_t SPEEDSETPOINTS[num_of_modes] = {0, 100, 100};
 
 float s_kp[num_of_modes] = {120.0, 80.0, 150.0};
 float s_kd[num_of_modes] = {0.0, 0.0, 0.0};
 float s_ki[num_of_modes] = {11.0, 6.0, 11.0};
 
 float t_kp[num_of_modes] = {0.089, 0.06, 0.089};
-float t_kd[num_of_modes] = {0.0, 0.05, 0.05};
+float t_kd[num_of_modes] = {0.0, 0.0, 0.05};
 
 CameraApp::CameraApp():
 	m_gyro(0), m_balance_speed1(0), m_balance_speed2(0),
