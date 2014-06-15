@@ -112,40 +112,42 @@ void CameraApp::TurnControl(){
 
 	static int areaPrevError = 0;
 	static int encoderPrevError = 0;
+
 	const Byte* src = m_car.GetCamera()->LockBuffer();
 
 
-	int LeftWhiteDot = 0;
-	int RightWhiteDot = 0;
+		int LeftWhiteDot = 0;
+		int RightWhiteDot = 0;
 
-	for(int y=0; y<CAM_H; y++)
-	{
-		for(int x=0; x<CAM_W; x++)
+		for(int y=0; y<CAM_H; y++)
 		{
-			if(m_car.GetPixel(src, x, y) == WHITE_BYTE)
+			for(int x=0; x<CAM_W; x++)
 			{
-				x>=(CAM_W/2) ? RightWhiteDot++ : LeftWhiteDot++;
+				if(m_car.GetPixel(src, x, y) == WHITE_BYTE)
+				{
+					x>=(CAM_W/2) ? RightWhiteDot++ : LeftWhiteDot++;
+				}
 			}
 		}
-	}
 
-	int areaCurrentError = RightWhiteDot - LeftWhiteDot;			//http://notepad.cc/smartcar
+		int areaCurrentError = RightWhiteDot - LeftWhiteDot;			//http://notepad.cc/smartcar
 
-//	double encoderCurrentError = m_encoder_2 * 2;
+	//	double encoderCurrentError = m_encoder_2 * 2;
 
-//	int degree = (int) round(degree_kp * areaCurrentError + degree_kd * -omega[1]);
-	int degree = (int) round((degree_kp * areaCurrentError + degree_kd * (areaPrevError - areaCurrentError))); /*+ (encoderCurrentError - encoderPrevError)*/
+	//	int degree = (int) round(degree_kp * areaCurrentError + degree_kd * -omega[1]);
+		int degree = (int) round((degree_kp * areaCurrentError + degree_kd * (areaPrevError - areaCurrentError))); /*+ (encoderCurrentError - encoderPrevError)*/
 
-	areaPrevError = areaCurrentError;
-	//encoderPrevError = encoderCurrentError;
+		areaPrevError = areaCurrentError;
+		//encoderPrevError = encoderCurrentError;
 
-	degree = m_car.Clamp(degree, -100, 100);
+		degree = m_car.Clamp(degree, -100, 100);
 
-	prev_turn = current_turn;
-	current_turn = - 1 * degree * 7;
+	//	prev_turn = current_turn;
+	//	current_turn = - 1 * degree * 7;
 
-//	m_turn_speed1 = - degree * 10;
-//	m_turn_speed2 = m_turn_speed1;
+		m_turn_speed1 = - degree * 10;
+		m_turn_speed2 = - m_turn_speed1;
+
 
 	m_car.GetCamera()->UnlockBuffer();
 	//DELAY_MS(10);
@@ -526,7 +528,7 @@ void CameraApp::Run()
 				SpeedControlOutput();
 
 				///Turn Control Output every 1 ms///
-				TurnControlOutput();
+//				TurnControlOutput();
 
 
 				if(t%2==0){
@@ -651,7 +653,7 @@ void CameraApp::Run()
 		{
 
 			///System loop - 1ms///
-			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>=100){
+			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>=1){
 				t = libutil::Clock::Time();
 				PrintCam();
 			}
@@ -798,13 +800,13 @@ void CameraApp::Run()
 					Printline(m_lcd.FONT_H * 4, s);
 				}
 
-				//if(t%45==0) {
+				if(t%45==0) {
 					nt = libutil::Clock::Time();
 					TurnControl();
 					s = libutil::String::Format("T: %d",libutil::Clock::TimeDiff(libutil::Clock::Time(),nt)).c_str();
 					Printline(m_lcd.FONT_H * 5, s);
 
-				//}
+				}
 				MoveMotor();
 				m_count++;
 			}

@@ -28,7 +28,7 @@
 //speed pid vars//
 //#define speed_kp 125.0f
 //#define speed_kp 95.0f
-#define speed_kp 120.0f
+#define speed_kp 170.0f
 #define speed_kd 0.0f
 //#define speed_ki 7.5f
 #define speed_ki 13.0f
