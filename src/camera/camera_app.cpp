@@ -33,11 +33,11 @@ float b_ki[num_of_modes] = {0.0, 0.0, 0.0};
 
 int16_t SPEEDSETPOINTS[num_of_modes] = {0, 90, 100};
 
-float s_kp[num_of_modes] = {120.0, 120.0, 150.0};
+float s_kp[num_of_modes] = {120.0, 80.0, 150.0};
 float s_kd[num_of_modes] = {0.0, 0.0, 0.0};
-float s_ki[num_of_modes] = {11.0, 8.0, 11.0};
+float s_ki[num_of_modes] = {11.0, 6.0, 11.0};
 
-float t_kp[num_of_modes] = {0.089, 0.089, 0.089};
+float t_kp[num_of_modes] = {0.089, 0.06, 0.089};
 float t_kd[num_of_modes] = {0.0, 0.05, 0.05};
 
 CameraApp::CameraApp():
