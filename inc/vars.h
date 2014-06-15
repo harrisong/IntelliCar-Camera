@@ -18,7 +18,7 @@
 #define balance_kd 0.0f
 #define balance_ki 0.0f*/
 #define balance_kp 3000.0f
-#define balance_kd 45000.0f
+#define balance_kd 30000.0f
 #define balance_ki 0.0f
 
 #define SETPOINT 54
@@ -28,15 +28,15 @@
 //speed pid vars//
 //#define speed_kp 125.0f
 //#define speed_kp 95.0f
-#define speed_kp 170.0f
+#define speed_kp 125.0f
 #define speed_kd 0.0f
 //#define speed_ki 7.5f
 #define speed_ki 13.0f
 #define SPEEDCONTROLPERIOD 20
 
-#define degree_kp 0.12f
-#define degree_kd 0.205f
-#define TURNCONTROLPERIOD 45
+#define degree_kp 0.09f
+#define degree_kd 0.0f
+#define TURNCONTROLPERIOD 8
 
 //#define CAM_W 160
 //#define CAM_H 120
