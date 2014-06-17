@@ -13,6 +13,7 @@
 #include <libutil/pid_controller.h>
 #include <libutil/pid_controller.tcc>
 #include "camera/car.h"
+#include "camera/helper.h"
 
 
 namespace camera
@@ -27,35 +28,34 @@ public:
 	void PositionControl();
 	void SpeedControl();
 	void SpeedControlOutput();
-	void ImageProcessing();
+	void ProcessImage(int n);
 	void TurnControl();
 	void TurnControlOutput();
 	void MoveMotor();
 
-	void PrintCam();
-
-	void EdgeDetection(const Byte* src, const int y);
-	int GetCenterPoint(const Byte* src);
-	int GetEdge(const Byte* src, const int center, const int direction);
-
-
-
-	void Printline(uint8_t y, const char* s);
-	void Printline(uint8_t y, const char* s, bool);
-	void Printline(uint8_t* x, uint8_t y, const char* s, const uint16_t TXT_COLOR = BLACK, const uint16_t BG_COLOR = WHITE);
-	void Printline(uint8_t x, uint8_t y, const char* s){
-			Printline(&x, y, s);
-		}
-
-	void PrintPtr(uint8_t y){
-		for(int i=m_lcd.FONT_H+1; i<m_lcd.H; i++) m_lcd.DrawChar(0, i, ' ', WHITE, WHITE);
-		m_lcd.DrawChar(0, y, '>', 0, WHITE);
-	}
-
 	void Run();
+
+	void AutoMode();
+	void PidMode();
+	void AccelAndGyroMode();
+	void EncoderMode();
+	void CameraMode();
+	void ParadeMode();
+	void BalanceOnlyMode();
+	void CameraMoveMode();
+	void BalanceAndSpeedMode();
+	void MoveMotorMode();
+	void UartMode();
+	void CalGyroMode();
+	void SpeedModeOne();
+	void SpeedModeTwo();
+	void TimeMeasurementMode();
+	void SpeedToMotorMode();
 
 private:
 	Car m_car;
+	Helper m_helper;
+
 	float m_gyro;
 
 	int32_t m_balance_speed1, m_balance_speed2;
@@ -71,17 +71,12 @@ private:
 	libutil::PidController<int16_t, int32_t> m_balance_pid;
 	libutil::PidController<int16_t, int32_t> m_speed_pid;
 
-	libsc::Lcd m_lcd;
-
 	int32_t m_count;
 
 	int LeftWhiteDot;
 	int RightWhiteDot;
 
 	const Byte* src;
-
-	bool finished_first_halve;
-
 
 };
 

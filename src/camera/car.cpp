@@ -24,10 +24,10 @@ Car::Car()
 		  m_uart(3, 115200),
 		  m_motor1(0), m_motor2(1),
 		  m_cam(CAM_W, CAM_H),
-		  m_gyro(RXADC)
-
-		  //m_encoder1(0),
-		  //m_encoder2(1)
+		  m_gyro(RXADC),
+		  m_lcd(true),
+		  m_start_button(0),
+		  m_joystick(0)
 {
 	libutil::InitDefaultFwriteHandler(&m_uart);
 
@@ -63,41 +63,11 @@ float Car::GetRawAngle(){
 libsc::Ov7725* Car::GetCamera(){
 	return &m_cam;
 }
-/*
-BalanceEncoder* Car::GetEncoder(int n){
-	switch(n){
-	case 0:
-		return &m_encoder1;
-		break;
-	case 1:
-		return &m_encoder2;
-		break;
-	default:
-		assert(0);
-		break;
-	}
-}
 
-int32 Car::GetEncoderSpeed(int n){
-	int32 m_current_speed, m_prev_speed, m_delta_speed;
-	m_current_time = libutil::Clock::Time();
-	m_delta_time = m_current_time - m_prev_time;
-	switch(n){
-	case 0:
-		m_current_speed = m_encoder1.GetCurrent();
-		break;
-	case 1:
-		m_current_speed = m_encoder2.GetCurrent();
-		break;
-	default:
-		assert(0);
-		break;
-	}
-	m_delta_speed = m_current_speed - m_prev_speed;
-	m_prev_speed = m_current_speed;
-	m_prev_time = m_current_time;
-	return m_delta_speed;
-}*/
+libsc::Lcd* Car::GetLcd()
+{
+	return &m_lcd;
+}
 
 libsc::Motor* Car::GetMotor(int n){
 	switch(n){
@@ -113,75 +83,38 @@ libsc::Motor* Car::GetMotor(int n){
 	}
 }
 
+libsc::Joystick* Car::GetJoystick()
+{
+	return & m_joystick;
+}
+
+libsc::Button* Car::GetButton()
+{
+	return &m_start_button;
+}
+
 void Car::MoveMotor(int n, const uint16_t power){
-	switch(n){
+	switch(n)
+	{
 		case 0:
 			m_motor1.SetPower(power);
 			break;
 		case 1:
 			m_motor2.SetPower(power);
 			break;
-		}
+	}
 }
 
 void Car::MotorDir(int n,const bool flag){
 	switch(n){
-			case 0:
-				m_motor1.SetClockwise(flag);
-				break;
-			case 1:
-				m_motor2.SetClockwise(flag);
-				break;
-			}
+		case 0:
+			m_motor1.SetClockwise(flag);
+			break;
+		case 1:
+			m_motor2.SetClockwise(flag);
+			break;
+	}
 
-}
-
-
-libsc::Led* Car::GetLed(int n)
-{
-	return &m_leds[n];
-}
-
-libsc::Lcd* Car::GetLcd()
-{
-	//return &m_lcd;
-}
-
-int Car::Clamp(const int x, const int lowerBound, const int upperBound)
-{
-	if(x<lowerBound)
-		return 0;
-	else if(x>upperBound)
-		return upperBound;
-	else
-		return x;
-}
-
-Byte* Car::ExpandPixel(const Byte *src, const int line)
-{
-    static Byte product[CAM_W];
-    Byte *it = product;
-    const int offset = line * CAM_W / 8;
-    for (int i = 0; i < CAM_W / 8; ++i)
-    {
-        *(it++) = ((src[i + offset] >> 7) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 6) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 5) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 4) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 3) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 2) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 1) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-        *(it++) = ((src[i + offset] >> 0) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
-    }
-    return product;
-}
-
-
-int Car::GetPixel(const Byte* src, const int x, const int y)
-{
-    const int offset = x/8 + (y * CAM_W / 8);
-
-    return (src[offset] >> (x%8) & 0x01) ? BLACK_BYTE : WHITE_BYTE;
 }
 
 }

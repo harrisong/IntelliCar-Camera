@@ -60,7 +60,7 @@ extern float s_ki[num_of_modes];
 extern float t_kp[num_of_modes];
 extern float t_kd[num_of_modes];
 
-#define TURNCONTROLPERIOD 4
+#define TURNCONTROLPERIOD 6
 
 //#define CAM_W 160
 //#define CAM_H 120
@@ -87,9 +87,6 @@ extern int16_t raw_omega[3];
 extern float omega[3];
 extern float acc[3];
 extern float angle[3];
-
-
-
 
 
 #endif /* VARS_H_ */

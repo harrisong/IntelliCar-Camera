@@ -23,7 +23,8 @@
 #include <libsc/com/encoder.h>
 #include "balance_gyro.h"
 #include "balance_encoder.h"
-
+#include <libsc/com/joystick.h>
+#include <libsc/com/button.h>
 #include "kalman.h"
 
 namespace camera
@@ -35,13 +36,6 @@ public:
 	Car();
 	~Car();
 
-	/**
-	 * Switch on/off the LEDs
-	 *
-	 * @param obj
-	 * @param id The id of the LED, [0, 3]
-	 * @param flag
-	 */
 	void SwitchLed(const uint8_t id, const bool flag)
 	{
 		m_leds[id].SetEnable(flag);
@@ -68,26 +62,19 @@ public:
 	}
 
 	BalanceAccel* GetGyro();
+	libsc::Motor* GetMotor(int n);
+	libsc::Led* GetLed(int n);
+	libsc::Lcd* GetLcd();
+	libsc::Ov7725* GetCamera();
+	libsc::Button* GetButton();
+	libsc::Joystick* GetJoystick();
+
 	void GyroRefresh();
 	float GetRawAngle();
 
-//	BalanceEncoder* GetEncoder(int n);
-//	int32 GetEncoderSpeed(int);
-
-	libsc::Motor* GetMotor(int n);
 	void MoveMotor(int, const uint16_t);
 	void MotorDir(int n, const bool flag);
 
-	libsc::Led* GetLed(int n);
-
-
-
-	libsc::Lcd* GetLcd();
-
-	Byte* ExpandPixel(const Byte *src, const int line);
-	int GetPixel(const Byte* src, const int x, const int y);
-	int Clamp(const int x, const int lowerBound, const int upperBound);
-	libsc::Ov7725* GetCamera();
 
 private:
 	libsc::Led m_leds[4];
@@ -96,8 +83,8 @@ private:
 	libsc::Ov7725 m_cam;
 	libsc::Lcd m_lcd;
 	BalanceAccel m_gyro;
-//	BalanceEncoder m_encoder1;
-//	BalanceEncoder m_encoder2;
+	libsc::Button m_start_button;
+	libsc::Joystick m_joystick;
 
 	uint16_t m_current_time, m_prev_time, m_delta_time;
 

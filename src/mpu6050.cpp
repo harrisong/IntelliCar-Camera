@@ -28,7 +28,7 @@ float angle[3] = {90,0,0};
 int gyro_cal_ok = 0;
 
 void  mpu6050_update(){
-	gpio_set(PTB22, 1);
+
 //	sw_i2c_read_nbytes(MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
 	i2c_read_nbytes(I2C1, MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
 
@@ -56,7 +56,7 @@ void  mpu6050_update(){
 		if(i==0) angle[i] -= omega[i] * 0.002f / 2;
 		else angle[i] += omega[i] * 0.002f / 2;
 	}
-	gpio_set(PTB22, 0);
+
 }
 
 void gyro_cal(void){
