@@ -16,6 +16,7 @@
 #include <MK60_gpio.h>
 #include <MK60_adc.h>
 #include <MK60_i2c.h>
+#include <MK60_uart.h>
 #include <libutil/string.h>
 #include "mpu6050.h"
 #include <libsc/com/lcd.h>
@@ -33,12 +34,12 @@ float b_ki[num_of_modes] = {0.0, 0.0, 0.0};
 
 int16_t SPEEDSETPOINTS[num_of_modes] = {0, 95, 100};
 
-float s_kp[num_of_modes] = {120.0, 80.0, 150.0};
+float s_kp[num_of_modes] = {80.0, 80.0, 150.0};
 float s_kd[num_of_modes] = {0.0, 0.0, 0.0};
-float s_ki[num_of_modes] = {11.0, 8.4, 11.0};
+float s_ki[num_of_modes] = {2.1, 2.1, 11.0};
 
-float t_kp[num_of_modes] = {0.089, 0.07, 0.089};
-float t_kd[num_of_modes] = {0.0, 0.05, 0.05};
+float t_kp[num_of_modes] = {0.0, 0.02, 0.089};
+float t_kd[num_of_modes] = {0.0, 0.0, 0.05};
 
 CameraApp::CameraApp():
 	m_gyro(0), m_balance_speed1(0), m_balance_speed2(0),
@@ -49,14 +50,17 @@ CameraApp::CameraApp():
 	m_total_speed1(0), m_total_speed2(0),
 	prev_tempspeed(0), current_tempspeed(0),
 	m_lcd(true),
-	m_turn_speed1(0), m_turn_speed2(0)
+	m_turn_speed1(0), m_turn_speed2(0),
+	RightWhiteDot(0), LeftWhiteDot(0),
+	finished_first_halve(false)
 {
+	gpio_init(PTB22, GPO, 0);
 	libutil::Clock::Init();
 	kalman_filter_init(&m_gyro_kf[0], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_gyro_kf[2], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_acc_kf, 0.0005, 0.05, 0, 1);
-	mpu6050_init();
+//	mpu6050_init();
 	m_lcd.Clear(WHITE);
 
 }
@@ -122,19 +126,39 @@ void CameraApp::SpeedControlOutput(){
     if(speed_control_count==SPEEDCONTROLPERIOD) speed_control_count = 0;
 }
 
-void CameraApp::TurnControl(){
+void CameraApp::ImageProcessing(){
+	if(m_car.GetCamera()->IsImageReady()){
+//		gpio_set(PTB22, 1);
+		finished_first_halve = true;
+			src = m_car.GetCamera()->LockBuffer();
+			for(int y=CAM_H/4+5; y<(CAM_H/2+10); y++)
+			{
+				for(int x=0; x<CAM_W; x++)
+				{
+					if(m_car.GetPixel(src, x, y) == WHITE_BYTE)
+					{
+						x>=(CAM_W/2) ? RightWhiteDot++ : LeftWhiteDot++;
+					}
+				}
+			}
+//			gpio_set(PTB22, 0);
+//			TurnControl();
 
+	}
+}
+
+void CameraApp::TurnControl(){
+//	gpio_set(PTB22, 1);
+	if(finished_first_halve){
 	static int areaPrevError = 0;
 	static int encoderPrevError = 0;
 
-	if(m_car.GetCamera()->IsImageReady()){
-		const Byte* src = m_car.GetCamera()->LockBuffer();
+//	if(m_car.GetCamera()->IsImageReady()){
 
+//			int LeftWhiteDot = 0;
+//			int RightWhiteDot = 0;
 
-			int LeftWhiteDot = 0;
-			int RightWhiteDot = 0;
-
-			for(int y=0; y<CAM_H; y++)
+			for(int y=(CAM_H/2+10); y<(CAM_H-5); y++)
 			{
 				for(int x=0; x<CAM_W; x++)
 				{
@@ -166,6 +190,9 @@ void CameraApp::TurnControl(){
 
 		m_car.GetCamera()->UnlockBuffer();
 	}
+
+//	}
+//	gpio_set(PTB22, 0);
 	//DELAY_MS(10);
 }
 
@@ -394,10 +421,16 @@ void CameraApp::Run()
 	s[15] = "Time measurement";
 	s[16] = "Speed to Motor";
 
-	for(int i=0; i<=maxh; i++) Printline(m_lcd.FONT_H * i, s[i]);
+	for(int i=0; i<=maxh; i++) {
+		Printline(m_lcd.FONT_H * i, s[i]);
+	}
+
 	uint8_t mx;
 
 	Printline(m_lcd.FONT_H * ptr_output_pos, s[viewport[0]+ptr_output_pos-1], true);
+
+//	uart_putstr(UART3, "haha\n");
+	printf("hahaFUCKFUCKFUCK\n");
 
 	while(mode==-1){
 		mx = m_lcd.FONT_W * 6;
@@ -555,17 +588,25 @@ void CameraApp::Run()
 					mpu6050_update();
 				}
 
-				if(t%2==1){
+				if(t%2==0){
 
 					BalanceControl();
 				}
 
+				if(t - pt > 5000) {
 
+					if(t%TURNCONTROLPERIOD==1){
+						ImageProcessing();
+					}
 
-				if(t%TURNCONTROLPERIOD==0){ TurnControl(); }
+					if(t%TURNCONTROLPERIOD==3){
+						TurnControl();
+					}
+
+				}
 
 				///Speed PID update every 100ms///
-				if(t%SPEEDCONTROLPERIOD==0){ SpeedControl(); }
+				if(t%SPEEDCONTROLPERIOD==1){ SpeedControl(); }
 				MoveMotor();
 
 			}
@@ -675,8 +716,6 @@ void CameraApp::Run()
 				t = libutil::Clock::Time();
 				PrintCam();
 			}
-
-			MoveMotor();
 
 		}
 		///////////////////////////Camera///////////////////////////
@@ -799,8 +838,7 @@ void CameraApp::Run()
 		break;
 	case 8:
 		Printline(m_lcd.FONT_H * 0, "Camera Move");
-		m_balance_speed1 = m_balance_speed2 = 0;
-		m_control_speed1 = m_control_speed2 = 0;
+
 
 		///////////////////////////Camera Move///////////////////////////
 		while (true)
@@ -808,26 +846,83 @@ void CameraApp::Run()
 			///System loop - 1ms///
 			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 				t = libutil::Clock::Time();
-				if(t%150==0) {
-					const char* s = libutil::String::Format("Turn: %d,%d",m_turn_speed1,m_turn_speed2).c_str();
-					Printline(m_lcd.FONT_H * 1, s);
-					s = libutil::String::Format("Balance: %d, %d",m_balance_speed1, m_balance_speed2).c_str();
-					Printline(m_lcd.FONT_H * 2, s);
-					s = libutil::String::Format("Speed: %d, %d",m_control_speed1, m_control_speed2).c_str();
-					Printline(m_lcd.FONT_H * 3, s);
-					s = libutil::String::Format("Motor: %d, %d",m_total_speed1, m_total_speed2).c_str();
-					Printline(m_lcd.FONT_H * 4, s);
+
+				/*if(t - pt> 5000){
+					if(!speedInit)
+					{
+						SPEEDSETPOINT = -60;
+						speedInit = true;
+					}
+					else if(t%1000 == 0)
+					{
+						if(SPEEDSETPOINT-5 >= -100)
+						{
+							SPEEDSETPOINT -= 5;
+						}
+					}
+				}*/
+				//if(t - pt > 5000) {
+	//					SPEEDSETPOINT = 100;
+					mode_chosen = 1;
+				//}
+
+
+				if(t%1500==0 && autoprint) {
+					/*const char* s = libutil::String::Format("%06d",m_control_speed1).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 1, s);
+					s = libutil::String::Format("%06d",m_control_speed2).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 2, s);
+					s = libutil::String::Format("%06d",m_total_speed1).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 3, s);
+					s = libutil::String::Format("%06d",m_total_speed2).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 4, s);
+					s = libutil::String::Format("%d",(int)m_gyro).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 5, s);
+					s = libutil::String::Format("%d",SPEEDSETPOINT).c_str();
+					Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 6, s);*/
 				}
 
-				if(t%TURNCONTROLPERIOD==0) {
-					nt = libutil::Clock::Time();
-					TurnControl();
-					s = libutil::String::Format("T: %d",libutil::Clock::TimeDiff(libutil::Clock::Time(),nt)).c_str();
-					Printline(m_lcd.FONT_H * 5, s);
+				///Speed Control Output every 1ms///
+				SpeedControlOutput();
 
+				///Turn Control Output every 1 ms///
+	//				TurnControlOutput();
+
+
+				if(t%2==0){
+
+					mpu6050_update();
 				}
+
+				if(t%2==0){
+
+					BalanceControl();
+				}
+
+				//if(t - pt > 5000) {
+
+					if(t%TURNCONTROLPERIOD==1){
+						ImageProcessing();
+					}
+
+					if(t%TURNCONTROLPERIOD==3){
+						TurnControl();
+					}
+
+				//}
+
+				///Speed PID update every 100ms///
+				if(t%SPEEDCONTROLPERIOD==1){ SpeedControl(); }
+				m_balance_speed1 = m_balance_speed2 = 0;
+				m_control_speed1 = m_control_speed2 = 0;
 				MoveMotor();
-				m_count++;
+
+			}
+
+
+			if(m_start_but.IsDown()) {
+				autoprint = !autoprint;
+				while(m_start_but.IsDown());
 			}
 		}
 
@@ -933,41 +1028,84 @@ void CameraApp::Run()
 	case 14:
 		Printline(m_lcd.FONT_H * 0, "Speed 2");
 			///////////////////////////Speed2///////////////////////////
-			while (true)
-			{
+		pt = libutil::Clock::Time();
 
-				///System loop - 1ms///
-				if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
-					t = libutil::Clock::Time();
+				while (true)
+				{
 
-//					SPEEDSETPOINT = 200;
-					mode_chosen = 2;
+					///System loop - 1ms///
+					if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
+						t = libutil::Clock::Time();
 
-					if(t%1000==0 && autoprint) {
-						const char* s = libutil::String::Format("Speed: %d,%d",m_control_speed1,m_control_speed2).c_str();
-						Printline(m_lcd.FONT_H * 1, s);
-						s = libutil::String::Format("Motor: %d, %d",m_total_speed1, m_total_speed2).c_str();
-						Printline(m_lcd.FONT_H * 2, s);
+						/*if(t - pt> 5000){
+							if(!speedInit)
+							{
+								SPEEDSETPOINT = -60;
+								speedInit = true;
+							}
+							else if(t%1000 == 0)
+							{
+								if(SPEEDSETPOINT-5 >= -100)
+								{
+									SPEEDSETPOINT -= 5;
+								}
+							}
+						}*/
+						if(t - pt > 5000) {
+		//					SPEEDSETPOINT = 100;
+							mode_chosen = 1;
+						}
 
-						s = libutil::String::Format("SSP: %d",SPEEDSETPOINTS[mode_chosen]).c_str();
-						Printline(m_lcd.FONT_H * 4, s);
+
+						if(t%1500==0 && autoprint) {
+							/*const char* s = libutil::String::Format("%06d",m_control_speed1).c_str();
+							Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 1, s);
+							s = libutil::String::Format("%06d",m_control_speed2).c_str();
+							Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 2, s);
+							s = libutil::String::Format("%06d",m_total_speed1).c_str();
+							Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 3, s);
+							s = libutil::String::Format("%06d",m_total_speed2).c_str();
+							Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 4, s);
+							s = libutil::String::Format("%d",(int)m_gyro).c_str();
+							Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 5, s);
+							s = libutil::String::Format("%d",SPEEDSETPOINT).c_str();
+							Printline(m_lcd.FONT_W * 8, m_lcd.FONT_H * 6, s);*/
+						}
+
+						///Speed Control Output every 1ms///
+						SpeedControlOutput();
+
+						///Turn Control Output every 1 ms///
+		//				TurnControlOutput();
+
+
+						if(t%2==0){
+
+							mpu6050_update();
+						}
+
+						if(t%2==1){
+
+							BalanceControl();
+						}
+
+
+
+//						if(t%TURNCONTROLPERIOD==0){ TurnControl(); }
+
+						///Speed PID update every 100ms///
+						if(t%SPEEDCONTROLPERIOD==0){ SpeedControl(); }
+						MoveMotor();
+
 					}
 
-					///Speed Control Output every 1ms///
-					SpeedControlOutput();
 
-					///Speed PID update every 100ms///
-					if(t%SPEEDCONTROLPERIOD==0) SpeedControl();
-					MoveMotor();
 					if(m_start_but.IsDown()) {
 						autoprint = !autoprint;
 						while(m_start_but.IsDown());
 					}
-					m_count++;
+
 				}
-
-
-			}
 			///////////////////////////Speed2///////////////////////////
 			break;
 	case 15:

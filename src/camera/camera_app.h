@@ -27,6 +27,7 @@ public:
 	void PositionControl();
 	void SpeedControl();
 	void SpeedControlOutput();
+	void ImageProcessing();
 	void TurnControl();
 	void TurnControlOutput();
 	void MoveMotor();
@@ -73,6 +74,15 @@ private:
 	libsc::Lcd m_lcd;
 
 	int32_t m_count;
+
+	int LeftWhiteDot;
+	int RightWhiteDot;
+
+	const Byte* src;
+
+	bool finished_first_halve;
+
+
 };
 
 }
