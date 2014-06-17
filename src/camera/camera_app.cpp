@@ -62,7 +62,7 @@ CameraApp::CameraApp():
 	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_gyro_kf[2], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_acc_kf, 0.0005, 0.05, 0, 1);
-//	mpu6050_init();
+	mpu6050_init();
 	m_car.GetLcd()->Clear(WHITE);
 
 }
@@ -928,6 +928,7 @@ void CameraApp::Run()
 	LcdMenu lcdmenu(&m_car, title, choices, 16);
 	lcdmenu.CreateMenu();
 	lcdmenu.WaitForSelection();
+
 	m_car.GetLcd()->Clear(WHITE);
 
 	switch(lcdmenu.GetSelectedChoice()){
