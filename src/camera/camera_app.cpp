@@ -143,9 +143,6 @@ void CameraApp::ProcessImage(int n){
 			}
 		}
 
-		if(end_row==60)
-			white_dot[0] = white_dot[1] = 0;
-
 		gpio_set(PTB22, 0);
 	}
 
@@ -154,6 +151,8 @@ void CameraApp::ProcessImage(int n){
 void CameraApp::TurnControl(){
 
 	m_turn_pid.UpdateCurrentError(white_dot[1] - white_dot[0]);
+
+	white_dot[0] = white_dot[1] = 0;
 
 	int degree = (int) round(
 		m_turn_pid.Proportional() + -1 * m_turn_pid.Derivative()
