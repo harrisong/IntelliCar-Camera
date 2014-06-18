@@ -18,7 +18,9 @@ class Helper
 {
 	public:
 		Helper(Car* car);
+		~Helper();
 
+		int abs(const int x);
 		int Clamp(const int x, const int lowerBound, const int upperBound);
 		int GetPixel(const Byte* src, const int x, const int y);
 		Byte* ExpandPixel(const Byte *src, const int line);

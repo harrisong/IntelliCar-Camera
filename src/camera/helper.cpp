@@ -17,6 +17,16 @@ Helper::Helper(Car* m_car)
 	car_pt = m_car;
 }
 
+Helper::~Helper()
+{
+
+}
+
+int Helper::abs(const int num)
+{
+	return num > 0 ? num : -1 * num;
+}
+
 int Helper::Clamp(const int x, const int lowerBound, const int upperBound)
 {
 	if(x<lowerBound)

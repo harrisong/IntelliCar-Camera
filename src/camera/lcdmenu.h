@@ -23,6 +23,7 @@ class LcdMenu
 		static constexpr uint8_t FONT_H = 16;
 
 		LcdMenu(Car* car, char* title, char** choices, int num_choice);
+		~LcdMenu();
 
 		int GetSelectedChoice() const;
 		char* GetChoice(const int line) const;

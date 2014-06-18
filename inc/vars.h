@@ -23,14 +23,8 @@
 #define balance_ki 0.0f
 */
 
-#define num_of_modes 3
-
-
-extern float b_kp[num_of_modes];
-extern float b_kd[num_of_modes];
-extern float b_ki[num_of_modes];
-
-#define SETPOINT 54
+#define BALANCE_SETPOINT 54
+#define TURN_SETPOINT 0
 #define DEADZONELOWER 90
 #define DEADZONEHIGHER -20
 
@@ -43,24 +37,13 @@ extern float b_ki[num_of_modes];
 //#define speed_ki 7.5f
 #define speed_ki 11.0f
 */
-
-extern int16_t SPEEDSETPOINTS[num_of_modes];
-
-extern float s_kp[num_of_modes];
-extern float s_kd[num_of_modes];
-extern float s_ki[num_of_modes];
-
+#define TURNCONTROLPERIOD 6
 #define SPEEDCONTROLPERIOD 20
 
 /*
 #define degree_kp 0.089f
 #define degree_kd 0.05f
 */
-
-extern float t_kp[num_of_modes];
-extern float t_kd[num_of_modes];
-
-#define TURNCONTROLPERIOD 6
 
 //#define CAM_W 160
 //#define CAM_H 120

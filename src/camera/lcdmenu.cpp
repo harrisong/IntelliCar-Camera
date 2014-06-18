@@ -19,6 +19,11 @@ LcdMenu::LcdMenu(Car* car, char* title, char** choices, int num_choice)
 	: car_pt(car), helper(car), title(title), choices(choices), num_choice(num_choice), selected_choice(-1)
 {}
 
+LcdMenu::~LcdMenu()
+{
+
+}
+
 int LcdMenu::GetSelectedChoice() const
 {
 	return selected_choice;
