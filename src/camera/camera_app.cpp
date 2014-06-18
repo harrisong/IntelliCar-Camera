@@ -142,6 +142,10 @@ void CameraApp::ProcessImage(int n){
 				}
 			}
 		}
+
+		if(end_row==60)
+			white_dot[0] = white_dot[1] = 0;
+
 		gpio_set(PTB22, 0);
 	}
 
