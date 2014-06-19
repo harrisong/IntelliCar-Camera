@@ -12,6 +12,7 @@
 #include "mini_common.h"
 #include "hw_common.h"
 #include <cstring>
+#include <libutil/string.h>
 #include "camera/camera_app.h"
 #include <MK60_gpio.h>
 #include <MK60_adc.h>
@@ -19,8 +20,6 @@
 #include <MK60_uart.h>
 #include "mpu6050.h"
 #include <libsc/com/lcd.h>
-#include <libutil/tunable_int_manager.h>
-#include <libutil/tunable_int_manager.tcc>
 #include <libsc/com/joystick.h>
 #include <libsc/com/button.h>
 #include "lcdmenu.h"
@@ -62,6 +61,10 @@ CameraApp::CameraApp():
 	src(NULL)
 {
 	gpio_init(PTB22, GPO, 0);
+	gpio_init(PTD2, GPO, 0);
+	gpio_set(PTD2, 0);
+	gpio_init(PTD3, GPO, 0);
+	gpio_set(PTD3, 0);
 	libutil::Clock::Init();
 	kalman_filter_init(&m_gyro_kf[0], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, 0, 1);
@@ -232,6 +235,7 @@ void CameraApp::AutoMode()
 				m_balance_pid.SetMode(2);
 				m_turn_pid.SetMode(2);
 				m_speed_pid.SetMode(2);
+				m_speed_pid.SetSetPoint(SPEED_SETPOINTS[1]);
 			}
 
 
@@ -258,7 +262,7 @@ void CameraApp::AutoMode()
 
 
 			if(t%2==0){
-				//mpu6050_update();
+				mpu6050_update();
 			}
 
 			if(t%2==0){
@@ -427,7 +431,8 @@ void CameraApp::ParadeMode()
 			//SPEEDSETPOINT = 720;
 			m_balance_pid.SetMode(3);
 			m_turn_pid.SetMode(3);
-			m_speed_pid.SetMode(3);;
+			m_speed_pid.SetMode(3);
+			m_speed_pid.SetSetPoint(SPEED_SETPOINTS[2]);
 			///Speed Control Output every 1ms///
 			SpeedControlOutput();
 
@@ -565,6 +570,7 @@ void CameraApp::CameraMoveMode()
 				m_balance_pid.SetMode(2);
 				m_turn_pid.SetMode(2);
 				m_speed_pid.SetMode(2);
+				m_speed_pid.SetSetPoint(SPEED_SETPOINTS[1]);
 			//}
 
 
@@ -792,6 +798,7 @@ void CameraApp::SpeedModeTwo()
 				m_balance_pid.SetMode(2);
 				m_turn_pid.SetMode(2);
 				m_speed_pid.SetMode(2);
+				m_speed_pid.SetSetPoint(SPEED_SETPOINTS[1]);
 			}
 
 

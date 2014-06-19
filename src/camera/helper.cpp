@@ -7,7 +7,6 @@
 
 #include "helper.h"
 #include <cstring>
-#include <libutil/string.h>
 
 namespace camera
 {
