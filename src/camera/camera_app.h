@@ -30,7 +30,7 @@ public:
 	void PositionControl();
 	void SpeedControl();
 	void SpeedControlOutput();
-	void ProcessImage(int n);
+	void ProcessImage();
 	void TurnControl();
 	void TurnControlOutput();
 	void MoveMotor();

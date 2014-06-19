@@ -126,7 +126,7 @@ void CameraApp::SpeedControlOutput(){
     m_control_speed[0] = m_control_speed[1] = speed_smoothing.SmoothingOutput();
 }
 
-void CameraApp::ProcessImage(int n){
+void CameraApp::ProcessImage(){
 
 	const int start_row = num_finished_row;
 	const int end_row = num_finished_row+20;
@@ -273,17 +273,17 @@ void CameraApp::AutoMode()
 			if(t - pt > 5000) {
 
 				if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
-					ProcessImage(num_finished_row);
+					ProcessImage();
 					num_finished_row+=20;
 				}
 
 				if(t%TURNCONTROLPERIOD==3 && num_finished_row==20){
-					ProcessImage(num_finished_row);
+					ProcessImage();
 					num_finished_row+=20;
 				}
 
 				if(t%TURNCONTROLPERIOD==5 && num_finished_row==40){
-					ProcessImage(num_finished_row);
+					ProcessImage();
 					num_finished_row=0;
 					TurnControl();
 				}
@@ -609,15 +609,15 @@ void CameraApp::CameraMoveMode()
 			//if(t - pt > 5000) {
 
 				if(t%TURNCONTROLPERIOD==1){
-					ProcessImage(1);
+					ProcessImage();
 				}
 
 				if(t%TURNCONTROLPERIOD==3){
-					ProcessImage(2);
+					ProcessImage();
 				}
 
 				if(t%TURNCONTROLPERIOD==5){
-					ProcessImage(3);
+					ProcessImage();
 					TurnControl();
 				}
 
