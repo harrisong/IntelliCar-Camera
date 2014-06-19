@@ -10,8 +10,8 @@
 #define CAMERA_APP_H_
 #include <log.h>
 #include <libutil/misc.h>
-#include <libutil/pid_controller.h>
-#include <libutil/pid_controller.tcc>
+//#include <libutil/pid_controller.h>
+//#include <libutil/pid_controller.tcc>
 #include "camera/car.h"
 #include "camera/helper.h"
 #include "camera/pid.h"

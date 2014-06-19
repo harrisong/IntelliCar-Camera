@@ -8,7 +8,6 @@
 #include "helper.h"
 #include <cstring>
 
-
 namespace camera
 {
 
