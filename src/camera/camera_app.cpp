@@ -609,6 +609,7 @@ void CameraApp::CameraMoveMode()
 
 			//if(t - pt > 5000) {
 
+
 			if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
 				ProcessImage();
 				num_finished_row+=20;
