@@ -31,15 +31,15 @@ float b_kp[3] = {3000.0, 3000.0, 3000.0};
 float b_ki[3] = {0.0, 0.0, 0.0};
 float b_kd[3] = {30000.0, 30000.0, 30000.0};
 
-int16_t SPEED_SETPOINTS[3] = {0, 95, 100};
+int16_t SPEED_SETPOINTS[3] = {0, 50, 100};
 
 float s_kp[3] = {80.0, 80.0, 150.0};
 float s_ki[3] = {2.1, 2.1, 11.0};
 float s_kd[3] = {0.0, 0.0, 0.0};
 
-float t_kp[3] = {0.0, 0.02, 0.089};
+float t_kp[3] = {0.07, 0.07, 0.089};
 float t_ki[3] = {0.0, 0.0, 0.0};
-float t_kd[3] = {0.0, 0.0, 0.05};
+float t_kd[3] = {0.05, 0.05, 0.05};
 
 CameraApp::CameraApp():
 	m_helper(&m_car),
@@ -126,7 +126,7 @@ void CameraApp::SpeedControlOutput(){
     m_control_speed[0] = m_control_speed[1] = speed_smoothing.SmoothingOutput();
 }
 
-void CameraApp::ProcessImage(int n){
+void CameraApp::ProcessImage(){
 
 	const int start_row = num_finished_row;
 	const int end_row = num_finished_row+20;
@@ -135,9 +135,9 @@ void CameraApp::ProcessImage(int n){
 	{
 		gpio_set(PTB22, 1);
 		src = m_car.GetCamera()->LockBuffer();
-		for(int y=start_row; y<CAM_H/3; y++)
+		for(int y=start_row; y<end_row; y++)
 		{
-			for(int x=0; x<end_row; x++)
+			for(int x=0; x<CAM_W; x++)
 			{
 				if(m_helper.GetPixel(src, x, y) == WHITE_BYTE)
 				{
@@ -158,18 +158,19 @@ void CameraApp::TurnControl(){
 	white_dot[0] = white_dot[1] = 0;
 
 	int degree = (int) round(
-		m_turn_pid.Proportional() + -1 * m_turn_pid.Derivative()
+		- m_turn_pid.Proportional() + -1 * m_turn_pid.Derivative()
 	);
 
 	m_turn_pid.UpdatePreviousError();
 
-	degree = m_helper.Clamp(degree, -100, 100);
+//	degree = m_helper.Clamp(degree, -100, 100);
 
 	//turn_smoothing.UpdateCurrentOutput(- degree * 13);
-
-	m_turn_speed[0] = - degree * 13;
+	printf("Degree: %d \n",degree);
+	m_turn_speed[0] = - degree * 10;
 	m_turn_speed[1] = - m_turn_speed[0];
-
+	printf("Dots: %d \t %d \n",white_dot[0],white_dot[1]);
+	printf("S: %d \t %d \n", m_turn_speed[0], m_turn_speed[1]);
 	m_car.GetCamera()->UnlockBuffer();
 
 }
@@ -273,17 +274,17 @@ void CameraApp::AutoMode()
 			if(t - pt > 5000) {
 
 				if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
-					ProcessImage(num_finished_row);
+					ProcessImage();
 					num_finished_row+=20;
 				}
 
 				if(t%TURNCONTROLPERIOD==3 && num_finished_row==20){
-					ProcessImage(num_finished_row);
+					ProcessImage();
 					num_finished_row+=20;
 				}
 
 				if(t%TURNCONTROLPERIOD==5 && num_finished_row==40){
-					ProcessImage(num_finished_row);
+					ProcessImage();
 					num_finished_row=0;
 					TurnControl();
 				}
@@ -608,18 +609,21 @@ void CameraApp::CameraMoveMode()
 
 			//if(t - pt > 5000) {
 
-				if(t%TURNCONTROLPERIOD==1){
-					ProcessImage(1);
-				}
+			if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
+				ProcessImage();
+				num_finished_row+=20;
+			}
 
-				if(t%TURNCONTROLPERIOD==3){
-					ProcessImage(2);
-				}
+			if(t%TURNCONTROLPERIOD==3 && num_finished_row==20){
+				ProcessImage();
+				num_finished_row+=20;
+			}
 
-				if(t%TURNCONTROLPERIOD==5){
-					ProcessImage(3);
-					TurnControl();
-				}
+			if(t%TURNCONTROLPERIOD==5 && num_finished_row==40){
+				ProcessImage();
+				num_finished_row=0;
+				TurnControl();
+			}
 
 			//}
 
