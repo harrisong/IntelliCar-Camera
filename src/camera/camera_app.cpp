@@ -19,8 +19,6 @@
 #include <MK60_uart.h>
 #include "mpu6050.h"
 #include <libsc/com/lcd.h>
-#include <libutil/tunable_int_manager.h>
-#include <libutil/tunable_int_manager.tcc>
 #include <libsc/com/joystick.h>
 #include <libsc/com/button.h>
 #include "lcdmenu.h"
@@ -258,10 +256,10 @@ void CameraApp::AutoMode()
 
 
 			if(t%2==0){
-				//mpu6050_update();
+				mpu6050_update();
 			}
 
-			if(t%2==0){
+			if(t%2==1){
 
 				BalanceControl();
 			}

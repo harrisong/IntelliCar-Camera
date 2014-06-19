@@ -10,6 +10,7 @@
 
 #include "vars.h"
 #include "car.h"
+#include <libutil/string.h>
 
 namespace camera
 {
