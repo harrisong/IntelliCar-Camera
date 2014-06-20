@@ -24,7 +24,7 @@ int16_t raw_acc[3] = {0,0,0};
 int16_t raw_omega[3] = {0,0,0};
 float omega[3] = {0,0,0};
 float acc[3] = {0,0,0};
-float angle[3] = {90,0,0};
+float angle[3] = {18,0,0};
 int gyro_cal_ok = 0;
 
 void  mpu6050_update(){
@@ -53,8 +53,9 @@ void  mpu6050_update(){
 	}
 
 	for(int i = 0; i < 3; i++){
-		if(i==0) angle[i] -= omega[i] * 0.002f / 2;
-		else angle[i] += omega[i] * 0.002f / 2;
+//		if(i==0) angle[i] -= omega[i] * 0.002f / 2;
+//		else
+		angle[i] += omega[i] * 0.002f / 2;
 	}
 
 }

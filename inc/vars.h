@@ -23,7 +23,7 @@
 #define balance_ki 0.0f
 */
 
-#define BALANCE_SETPOINT 54
+#define BALANCE_SETPOINT 60
 #define TURN_SETPOINT 0
 #define DEADZONELOWER 90
 #define DEADZONEHIGHER -20
@@ -37,7 +37,7 @@
 //#define speed_ki 7.5f
 #define speed_ki 11.0f
 */
-#define TURNCONTROLPERIOD 6
+#define TURNCONTROLPERIOD 8
 #define SPEEDCONTROLPERIOD 20
 
 /*
