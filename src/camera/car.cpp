@@ -13,8 +13,8 @@
 #include <assert.h>
 
 
-
 using namespace libsc;
+using namespace libutil;
 
 namespace camera
 {

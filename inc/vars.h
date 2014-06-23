@@ -23,7 +23,7 @@
 #define balance_ki 0.0f
 */
 
-#define BALANCE_SETPOINT 60
+#define BALANCE_SETPOINT 48
 #define TURN_SETPOINT 0
 #define DEADZONELOWER 90
 #define DEADZONEHIGHER -20

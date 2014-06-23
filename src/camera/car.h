@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <vectors.h>
 #include <libutil/clock.h>
+#include <libutil/tunable_int_manager.h>
 #include <libsc/com/ov7725.h>
 #include <libsc/com/lcd.h>
 #include <libsc/com/led.h>
@@ -61,6 +62,11 @@ public:
 		return m_uart.PeekChar(out_ch);
 	}
 
+	libsc::UartDevice* GetUart()
+	{
+		return &m_uart;
+	}
+
 	BalanceAccel* GetGyro();
 	libsc::Motor* GetMotor(int n);
 	libsc::Led* GetLed(int n);
@@ -85,6 +91,7 @@ private:
 	BalanceAccel m_gyro;
 	libsc::Button m_start_button;
 	libsc::Joystick m_joystick;
+	libutil::TunableInt *m_kp;
 
 	uint16_t m_current_time, m_prev_time, m_delta_time;
 

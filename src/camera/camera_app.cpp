@@ -13,6 +13,8 @@
 #include "hw_common.h"
 #include <cstring>
 #include <libutil/string.h>
+#include <libutil/tunable_int_manager.h>
+#include <libutil/tunable_int_manager.tcc>
 #include "camera/camera_app.h"
 #include <MK60_gpio.h>
 #include <MK60_adc.h>
@@ -24,22 +26,24 @@
 #include <libsc/com/button.h>
 #include "lcdmenu.h"
 
+using namespace libutil;
+
 namespace camera
 {
 
-float b_kp[3] = {3000.0, 3000.0, 3000.0};
+float b_kp[3] = {2400.0, 2400.0, 2400.0};
 float b_ki[3] = {0.0, 0.0, 0.0};
 float b_kd[3] = {30000.0, 30000.0, 30000.0};
 
-int16_t SPEED_SETPOINTS[3] = {0, 50, 100};
+int16_t SPEED_SETPOINTS[3] = {0, 85, 100};
 
-float s_kp[3] = {80.0, 80.0, 150.0};
-float s_ki[3] = {7.0, 7.0, 11.0};
+float s_kp[3] = {90.0, 90.0, 150.0};
+float s_ki[3] = {9.0, 9.0, 11.0};
 float s_kd[3] = {0.0, 0.0, 0.0};
 
-float t_kp[3] = {0.089, 0.5, 0.089};
+float t_kp[3] = {0.089, 0.089, 0.089};
 float t_ki[3] = {0.0, 0.0, 0.0};
-float t_kd[3] = {0.0, 0.0, 0.05};
+float t_kd[3] = {0.0, 0.1, 0.05};
 
 CameraApp::CameraApp():
 	m_helper(&m_car),
@@ -58,7 +62,8 @@ CameraApp::CameraApp():
 	m_encoder_2(0),
 	m_count(0),
 	num_finished_row(0),
-	src(NULL)
+	src(NULL),
+	e_stop(0)
 {
 	gpio_init(PTB22, GPO, 0);
 	gpio_init(PTD2, GPO, 0);
@@ -73,11 +78,49 @@ CameraApp::CameraApp():
 	mpu6050_init();
 	m_car.GetLcd()->Clear(WHITE);
 
+	tunableints[0] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("bkp", TunableInt::REAL,
+			TunableInt::AsUnsigned(b_kp[1]));
+	tunableints[1] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("bkd", TunableInt::REAL,
+				TunableInt::AsUnsigned(b_kd[1]));
+	tunableints[2] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("bki", TunableInt::REAL,
+					TunableInt::AsUnsigned(b_ki[1]));
+	tunableints[3] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("skp", TunableInt::REAL,
+						TunableInt::AsUnsigned(s_kp[1]));
+	tunableints[4] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("skd", TunableInt::REAL,
+						TunableInt::AsUnsigned(s_kd[1]));
+	tunableints[5] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("ski", TunableInt::REAL,
+						TunableInt::AsUnsigned(s_ki[1]));
+	tunableints[6] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("tkp", TunableInt::REAL,
+						TunableInt::AsUnsigned(t_kp[1]));
+	tunableints[7] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("tkd", TunableInt::REAL,
+						TunableInt::AsUnsigned(t_kd[1]));
+	tunableints[8] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("speed", TunableInt::INTEGER,
+						TunableInt::AsSigned(SPEED_SETPOINTS[1]));
+	tunableints[9] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("estop", TunableInt::INTEGER,
+						TunableInt::AsSigned(-1));
+
+	TunableIntManager<10>::GetInstance(m_car.GetUart())->Start();
+
 }
 
 CameraApp::~CameraApp()
 {
 
+}
+
+void CameraApp::eStop(){
+	m_car.MoveMotor(0, 0);
+	m_car.MoveMotor(1, 0);
+
+	angle[0] = 18;
+	m_speed_pid.ResetError();
+	m_speed_pid.SetSetPoint(0);
+	m_balance_pid.ResetError();
+	m_turn_pid.ResetError();
+
+	while(m_car.GetJoystick()->GetState() != libsc::Joystick::SELECT);
+
+	e_stop++;
 }
 
 void CameraApp::BalanceControl()
@@ -113,13 +156,12 @@ void CameraApp::SpeedControl(){
 
 	m_speed_pid.UpdatePreviousError();
 
-	if(m_encoder_2 > 350)
+	if(m_encoder_2 > 300)
 	{
-		m_car.MoveMotor(0, 0);
-		m_car.MoveMotor(1, 0);
-		while(true);
+		eStop();
 	}
 }
+
 
 void CameraApp::SpeedControlOutput(){
 
@@ -158,8 +200,7 @@ void CameraApp::TurnControl(){
 	white_dot[0] = white_dot[1] = 0;
 
 	int degree = (int) round(
-		- m_turn_pid.Proportional()
-//		+ -1 * m_turn_pid.Derivative()
+		- m_turn_pid.Proportional() + -1 * m_turn_pid.Derivative()
 	);
 
 	m_turn_pid.UpdatePreviousError();
@@ -199,10 +240,10 @@ void CameraApp::MoveMotor(){
 	m_dir[0] = m_total_speed[0] > 0 ? true : false;
 	m_dir[1] = m_total_speed[1] > 0 ? true : false;
 
-	m_car.MotorDir(0, m_dir[0]); 			////Right Motor - True Backward  -  False Forward
+	m_car.MotorDir(0, !m_dir[0]); 			////Right Motor - True Backward  -  False Forward
 	m_car.MoveMotor(0,(uint16_t) m_helper.abs(m_total_speed[0]));
 
-	m_car.MotorDir(1, !m_dir[1]);			////Left Motor - False Backward  -  True Forward
+	m_car.MotorDir(1, m_dir[1]);			////Left Motor - False Backward  -  True Forward
 	m_car.MoveMotor(1,(uint16_t) m_helper.abs(m_total_speed[1]));
 }
 
@@ -216,13 +257,13 @@ void CameraApp::AutoMode()
 
 	libsc::Button* m_start_button = m_car.GetButton();
 
-	m_helper.Printline(m_car.GetLcd()->FONT_H * 0, "AUTO Mode");
+	/*m_helper.Printline(m_car.GetLcd()->FONT_H * 0, "AUTO Mode");
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 1, "Speed1: ");
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 2, "Speed2: ");
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 3, "Motor1: ");
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 4, "Motor2: ");
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 5, "Angle: ");
-	m_helper.Printline(m_car.GetLcd()->FONT_H * 6, "SSP: ");
+	m_helper.Printline(m_car.GetLcd()->FONT_H * 6, "SSP: ");*/
 
 	while (true)
 	{
@@ -235,21 +276,52 @@ void CameraApp::AutoMode()
 				m_balance_pid.SetMode(2);
 				m_turn_pid.SetMode(2);
 				m_speed_pid.SetMode(2);
-				m_speed_pid.SetSetPoint(SPEED_SETPOINTS[1]);
+//				m_speed_pid.SetSetPoint(SPEED_SETPOINTS[1]);
 			}
 
 
-//			if(t%1500==0 && autoprint) {
-//				const char* s = libutil::String::Format("%06d",m_control_speed[0]).c_str();
-//				m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 1, s);
-//				s = libutil::String::Format("%06d",m_control_speed[1]).c_str();
-//				m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 2, s);
-//				s = libutil::String::Format("%06d",m_total_speed[0]).c_str();
-//				m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 3, s);
-//				s = libutil::String::Format("%06d",m_total_speed[1]).c_str();
-//				m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 4, s);
-//				s = libutil::String::Format("%d",(int)m_gyro).c_str();
-//				m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 5, s);
+
+			if(t%1500==0){
+				m_balance_pid.SetKP( TunableInt::AsFloat(tunableints[0]->GetValue()) );
+				m_balance_pid.SetKD( TunableInt::AsFloat(tunableints[1]->GetValue()) );
+				m_balance_pid.SetKI( TunableInt::AsFloat(tunableints[2]->GetValue()) );
+				m_speed_pid.SetKP( TunableInt::AsFloat(tunableints[3]->GetValue()) );
+				m_speed_pid.SetKD( TunableInt::AsFloat(tunableints[4]->GetValue()) );
+				m_speed_pid.SetKI( TunableInt::AsFloat(tunableints[5]->GetValue()) );
+				m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
+				m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[7]->GetValue()) );
+				m_speed_pid.SetSetPoint( TunableInt::AsFloat(tunableints[8]->GetValue()) );
+				if(TunableInt::AsFloat(tunableints[9]->GetValue())==e_stop) eStop();
+				/*printf("b_kp: %f\n",b_kp[1]);
+				printf("b_kd: %f\n",b_kd[1]);
+				printf("b_ki: %f\n",b_ki[1]);
+				printf("s_kp: %f\n",s_kp[1]);
+				printf("s_kd: %f\n",s_kd[1]);
+				printf("s_ki: %f\n",s_ki[1]);
+				printf("t_kp: %f\n",t_kp[1]);
+				printf("t_kd: %f\n",t_kd[1]);
+				printf("SPEED_SETPOINTS: %f\n",SPEED_SETPOINTS[1]);*/
+			}
+
+//			if(t%1500==0) {
+//				const char* s = libutil::String::Format("%.3f",b_kp[1]).c_str();
+//				m_helper.Printline(m_car.GetLcd()->FONT_W * 0, m_car.GetLcd()->FONT_H * 0, s);
+//				s = libutil::String::Format("%.3f",b_kd[1]).c_str();
+//				m_helper.Printline(m_car.GetLcd()->FONT_W * 0, m_car.GetLcd()->FONT_H * 1, s);
+//				s = libutil::String::Format("%.3f",b_ki[1]).c_str();
+//				m_helper.Printline(m_car.GetLcd()->FONT_W * 0, m_car.GetLcd()->FONT_H * 2, s);
+//				s = libutil::String::Format("%.3f",s_kp[1]).c_str();
+//				m_helper.Printline(m_car.GetLcd()->FONT_W * 0, m_car.GetLcd()->FONT_H * 3, s);
+//				s = libutil::String::Format("%.3f",s_kd[1]).c_str();
+//				m_helper.Printline(m_car.GetLcd()->FONT_W * 0, m_car.GetLcd()->FONT_H * 4, s);
+//				s = libutil::String::Format("%.3f",s_ki[1]).c_str();
+//				m_helper.Printline(m_car.GetLcd()->FONT_W * 0, m_car.GetLcd()->FONT_H * 5, s);
+//				s = libutil::String::Format("%.3f",t_kp[1]).c_str();
+//				m_helper.Printline(m_car.GetLcd()->FONT_W * 0, m_car.GetLcd()->FONT_H * 6, s);
+//				s = libutil::String::Format("%.3f",t_kd[1]).c_str();
+//				m_helper.Printline(m_car.GetLcd()->FONT_W * 0, m_car.GetLcd()->FONT_H * 7, s);
+//				s = libutil::String::Format("%d",SPEED_SETPOINTS[1]).c_str();
+//				m_helper.Printline(m_car.GetLcd()->FONT_W * 0, m_car.GetLcd()->FONT_H * 8, s);
 //			}
 
 			///Speed Control Output every 1ms///
@@ -296,9 +368,9 @@ void CameraApp::AutoMode()
 
 			///Speed PID update every 20ms///
 			if(t%SPEEDCONTROLPERIOD==0){
-				printf("DT: %d\n", libutil::Clock::TimeDiff(libutil::Clock::Time(),dt));
+//				printf("DT: %d\n", libutil::Clock::TimeDiff(libutil::Clock::Time(),dt));
 				SpeedControl();
-				dt = libutil::Clock::Time();
+//				dt = libutil::Clock::Time();
 			}
 			MoveMotor();
 
@@ -340,9 +412,9 @@ void CameraApp::AccelAndGyroMode()
 
 			///Update Gyro every 2ms///
 			if(t % 2 == 0)	{
-				gpio_set(PTD4, 1);
+//				gpio_set(PTD4, 1);
 				mpu6050_update();
-				gpio_set(PTD4, 0);
+//				gpio_set(PTD4, 0);
 				BalanceControl();
 			}
 
@@ -496,49 +568,121 @@ void CameraApp::BalanceOnlyMode()
 
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 0, "Balance Only");
 
-	m_control_speed[0] = m_control_speed[0] = m_turn_speed[0] = m_turn_speed[1] = 0;
-
 	while (true)
-	{
+		{
 
-		///System loop - 1ms///
-		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
-			t = libutil::Clock::Time();
+			///System loop - 1ms///
+			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
+				t = libutil::Clock::Time();
 
-			//if(t%150==0) {
-			//	const char* s = libutil::String::Format("Speed: %d,%d",m_control_speed[0],m_control_speed[1]).c_str();
-			//	m_helper.Printline(m_car.GetLcd()->FONT_H * 1, s);
-			//	s = libutil::String::Format("Motor: %d, %d",m_total_speed[0], m_total_speed[1]).c_str();
-			//	m_helper.Printline(m_car.GetLcd()->FONT_H * 2, s);
-			//	s = libutil::String::Format("Angle: %d",(int)m_gyro).c_str();
-			//	m_helper.Printline(m_car.GetLcd()->FONT_H * 3, s);
-			//	s = libutil::String::Format("SSP: %d",m_speed_pid.GetSetPoint()).c_str();
-			//	m_helper.Printline(m_car.GetLcd()->FONT_H * 4, s);
-			//}
+//				if(t - pt > 5000) {
+					m_balance_pid.SetMode(2);
+					m_turn_pid.SetMode(2);
+					m_speed_pid.SetMode(2);
+//				}
 
 
-			///Update Gyro every 2ms///
-			if(t % 2 == 0)	{
-				mpu6050_update();
-			}
 
-			switch(t%2){
-				case 0:
+					if(t%1500==0){
+						b_kp[1] = TunableInt::AsFloat(tunableints[0]->GetValue());
+						b_kd[1] = TunableInt::AsFloat(tunableints[1]->GetValue());
+						b_ki[1] = TunableInt::AsFloat(tunableints[2]->GetValue());
+						s_kp[1] = TunableInt::AsFloat(tunableints[3]->GetValue());
+						s_kd[1] = TunableInt::AsFloat(tunableints[4]->GetValue());
+						s_ki[1] = TunableInt::AsFloat(tunableints[5]->GetValue());
+						t_kp[1] = TunableInt::AsFloat(tunableints[6]->GetValue());
+						t_kd[1] = TunableInt::AsFloat(tunableints[7]->GetValue());
+//						SPEED_SETPOINTS[1] = TunableInt::AsFloat(tunableints[8]->GetValue());
+						/*printf("b_kp: %f\n",b_kp[1]);
+						printf("b_kd: %f\n",b_kd[1]);
+						printf("b_ki: %f\n",b_ki[1]);
+						printf("s_kp: %f\n",s_kp[1]);
+						printf("s_kd: %f\n",s_kd[1]);
+						printf("s_ki: %f\n",s_ki[1]);
+						printf("t_kp: %f\n",t_kp[1]);
+						printf("t_kd: %f\n",t_kd[1]);
+						printf("SPEED_SETPOINTS: %f\n",SPEED_SETPOINTS[1]);*/
+					}
+
+				if(t%1500==0 /*&& autoprint*/) {
+					const char* s = libutil::String::Format("%06d",m_control_speed[0]).c_str();
+					m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 1, s);
+					s = libutil::String::Format("%06d",m_control_speed[1]).c_str();
+					m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 2, s);
+					s = libutil::String::Format("%06d",m_total_speed[0]).c_str();
+					m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 3, s);
+					s = libutil::String::Format("%06d",m_total_speed[1]).c_str();
+					m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 4, s);
+					s = libutil::String::Format("%d",(int)m_gyro).c_str();
+					m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 5, s);
+					m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 6,
+							libutil::String::Format("%.3f",b_kp[1]).c_str());
+					m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 7,
+							libutil::String::Format("%.3f",b_kd[1]).c_str());
+				}
+
+				///Speed Control Output every 1ms///
+				SpeedControlOutput();
+
+				///Turn Control Output every 1 ms///
+				// TurnControlOutput();
+
+
+				if(t%2==0){
+					mpu6050_update();
+				}
+
+				if(t%2==1){
+
 					BalanceControl();
-					break;
-				case 1:
+				}
 
-					break;
-				default:
-					break;
+//				if(t - pt > 5000) {
+
+					if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
+						ProcessImage();
+						num_finished_row+=15;
+					}
+
+					if(t%TURNCONTROLPERIOD==3 && num_finished_row==15){
+						ProcessImage();
+						num_finished_row+=15;
+					}
+
+					if(t%TURNCONTROLPERIOD==5 && num_finished_row==30){
+						ProcessImage();
+						num_finished_row+=15;
+					}
+
+					if(t%TURNCONTROLPERIOD==7 && num_finished_row==45){
+						ProcessImage();
+						num_finished_row=0;
+						TurnControl();
+					}
+
+//				}
+
+
+				///Speed PID update every 20ms///
+				if(t%SPEEDCONTROLPERIOD==0){
+	//				printf("DT: %d\n", libutil::Clock::TimeDiff(libutil::Clock::Time(),dt));
+					SpeedControl();
+	//				dt = libutil::Clock::Time();
+				}
+
+				m_control_speed[0] = m_control_speed[0] = m_turn_speed[0] = m_turn_speed[1] = 0;
+
+				MoveMotor();
+
 			}
 
-			MoveMotor();
 
-			m_count++;
+	//		if(m_start_button->IsDown()) {
+	//			autoprint = !autoprint;
+	//			while(m_start_button->IsDown());
+	//		}
+
 		}
-
-	}
 }
 
 void CameraApp::CameraMoveMode()
@@ -667,11 +811,32 @@ void CameraApp::BalanceAndSpeedMode()
 			if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 				t = libutil::Clock::Time();
 
-				if(t - pt > 5000) {
+//				if(t - pt > 5000) {
 					m_balance_pid.SetMode(2);
 					m_turn_pid.SetMode(2);
 					m_speed_pid.SetMode(2);
-//					m_speed_pid.SetSetPoint(SPEED_SETPOINTS[1]);
+					m_speed_pid.SetSetPoint(SPEED_SETPOINTS[1]);
+//				}
+
+				if(t%1500==0){
+/*					b_kp[1] = TunableInt::AsFloat(tunableints[0]->GetValue());
+					b_kd[1] = TunableInt::AsFloat(tunableints[1]->GetValue());
+					b_ki[1] = TunableInt::AsFloat(tunableints[2]->GetValue());
+					s_kp[1] = TunableInt::AsFloat(tunableints[3]->GetValue());
+					s_kd[1] = TunableInt::AsFloat(tunableints[4]->GetValue());
+					s_ki[1] = TunableInt::AsFloat(tunableints[5]->GetValue());
+					t_kp[1] = TunableInt::AsFloat(tunableints[6]->GetValue());
+					t_kd[1] = TunableInt::AsFloat(tunableints[7]->GetValue());*/
+					SPEED_SETPOINTS[1] = TunableInt::AsFloat(tunableints[8]->GetValue());
+					/*printf("b_kp: %f\n",b_kp[1]);
+					printf("b_kd: %f\n",b_kd[1]);
+					printf("b_ki: %f\n",b_ki[1]);
+					printf("s_kp: %f\n",s_kp[1]);
+					printf("s_kd: %f\n",s_kd[1]);
+					printf("s_ki: %f\n",s_ki[1]);
+					printf("t_kp: %f\n",t_kp[1]);
+					printf("t_kd: %f\n",t_kd[1]);
+					printf("SPEED_SETPOINTS: %f\n",SPEED_SETPOINTS[1]);*/
 				}
 
 
@@ -734,9 +899,9 @@ void CameraApp::BalanceAndSpeedMode()
 
 				///Speed PID update every 20ms///
 				if(t%SPEEDCONTROLPERIOD==0){
-					printf("t:%d \t dt:%d \t DT: %d\n", t, dt, libutil::Clock::TimeDiff(t,dt));
+//					printf("t:%d \t dt:%d \t DT: %d\n", t, dt, libutil::Clock::TimeDiff(t,dt));
 					SpeedControl();
-					dt = t;
+//					dt = t;
 				}
 				MoveMotor();
 

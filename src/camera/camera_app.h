@@ -12,6 +12,8 @@
 #include <libutil/misc.h>
 //#include <libutil/pid_controller.h>
 //#include <libutil/pid_controller.tcc>
+#include <libutil/tunable_int_manager.h>
+#include <libutil/tunable_int_manager.tcc>
 #include "camera/car.h"
 #include "camera/helper.h"
 #include "camera/pid.h"
@@ -34,6 +36,8 @@ public:
 	void TurnControl();
 	void TurnControlOutput();
 	void MoveMotor();
+
+	void eStop();
 
 	void Run();
 
@@ -80,6 +84,10 @@ private:
 	int num_finished_row;
 
 	const Byte* src;
+
+	const libutil::TunableInt *tunableints[10];
+
+	int e_stop;
 
 };
 

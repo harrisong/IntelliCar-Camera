@@ -43,6 +43,13 @@ void PID::UpdateCurrentError(const float cur_reading)
 	total_error += current_error;
 }
 
+void PID::ResetError(const float error)
+{
+	current_error = error;
+	previous_error = error;
+	total_error = error;
+}
+
 void PID::SetSetPoint(const int new_setpoint)
 {
 	setpoint = new_setpoint;

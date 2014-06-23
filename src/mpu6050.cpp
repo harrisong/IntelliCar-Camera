@@ -27,6 +27,8 @@ float acc[3] = {0,0,0};
 float angle[3] = {18,0,0};
 int gyro_cal_ok = 0;
 
+#define GYROLSB 1/16.4f
+
 void  mpu6050_update(){
 
 //	sw_i2c_read_nbytes(MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
@@ -42,7 +44,7 @@ void  mpu6050_update(){
 		if(i >= 8 && i <= 13){
 			raw_omega[(i - 8) / 2] = data[i + 1] | (data[i] << 8);
 			raw_omega[(i - 8) / 2] -= omega_offset[(i - 8) / 2];
-			omega[(i - 8) / 2] = (float)raw_omega[(i - 8) / 2] * 0.061f;
+			omega[(i - 8) / 2] = (float)raw_omega[(i - 8) / 2] * GYROLSB;
 		}
 	}
 	for(int i = 0; i < 3; i++){
@@ -84,7 +86,7 @@ void gyro_cal(void){
 	for(int j = 0; j < 3; j++){
 		omega_offset[j] = (uint16_t)(gyro_cal_sum[j] / 256);
 	}
-	printf("omega_offset:%d,%d,%d", omega_offset[0], omega_offset[1], omega_offset[2]);
+//	printf("omega_offset:%d,%d,%d\n", omega_offset[0], omega_offset[1], omega_offset[2]);
 	gyro_cal_ok = 1;
 
 }
@@ -92,7 +94,7 @@ void gyro_cal(void){
 void mpu6050_init(){
 	i2c_init(I2C1, 400000);
 	DELAY_MS(1000);
-	printf("init start\n");
+//	printf("init start\n");
 
 	/*sw_i2c_write(MPU6050_ADDRESS, MPU6050_PWR_MGMT_1, 0x00);		//use PLL with Z axis gyro ref
 	sw_i2c_write(MPU6050_ADDRESS, MPU6050_SMPLRT_DIV, 0x00);		//sampling frequence=1000K
@@ -108,6 +110,6 @@ void mpu6050_init(){
 
 	DELAY_MS(1000);
 	gyro_cal();
-	printf("init ends\n");
+//	printf("init ends\n");
 
 }

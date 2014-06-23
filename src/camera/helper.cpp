@@ -101,7 +101,7 @@ void Helper::PrintPtr(uint8_t y){
 }
 
 void Helper::PrintCam(){
-
+	if(car_pt->GetCamera()->IsImageReady()){
 	const Byte* src = car_pt->GetCamera()->LockBuffer();
 
 	for (int i = CAM_H - 1; i >= 0; --i)
@@ -188,6 +188,7 @@ void Helper::PrintCam(){
 
 
 	car_pt->GetCamera()->UnlockBuffer();
+	}
 	uint16_t sec = libutil::Clock::Time()/1000;
 	const char* s = libutil::String::Format("Time: %02d",sec).c_str();
 	Printline(car_pt->GetLcd()->FONT_H * 7, s);
