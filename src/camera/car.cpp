@@ -31,8 +31,10 @@ Car::Car()
 		  m_start_button(0),
 		  m_joystick(0)
 {
+#ifdef LIBSC_USE_UART
 	m_uart.StartReceive();
 	libutil::InitDefaultFwriteHandler(&m_uart);
+#endif
 
 #ifdef LIBSC_USE_CAMERA
 	while (!m_cam.Init())
