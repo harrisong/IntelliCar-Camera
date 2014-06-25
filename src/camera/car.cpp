@@ -23,23 +23,30 @@ Car::Car()
 		: m_leds{Led(0), Led(1), Led(2), Led(3)},
 		  m_uart(3, 115200),
 		  m_motor1(0), m_motor2(1),
+#ifdef LIBSC_USE_CAMERA
 		  m_cam(CAM_W, CAM_H),
-		  m_gyro(RXADC),
+#endif
+		  m_accel(RXADC),
 		  m_lcd(true),
 		  m_start_button(0),
 		  m_joystick(0)
 {
+	m_uart.StartReceive();
 	libutil::InitDefaultFwriteHandler(&m_uart);
 
+#ifdef LIBSC_USE_CAMERA
 	while (!m_cam.Init())
 	{
 		LOG_E("Camera fucked up!!!!!");
 		DELAY_MS(250);
 	}
 	m_cam.ShootContinuously();
+#endif
 
+#ifdef LIBSC_USE_K60_ENCODERS
 	FTM_QUAD_Init(FTM1);
 	FTM_QUAD_Init(FTM2);
+#endif
 }
 
 Car::~Car()
@@ -48,20 +55,22 @@ Car::~Car()
 }
 
 
-BalanceAccel* Car::GetGyro(){
-	return &m_gyro;
+BalanceAccel* Car::GetAccel(){
+	return &m_accel;
 }
 
-void Car::GyroRefresh(){
-	m_gyro.Refresh();
+void Car::AccelRefresh(){
+	m_accel.Refresh();
 }
 
 float Car::GetRawAngle(){
-	return m_gyro.GetRawAngle();
+	return m_accel.GetRawAngle();
 }
 
 libsc::Ov7725* Car::GetCamera(){
+#ifdef LIBSC_USE_CAMERA
 	return &m_cam;
+#endif
 }
 
 libsc::Lcd* Car::GetLcd()

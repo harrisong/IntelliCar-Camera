@@ -126,11 +126,12 @@ void CameraApp::eStop(){
 void CameraApp::BalanceControl()
 {
 	///Get values from gyro///
-	m_car.GyroRefresh();
+	m_car.AccelRefresh();
 
 	static float acc = m_car.GetRawAngle();
 	kalman_filtering(&m_acc_kf, &acc, 1);
-	m_gyro = 1/TIMECONST * acc + (1- 1/TIMECONST) * angle[0];
+//	m_gyro = 1/TIMECONST * acc + (1- 1/TIMECONST) * angle[0];
+	m_gyro = angle[0];
 
 	m_balance_pid.UpdateCurrentError(m_gyro);
 
@@ -141,6 +142,9 @@ void CameraApp::BalanceControl()
 
 
 void CameraApp::SpeedControl(){
+#ifndef LIBSC_USE_K60_ENCODERS
+	return;
+#endif
 
 	int32_t encoder1 = FTM_QUAD_get(FTM1);
 	int32_t encoder2 = -FTM_QUAD_get(FTM2);
@@ -388,12 +392,59 @@ void CameraApp::AutoMode()
 
 void CameraApp::PidMode()
 {
+	uint32_t t;
+	while(true){
+		t = libutil::Clock::Time();
+		if(t%1500==0){
+//								b_kp[1] = TunableInt::AsFloat(tunableints[0]->GetValue());
+//								b_kd[1] = TunableInt::AsFloat(tunableints[1]->GetValue());
+//								b_ki[1] = TunableInt::AsFloat(tunableints[2]->GetValue());
+//								s_kp[1] = TunableInt::AsFloat(tunableints[3]->GetValue());
+//								s_kd[1] = TunableInt::AsFloat(tunableints[4]->GetValue());
+//								s_ki[1] = TunableInt::AsFloat(tunableints[5]->GetValue());
+//								t_kp[1] = TunableInt::AsFloat(tunableints[6]->GetValue());
+//								t_kd[1] = TunableInt::AsFloat(tunableints[7]->GetValue());
+//								SPEED_SETPOINTS[1] = TunableInt::AsFloat(tunableints[8]->GetValue());
+								/*printf("b_kp: %f\n",b_kp[1]);
+								printf("b_kd: %f\n",b_kd[1]);
+								printf("b_ki: %f\n",b_ki[1]);
+								printf("s_kp: %f\n",s_kp[1]);
+								printf("s_kd: %f\n",s_kd[1]);
+								printf("s_ki: %f\n",s_ki[1]);
+								printf("t_kp: %f\n",t_kp[1]);
+								printf("t_kd: %f\n",t_kd[1]);
+								printf("SPEED_SETPOINTS: %f\n",SPEED_SETPOINTS[1]);*/
+			}
 
+		if(t%1500==0 /*&& autoprint*/) {
+//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 1,
+//					libutil::String::Format("%.3f",b_kp[1]).c_str());
+//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 2,
+//					libutil::String::Format("%.3f",b_kd[1]).c_str());
+//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 3,
+//							libutil::String::Format("%.3f",b_ki[1]).c_str());
+//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 4,
+//							libutil::String::Format("%.3f",s_kp[1]).c_str());
+//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 5,
+//							libutil::String::Format("%.3f",s_kd[1]).c_str());
+//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 6,
+//							libutil::String::Format("%.3f",s_ki[1]).c_str());
+//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 7,
+//							libutil::String::Format("%.3f",t_kp[1]).c_str());
+//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 8,
+//							libutil::String::Format("%.3f",t_kd[1]).c_str());
+//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 9,
+//							libutil::String::Format("%d",SPEED_SETPOINTS[1]).c_str());
+//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 0,
+//							libutil::String::Format("%f", TunableInt::AsFloat(tunableints[9]->GetValue()) ).c_str());
+
+		}
+	}
 }
 
 void CameraApp::AccelAndGyroMode()
 {
-	uint16_t t = 0;
+	uint32_t t = 0;
 
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 0, "Accel & Gyro");
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 1, "Angle: ");
@@ -479,7 +530,7 @@ void CameraApp::EncoderMode()
 
 void CameraApp::CameraMode()
 {
-	uint16_t t = 0;
+	uint32_t t = 0;
 
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 0, "Camera Mode");
 
@@ -497,7 +548,7 @@ void CameraApp::CameraMode()
 
 void CameraApp::ParadeMode()
 {
-	uint16_t t = 0;
+	uint32_t t = 0;
 
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 0, "Parade");
 
@@ -564,7 +615,7 @@ void CameraApp::ParadeMode()
 
 void CameraApp::BalanceOnlyMode()
 {
-	uint16_t t = 0;
+	uint32_t t = 0;
 
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 0, "Balance Only");
 
@@ -584,14 +635,14 @@ void CameraApp::BalanceOnlyMode()
 
 
 					if(t%1500==0){
-						b_kp[1] = TunableInt::AsFloat(tunableints[0]->GetValue());
-						b_kd[1] = TunableInt::AsFloat(tunableints[1]->GetValue());
-						b_ki[1] = TunableInt::AsFloat(tunableints[2]->GetValue());
-						s_kp[1] = TunableInt::AsFloat(tunableints[3]->GetValue());
-						s_kd[1] = TunableInt::AsFloat(tunableints[4]->GetValue());
-						s_ki[1] = TunableInt::AsFloat(tunableints[5]->GetValue());
-						t_kp[1] = TunableInt::AsFloat(tunableints[6]->GetValue());
-						t_kd[1] = TunableInt::AsFloat(tunableints[7]->GetValue());
+//						b_kp[1] = TunableInt::AsFloat(tunableints[0]->GetValue());
+//						b_kd[1] = TunableInt::AsFloat(tunableints[1]->GetValue());
+//						b_ki[1] = TunableInt::AsFloat(tunableints[2]->GetValue());
+//						s_kp[1] = TunableInt::AsFloat(tunableints[3]->GetValue());
+//						s_kd[1] = TunableInt::AsFloat(tunableints[4]->GetValue());
+//						s_ki[1] = TunableInt::AsFloat(tunableints[5]->GetValue());
+//						t_kp[1] = TunableInt::AsFloat(tunableints[6]->GetValue());
+//						t_kd[1] = TunableInt::AsFloat(tunableints[7]->GetValue());
 //						SPEED_SETPOINTS[1] = TunableInt::AsFloat(tunableints[8]->GetValue());
 						/*printf("b_kp: %f\n",b_kp[1]);
 						printf("b_kd: %f\n",b_kd[1]);
@@ -687,7 +738,7 @@ void CameraApp::BalanceOnlyMode()
 
 void CameraApp::CameraMoveMode()
 {
-	uint16_t t = 0;
+	uint32_t t = 0;
 
 	bool autoprint = false;
 
@@ -941,7 +992,7 @@ void CameraApp::CalGyroMode()
 
 void CameraApp::SpeedModeOne()
 {
-	uint16_t t = 0;
+	uint32_t t = 0;
 
 	bool autoprint = false;
 
@@ -986,8 +1037,8 @@ void CameraApp::SpeedModeOne()
 
 void CameraApp::SpeedModeTwo()
 {
-	uint16_t t = 0;
-	uint16_t pt = 0;
+	uint32_t t = 0;
+	uint32_t pt = 0;
 
 	libsc::Button* m_start_button = m_car.GetButton();
 
@@ -1081,8 +1132,8 @@ void CameraApp::SpeedModeTwo()
 
 void CameraApp::TimeMeasurementMode()
 {
-	uint16_t t = 0;
-	uint16_t pt = 0;
+	uint32_t t = 0;
+	uint32_t pt = 0;
 
 	m_helper.Printline(m_car.GetLcd()->FONT_H * 0, "Time measurement");
 

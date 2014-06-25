@@ -67,7 +67,7 @@ public:
 		return &m_uart;
 	}
 
-	BalanceAccel* GetGyro();
+	BalanceAccel* GetAccel();
 	libsc::Motor* GetMotor(int n);
 	libsc::Led* GetLed(int n);
 	libsc::Lcd* GetLcd();
@@ -75,7 +75,7 @@ public:
 	libsc::Button* GetButton();
 	libsc::Joystick* GetJoystick();
 
-	void GyroRefresh();
+	void AccelRefresh();
 	float GetRawAngle();
 
 	void MoveMotor(int, const uint16_t);
@@ -86,12 +86,13 @@ private:
 	libsc::Led m_leds[4];
 	libsc::UartDevice m_uart;
 	libsc::Motor m_motor1, m_motor2;
+#ifdef LIBSC_USE_CAMERA
 	libsc::Ov7725 m_cam;
+#endif
 	libsc::Lcd m_lcd;
-	BalanceAccel m_gyro;
+	BalanceAccel m_accel;
 	libsc::Button m_start_button;
 	libsc::Joystick m_joystick;
-	libutil::TunableInt *m_kp;
 
 	uint16_t m_current_time, m_prev_time, m_delta_time;
 

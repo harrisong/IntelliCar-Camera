@@ -7,6 +7,7 @@
 #include <MK60_i2c.h>
 #include <MK60_gpio.h>
 #include <libutil/clock.h>
+#include <libsc/com/config/2014_camera.h>
 
 
 KF m_gyro_kf[3];
@@ -29,6 +30,7 @@ int gyro_cal_ok = 0;
 
 #define GYROLSB 1/16.4f
 
+#ifdef LIBSC_USE_MPU6050
 void  mpu6050_update(){
 
 //	sw_i2c_read_nbytes(MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
@@ -63,6 +65,7 @@ void  mpu6050_update(){
 }
 
 void gyro_cal(void){
+
 	int i = 0;
 	for(int j = 0; j < 3; j++){
 		gyro_cal_sum[j] = 0;
@@ -113,3 +116,10 @@ void mpu6050_init(){
 //	printf("init ends\n");
 
 }
+#else
+
+void mpu6050_init(){}
+void gyro_cal(void){}
+void  mpu6050_update(){}
+
+#endif
