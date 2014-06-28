@@ -31,7 +31,7 @@ void Smoothing::UpdateCurrentOutput(const int32_t cur_output)
 
 int32_t Smoothing::SmoothingOutput()
 {
-	int32_t smoothing_output = (current_output - previous_output) * output_count++ / output_period + previous_output;
+	int32_t smoothing_output = (current_output - previous_output) * ++output_count / output_period + previous_output;
 
 	if(output_count==output_period)
 		output_count = 0;
