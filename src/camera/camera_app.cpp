@@ -160,10 +160,10 @@ void CameraApp::SpeedControl(){
 
 	m_speed_pid.UpdatePreviousError();
 
-	if(m_encoder_2 > 500)
-	{
-		eStop();
-	}
+//	if(m_encoder_2 > 500)
+//	{
+//		eStop();
+//	}
 }
 
 
@@ -301,7 +301,7 @@ void CameraApp::AutoMode()
 				m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
 				m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[7]->GetValue()) );
 				n_speed = set_speed = TunableInt::AsFloat(tunableints[8]->GetValue()) / 50;
-				set_time = libutil::Clock::Time();
+				if(n_speed!=0) set_time = libutil::Clock::Time();
 //				m_speed_pid.SetSetPoint( TunableInt::AsFloat(tunableints[8]->GetValue()) );
 				if(TunableInt::AsFloat(tunableints[9]->GetValue())==e_stop) eStop();
 
@@ -317,7 +317,7 @@ void CameraApp::AutoMode()
 			}
 
 			if(n_speed!=0){
-				if(libutil::Clock::TimeDiff(libutil::Clock::Time(),set_time) > 50){
+				if(libutil::Clock::TimeDiff(libutil::Clock::Time(),set_time) >= 1 && n_speed<=set_speed*50){
 					m_speed_pid.SetSetPoint( n_speed );
 					n_speed += set_speed;
 					set_time = libutil::Clock::Time();
