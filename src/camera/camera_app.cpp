@@ -57,7 +57,7 @@ CameraApp::CameraApp():
 	m_turn_pid(TURN_SETPOINT, t_kp, t_ki, t_kd, 3, 1),
 	m_balance_pid(BALANCE_SETPOINT, b_kp, b_ki, b_kd, 3, 1),
 	speed_smoothing(SPEEDCONTROLPERIOD),
-	speed_input_smoothing(1500),
+	speed_input_smoothing(3000),
 	turn_smoothing(TURNCONTROLPERIOD),
 	m_gyro(0),
 	m_encoder_2(0),
@@ -66,6 +66,10 @@ CameraApp::CameraApp():
 	src(NULL),
 	e_stop(0)
 {
+	gpio_init(PTA11, GPO, 1);
+	DELAY_MS(500);
+	gpio_set(PTA11, 0);
+
 	gpio_init(PTB22, GPO, 0);
 	gpio_init(PTD2, GPO, 0);
 	gpio_set(PTD2, 0);
