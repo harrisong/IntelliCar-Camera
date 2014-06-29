@@ -27,8 +27,8 @@ class Smoothing
 	private:
 		int output_period;
 		int output_count;
-		int32_t previous_output;
-		int32_t current_output;
+		float previous_output;
+		float current_output;
 };
 
 }

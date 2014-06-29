@@ -75,6 +75,7 @@ private:
 
 	Smoothing speed_smoothing;
 	Smoothing turn_smoothing;
+	Smoothing speed_input_smoothing;
 
 	float m_gyro;
 

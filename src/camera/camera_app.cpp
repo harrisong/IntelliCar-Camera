@@ -57,6 +57,7 @@ CameraApp::CameraApp():
 	m_turn_pid(TURN_SETPOINT, t_kp, t_ki, t_kd, 3, 1),
 	m_balance_pid(BALANCE_SETPOINT, b_kp, b_ki, b_kd, 3, 1),
 	speed_smoothing(SPEEDCONTROLPERIOD),
+	speed_input_smoothing(1500),
 	turn_smoothing(TURNCONTROLPERIOD),
 	m_gyro(0),
 	m_encoder_2(0),
@@ -300,9 +301,7 @@ void CameraApp::AutoMode()
 				m_speed_pid.SetKI( TunableInt::AsFloat(tunableints[5]->GetValue()) );
 				m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
 				m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[7]->GetValue()) );
-				n_speed = set_speed = TunableInt::AsFloat(tunableints[8]->GetValue()) / 50;
-				if(n_speed!=0) set_time = libutil::Clock::Time();
-//				m_speed_pid.SetSetPoint( TunableInt::AsFloat(tunableints[8]->GetValue()) );
+				speed_input_smoothing.UpdateCurrentOutput(TunableInt::AsFloat(tunableints[8]->GetValue()) );
 				if(TunableInt::AsFloat(tunableints[9]->GetValue())==e_stop) eStop();
 
 				/*printf("b_kp: %f\n",b_kp[1]);
@@ -316,13 +315,9 @@ void CameraApp::AutoMode()
 				printf("SPEED_SETPOINTS: %f\n",SPEED_SETPOINTS[1]);*/
 			}
 
-			if(n_speed!=0){
-				if(libutil::Clock::TimeDiff(libutil::Clock::Time(),set_time) >= 1 && n_speed<=set_speed*50){
-					m_speed_pid.SetSetPoint( n_speed );
-					n_speed += set_speed;
-					set_time = libutil::Clock::Time();
-				}
-			}
+			m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
+
+
 			if(t%100==0) {
 //				m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 1,
 //				libutil::String::Format("%.3f",angle[0]).c_str());
