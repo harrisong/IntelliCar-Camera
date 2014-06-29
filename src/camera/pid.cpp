@@ -50,7 +50,7 @@ void PID::ResetError(const float error)
 	total_error = error;
 }
 
-void PID::SetSetPoint(const int new_setpoint)
+void PID::SetSetPoint(const float new_setpoint)
 {
 	setpoint = new_setpoint;
 }
