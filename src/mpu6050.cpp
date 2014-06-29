@@ -79,13 +79,12 @@ uint8_t timeout(void){
 
 
 void my_i2c_reset_sda(){
-	for(int i = 0; i < 9; i++){
-		gpio_init(PTE1, GPO, 1);
-		DELAY_US(1);
-		gpio_set(PTE1, 0);
-		DELAY_US(1);
-	}
+	gpio_init(PTE1, GPO, 1);
+	DELAY_US(1);
+	gpio_set(PTE1, 0);
+	DELAY_US(1);
 	i2c_init(I2C1, 400000);
+	DELAY_MS(1);
 }
 
 uint8_t my_i2c_Wait(I2Cn) {
