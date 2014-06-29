@@ -277,10 +277,7 @@ void CameraApp::AutoMode()
 	m_turn_pid.SetMode(2);
 	m_speed_pid.SetMode(2);
 
-<<<<<<< HEAD
-=======
 
->>>>>>> origin/master
 	while (true)
 	{
 
@@ -288,11 +285,6 @@ void CameraApp::AutoMode()
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 			t = libutil::Clock::Time();
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> origin/master
 			if(t%1500==0){
 
 				m_balance_pid.SetKP( TunableInt::AsFloat(tunableints[0]->GetValue()) );
