@@ -277,7 +277,6 @@ void CameraApp::AutoMode()
 	m_turn_pid.SetMode(2);
 	m_speed_pid.SetMode(2);
 
-	int16_t set_speed = 0, n_speed = 0;
 
 	while (true)
 	{
@@ -285,13 +284,6 @@ void CameraApp::AutoMode()
 		///System loop - 1ms///
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 			t = libutil::Clock::Time();
-
-//			if(t - pt > 5000) {
-//				m_balance_pid.SetMode(2);
-//				m_turn_pid.SetMode(2);
-//				m_speed_pid.SetMode(2);
-////				m_speed_pid.SetSetPoint(SPEED_SETPOINTS[1]);
-//			}
 
 
 
