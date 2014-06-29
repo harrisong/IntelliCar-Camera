@@ -9,6 +9,8 @@
 #include <libutil/clock.h>
 #include "MK60_port.h"
 #include "MK60_i2c.h"
+#include <libsc/com/config/2014_camera.h>
+
 
 KF m_gyro_kf[3];
 KF m_acc_kf;
@@ -72,13 +74,18 @@ uint8_t timeout(void){
 	return _timeout > 0 ? 0 : 1;
 }
 
+
+#ifdef LIBSC_USE_MPU6050
+
+
 void my_i2c_reset_sda(){
-	gpio_init(PTE1, GPO, 1);
-	DELAY_US(1);
-	gpio_set(PTE1, 0);
-	DELAY_US(1);
+	for(int i = 0; i < 9; i++){
+		gpio_init(PTE1, GPO, 1);
+		DELAY_US(1);
+		gpio_set(PTE1, 0);
+		DELAY_US(1);
+	}
 	i2c_init(I2C1, 400000);
-	DELAY_MS(1);;
 }
 
 uint8_t my_i2c_Wait(I2Cn) {
@@ -220,3 +227,12 @@ void mpu6050_init(){
 //	printf("init ends\n");
 
 }
+
+
+#else
+
+void mpu6050_init(){}
+void gyro_cal(void){}
+void  mpu6050_update(){}
+
+#endif
