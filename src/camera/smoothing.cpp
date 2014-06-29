@@ -26,7 +26,6 @@ void Smoothing::UpdateCurrentOutput(const int32_t cur_output)
 {
 	previous_output = current_output;
 	current_output = cur_output;
-//	output_count++;
 }
 
 int32_t Smoothing::SmoothingOutput()

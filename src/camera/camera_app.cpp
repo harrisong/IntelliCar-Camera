@@ -160,10 +160,10 @@ void CameraApp::SpeedControl(){
 
 	m_speed_pid.UpdatePreviousError();
 
-	if(m_encoder_2 > 500)
-	{
-		eStop();
-	}
+//	if(m_encoder_2 > 500)
+//	{
+//		eStop();
+//	}
 }
 
 
