@@ -13,15 +13,7 @@
 
 #define TIMECONST 100.0f
 
-//balance pid vars//
-/*#define balance_kp 7.7f
-#define balance_kd 0.0f
-#define balance_ki 0.0f*/
-/*
-#define balance_kp 3000.0f
-#define balance_kd 30000.0f
-#define balance_ki 0.0f
-*/
+#define PWMCLAMP 8000
 
 #define BALANCE_SETPOINT 48
 #define TURN_SETPOINT 0
