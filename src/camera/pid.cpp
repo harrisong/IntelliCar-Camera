@@ -76,7 +76,7 @@ void PID::SetKD(const float new_kd)
 	kd[mode-1] = new_kd;
 }
 
-int PID::GetSetPoint() const
+float PID::GetSetPoint() const
 {
 	return setpoint;
 }

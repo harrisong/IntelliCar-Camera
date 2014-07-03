@@ -27,7 +27,7 @@ class PID
 		void SetKI(const float new_ki);
 		void SetKD(const float new_kd);
 
-		int GetSetPoint() const;
+		float GetSetPoint() const;
 
 		float KP() const;
 		float KI() const;
