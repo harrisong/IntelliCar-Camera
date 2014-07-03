@@ -123,5 +123,6 @@
 void mpu6050_init();
 void gyro_cal(void);
 void  mpu6050_update();
+void error_prints();
 
 #endif /* MPU6050_H_ */

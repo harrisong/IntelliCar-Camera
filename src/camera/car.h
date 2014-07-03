@@ -94,7 +94,7 @@ private:
 	libsc::Button m_start_button;
 	libsc::Joystick m_joystick;
 
-	uint16_t m_current_time, m_prev_time, m_delta_time;
+	//uint16_t m_current_time, m_prev_time, m_delta_time;
 
 };
 

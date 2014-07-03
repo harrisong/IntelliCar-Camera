@@ -59,6 +59,9 @@ public:
 	void SpeedToMotorMode();
 
 private:
+	static void HardFaultHandler();
+	static void PitIndicator();
+
 	Car m_car;
 	Helper m_helper;
 
@@ -90,6 +93,7 @@ private:
 
 	int e_stop;
 
+	static CameraApp *m_instance;
 };
 
 }
