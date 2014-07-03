@@ -18,8 +18,10 @@ namespace camera{
 			adc_init(p);
 		}
 		float GetVolt(){
-			float val = (float) adc_once(port, ADC_16bit) * 3.3 / 65535 * 50 /20;
-			return val;
+			float val;
+			for(int i=0; i<10; i++)
+				val += (float) adc_once(port, ADC_16bit) * 3.3 / 65535 * 50 /20;
+			return val/10;
 		}
 	private:
 		ADCn_Ch_e port;
