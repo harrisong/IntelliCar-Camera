@@ -31,29 +31,29 @@ int gyro_cal_ok = 0;
 
 #define GYROLSB 1/16.4f
 
-#define i2c_Start(I2Cn)             I2C_C1_REG(I2C1_BASE_PTR) |= (I2C_C1_TX_MASK | I2C_C1_MST_MASK)    //MST 由0变1，产生起始信号，TX = 1 进入发送模式
+#define i2c_Start(I2Cn)             I2C_C1_REG(I2C0_BASE_PTR) |= (I2C_C1_TX_MASK | I2C_C1_MST_MASK)    //MST 由0变1，产生起始信号，TX = 1 进入发送模式
 
 //停止信号
-#define i2c_Stop(I2Cn)              I2C_C1_REG(I2C1_BASE_PTR) &= ~(I2C_C1_MST_MASK | I2C_C1_TX_MASK)   //MST 由1变0，产生停止信号，TX = 0 进入接收模式
+#define i2c_Stop(I2Cn)              I2C_C1_REG(I2C0_BASE_PTR) &= ~(I2C_C1_MST_MASK | I2C_C1_TX_MASK)   //MST 由1变0，产生停止信号，TX = 0 进入接收模式
 
 //重复启动
-#define i2c_RepeatedStart(I2Cn)     I2C_C1_REG(I2C1_BASE_PTR) |= I2C_C1_RSTA_MASK
+#define i2c_RepeatedStart(I2Cn)     I2C_C1_REG(I2C0_BASE_PTR) |= I2C_C1_RSTA_MASK
 
 //进入接收模式(应答,需要接收多个数据，接收最后一个字节前需要禁用应答i2c_DisableAck)
-#define i2c_EnterRxMode(I2Cn)       I2C_C1_REG(I2C1_BASE_PTR) &= ~(I2C_C1_TX_MASK | I2C_C1_TXAK_MASK)  //
+#define i2c_EnterRxMode(I2Cn)       I2C_C1_REG(I2C0_BASE_PTR) &= ~(I2C_C1_TX_MASK | I2C_C1_TXAK_MASK)  //
 
 //进入接收模式(不应答,只接收一个字节)
-#define i2c_PutinRxMode(I2Cn)       I2C_C1_REG(I2C1_BASE_PTR) &= ~I2C_C1_TX_MASK;I2C_C1_REG(I2C1_BASE_PTR) |= I2C_C1_TXAK_MASK
+#define i2c_PutinRxMode(I2Cn)       I2C_C1_REG(I2C0_BASE_PTR) &= ~I2C_C1_TX_MASK;I2C_C1_REG(I2C0_BASE_PTR) |= I2C_C1_TXAK_MASK
 
 //禁用应答(接收最后一个字节)
-#define i2c_DisableAck(I2Cn)        I2C_C1_REG(I2C1_BASE_PTR) |= I2C_C1_TXAK_MASK
+#define i2c_DisableAck(I2Cn)        I2C_C1_REG(I2C0_BASE_PTR) |= I2C_C1_TXAK_MASK
 
 //等待 I2C_S
-#define i2c_Wait(I2Cn)              while(( I2C_S_REG(I2C1_BASE_PTR) & I2C_S_IICIF_MASK)==0) {} \
-                                    I2C_S_REG(I2C1_BASE_PTR) |= I2C_S_IICIF_MASK;
+#define i2c_Wait(I2Cn)              while(( I2C_S_REG(I2C0_BASE_PTR) & I2C_S_IICIF_MASK)==0) {} \
+                                    I2C_S_REG(I2C0_BASE_PTR) |= I2C_S_IICIF_MASK;
 
 //写一个字节
-#define i2c_write_byte(I2Cn,data)   (I2C_D_REG(I2C1_BASE_PTR) = (data));i2c_Wait(I2Cn)
+#define i2c_write_byte(I2Cn,data)   (I2C_D_REG(I2C0_BASE_PTR) = (data));i2c_Wait(I2Cn)
 
 
 volatile uint16_t tick_img = 0;
@@ -77,18 +77,16 @@ uint8_t timeout(void){
 
 
 void my_i2c_reset_sda(){
-	for(int i = 0; i < 9; i++){
-		gpio_init(PTE1, GPO, 1);
-		DELAY_US(1);
-		gpio_set(PTE1, 0);
-		DELAY_US(1);
-	}
-	i2c_init(I2C1, 400000);
+	gpio_init(I2C0_SCL, GPO, 1);
+	DELAY_US(1);
+	gpio_set(I2C0_SCL, 0);
+	DELAY_US(1);
+	i2c_init(I2C0, 400000);
 }
 
 uint8_t my_i2c_Wait(I2Cn) {
 	set_timeout(3);
-	while(( I2C_S_REG(I2C1_BASE_PTR) & I2C_S_IICIF_MASK)==0) {
+	while(( I2C_S_REG(I2C0_BASE_PTR) & I2C_S_IICIF_MASK)==0) {
 		if(timeout()){
 			gpio_set(PTA11, 1);
 			gpio_init(PTD0, GPO, 0);
@@ -96,7 +94,7 @@ uint8_t my_i2c_Wait(I2Cn) {
 			return 0;
 		}
 	}
-	I2C_S_REG(I2C1_BASE_PTR) |= I2C_S_IICIF_MASK;
+	I2C_S_REG(I2C0_BASE_PTR) |= I2C_S_IICIF_MASK;
 	return 1;
 }
 
@@ -109,17 +107,17 @@ uint8_t my_i2c_read_nbytes(I2Cn_e i2cn, uint8_t addr, uint8_t reg, int length, u
     i2c_RepeatedStart(i2cn);
 	i2c_write_byte(i2cn, ( addr << 1 ) | MRSW);
     i2c_EnterRxMode(i2cn);
-    dump = I2C_D_REG(I2C1_BASE_PTR);
+    dump = I2C_D_REG(I2C0_BASE_PTR);
 	if(!my_i2c_Wait(i2cn)){
 		return 0;
 	}
 	for(i = 0; i < length; i++){
 		if(i == length - 1){
 			i2c_PutinRxMode(i2cn);
-			*(pdata + i) = I2C_D_REG(I2C1_BASE_PTR);
+			*(pdata + i) = I2C_D_REG(I2C0_BASE_PTR);
 		}
 		else{
-			*(pdata + i) = I2C_D_REG(I2C1_BASE_PTR);
+			*(pdata + i) = I2C_D_REG(I2C0_BASE_PTR);
 		}
 		if(!my_i2c_Wait(i2cn)){
 			return 0;
@@ -130,21 +128,20 @@ uint8_t my_i2c_read_nbytes(I2Cn_e i2cn, uint8_t addr, uint8_t reg, int length, u
 }
 
 void mpu6050_short_init(){
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_PWR_MGMT_1, 0x00);		//use PLL with Z axis gyro ref
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_SMPLRT_DIV, 0x00);		//sampling frequence=1000K
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_CONFIG, 0x00);			//bandwith: gyro=256hz, acc=260hz
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g
+	i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_PWR_MGMT_1, 0x00);		//use PLL with Z axis gyro ref
+	i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_SMPLRT_DIV, 0x00);		//sampling frequence=1000K
+	i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_CONFIG, 0x00);			//bandwith: gyro=256hz, acc=260hz
+	i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
+	i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g
 
 }
 
 void  mpu6050_update(){
 
 //	sw_i2c_read_nbytes(MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
-//	i2c_read_nbytes(I2C1, MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
-	if(!my_i2c_read_nbytes(I2C1, MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data)){
+	//i2c_read_nbytes(I2C0, MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
+	if(!my_i2c_read_nbytes(I2C0, MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data)){
 		mpu6050_short_init();
-		gpio_set(PTA11, 0);
 	}
 	for(int i = 8; i < 14; i += 2){
 		/*if(i >= 0 && i <= 5){
@@ -204,9 +201,9 @@ void gyro_cal(void){
 }
 
 void mpu6050_init(){
-	i2c_init(I2C1, 400000);
+	i2c_init(I2C0, 400000);
 	DELAY_MS(1000);
-//	printf("init start\n");
+	printf("init start\n");
 
 	/*sw_i2c_write(MPU6050_ADDRESS, MPU6050_PWR_MGMT_1, 0x00);		//use PLL with Z axis gyro ref
 	sw_i2c_write(MPU6050_ADDRESS, MPU6050_SMPLRT_DIV, 0x00);		//sampling frequence=1000K
@@ -214,15 +211,15 @@ void mpu6050_init(){
 	sw_i2c_write(MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
 	sw_i2c_write(MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g*/
 
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_PWR_MGMT_1, 0x00);		//use PLL with Z axis gyro ref
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_SMPLRT_DIV, 0x00);		//sampling frequence=1000K
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_CONFIG, 0x00);			//bandwith: gyro=256hz, acc=260hz
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
-	i2c_write_reg(I2C1, MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g
+	i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_PWR_MGMT_1, 0x00);		//use PLL with Z axis gyro ref
+	i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_SMPLRT_DIV, 0x00);		//sampling frequence=1000K
+	i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_CONFIG, 0x00);			//bandwith: gyro=256hz, acc=260hz
+	i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
+	i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g
 
 	DELAY_MS(1000);
 	gyro_cal();
-//	printf("init ends\n");
+	printf("init ends\n");
 
 }
 

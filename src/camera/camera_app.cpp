@@ -37,8 +37,8 @@ float b_kd[3] = {27000.0, 27000.0, 27000.0};
 
 int16_t SPEED_SETPOINTS[3] = {0, 85, 100};
 
-float s_kp[3] = {110.0, 110.0, 150.0};
-float s_ki[3] = {9.0, 9.0, 11.0};
+float s_kp[3] = {55.0, 55.0, 55.0};
+float s_ki[3] = {4.5, 4.5, 4.5};
 float s_kd[3] = {0.0, 0.0, 0.0};
 
 float t_kp[3] = {1.0, 1.0, 1.0};
@@ -67,8 +67,6 @@ CameraApp::CameraApp():
 	e_stop(0)
 {
 	gpio_init(PTA11, GPO, 1);
-	DELAY_MS(500);
-	gpio_set(PTA11, 0);
 
 	gpio_init(PTB22, GPO, 0);
 	gpio_init(PTD2, GPO, 0);
@@ -264,6 +262,7 @@ void CameraApp::AutoMode()
 
 	bool autoprint = false;
 
+//	FTFL_FOPT &= ~((1 << 1) | (1 << 2));
 	libsc::Button* m_start_button = m_car.GetButton();
 
 	/*m_helper.Printline(m_car.GetLcd()->FONT_H * 0, "AUTO Mode");
