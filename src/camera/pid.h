@@ -22,7 +22,7 @@ class PID
 		void ResetError(const float error = 0.0);
 
 		void SetMode(const int new_mode);
-		void SetSetPoint(const int new_setpoint);
+		void SetSetPoint(const float new_setpoint);
 		void SetKP(const float new_kp);
 		void SetKI(const float new_ki);
 		void SetKD(const float new_kd);
@@ -37,7 +37,7 @@ class PID
 		float Derivative() const;
 
 	private:
-		int setpoint;
+		float setpoint;
 		int mode;
 		float* kp;
 		float* ki;
