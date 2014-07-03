@@ -247,7 +247,18 @@ void gyro_cal(void){
 
 }
 
+//void NMI_Handler(){
+////	if(MCM_ISR & (1 << 2)){
+////		MCM_ETBCC &= ~(1 << 3);
+////	}
+//	return;
+//}
+
 void mpu6050_init(){
+//	printf("rspt: %x\n", MCM_ETBCC&6);
+//	SetIsr(NonMaskableInt_VECTORn, NMI_Handler);
+//	EnableIsr(NonMaskableInt_VECTORn);
+
 	i2c_init(I2C0, 400000);
 	DELAY_MS(100);
 	printf("init start\n");

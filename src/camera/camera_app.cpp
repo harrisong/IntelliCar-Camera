@@ -69,6 +69,7 @@ CameraApp::CameraApp():
 	src(NULL),
 	e_stop(0)
 {
+	printf("Voltage: %f\n", m_car.GetVolt());
 	gpio_init(PTA11, GPO, 1);
 
 	gpio_init(PTB22, GPO, 0);
@@ -187,7 +188,6 @@ void CameraApp::ProcessImage(){
 
 	if(m_car.GetCamera()->IsImageReady())
 	{
-//		gpio_set(PTB22, 1);
 		src = m_car.GetCamera()->LockBuffer();
 		for(int y=start_row; y<end_row; y++)
 		{
@@ -200,7 +200,6 @@ void CameraApp::ProcessImage(){
 			}
 		}
 
-//		gpio_set(PTB22, 0);
 	}
 
 }
@@ -260,7 +259,7 @@ void CameraApp::AutoMode()
 
 	bool autoprint = false;
 
-	FTFL_FOPT &= ~((1 << 1) | (1 << 2));
+	MCM_ETBCC &= ~(1 << 0);
 	libsc::Button* m_start_button = m_car.GetButton();
 
 	m_balance_pid.SetMode(2);
@@ -469,8 +468,8 @@ void CameraApp::EncoderMode()
 	uint32_t t;
 //	m_balance_pid.SetMode(2);
 //	m_turn_pid.SetMode(2);
-	m_speed_pid.SetMode(2);
-	m_speed_pid.SetSetPoint( 40 );
+//	m_speed_pid.SetMode(2);
+//	m_speed_pid.SetSetPoint( 40 );
 
 	while (true)
 	{
@@ -482,13 +481,6 @@ void CameraApp::EncoderMode()
 			t = libutil::Clock::Time();
 
 
-
-			///Speed Control Output every 1ms///
-			SpeedControlOutput();
-
-			///Speed PID update every 100ms///
-			if(t%SPEEDCONTROLPERIOD==0) SpeedControl();
-
 			if(t%1000){
 				encoder1 = FTM_QUAD_get(FTM1);
 				encoder2 = -FTM_QUAD_get(FTM2);
@@ -499,9 +491,7 @@ void CameraApp::EncoderMode()
 				s = libutil::String::Format("Time: %d",libutil::Clock::Time()/1000).c_str();
 				m_helper.Printline(m_car.GetLcd()->FONT_H * 3, s);
 			}
-			m_balance_speed[0] = m_balance_speed[1] = 0;
-			m_turn_speed[0] = m_turn_speed[1] = 0;
-			MoveMotor();
+
 
 		}
 

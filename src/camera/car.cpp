@@ -29,7 +29,8 @@ Car::Car()
 		  m_accel(RXADC),
 		  m_lcd(true),
 		  m_start_button(0),
-		  m_joystick(0)
+		  m_joystick(0),
+		  m_balancevolt(LIBSC_VOLT)
 {
 #ifdef LIBSC_USE_UART
 	m_uart.StartReceive();
