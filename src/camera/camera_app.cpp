@@ -240,9 +240,8 @@ void CameraApp::MoveMotor(){
 	m_dir[0] = m_total_speed[0] > 0 ? true : false;
 	m_dir[1] = m_total_speed[1] > 0 ? true : false;
 
-
-	m_total_speed[0] = m_helper.Clamp(m_total_speed[0], -PWMCLAMP, PWMCLAMP);
-	m_total_speed[1] = m_helper.Clamp(m_total_speed[1], -PWMCLAMP, PWMCLAMP);
+//	m_total_speed[0] = m_helper.Clamp(m_total_speed[0], -PWMCLAMP, PWMCLAMP);
+//	m_total_speed[1] = m_helper.Clamp(m_total_speed[1], -PWMCLAMP, PWMCLAMP);
 
 	m_car.MotorDir(0, !m_dir[0]); 			////Right Motor - True Backward  -  False Forward
 	m_car.MoveMotor(0,(uint16_t) m_helper.abs(m_total_speed[0]));
@@ -253,17 +252,13 @@ void CameraApp::MoveMotor(){
 
 void CameraApp::AutoMode()
 {
-	SetIsr(PIT1_VECTORn, PitIndicator);
-	pit_init_ms(PIT1, 1000);
-	EnableIsr(PIT1_VECTORn);
-
 	uint32_t t = 0, set_time = 0;
 	uint32_t dt = 0;
 	uint32_t pt = libutil::Clock::Time();
 
 	bool autoprint = false;
 
-	MCM_ETBCC &= ~(1 << 0);
+//	MCM_ETBCC &= ~(1 << 0);
 	libsc::Button* m_start_button = m_car.GetButton();
 
 	m_balance_pid.SetMode(2);
