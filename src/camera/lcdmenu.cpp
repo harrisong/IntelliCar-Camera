@@ -52,8 +52,10 @@ void LcdMenu::WaitForSelection()
 	uint8_t mx;
 
 	while(selected_choice==-1){
-		mx = FONT_W * 6;
+		mx = FONT_W * 5;
 		helper.Printline( mx , 0, libutil::String::Format("%02d/%02d", ptr_pos, num_choice).c_str());
+		mx = FONT_W * 11;
+		helper.Printline( mx , 0, libutil::String::Format("%.2fV", car_pt->GetVolt()).c_str());
 		switch (m_joystick->GetState())
 		{
 			case libsc::Joystick::DOWN:

@@ -89,7 +89,7 @@ private:
 
 	const Byte* src;
 
-	const libutil::TunableInt *tunableints[10];
+	const libutil::TunableInt *tunableints[12];
 
 	int e_stop;
 

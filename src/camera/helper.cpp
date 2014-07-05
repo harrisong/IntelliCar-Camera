@@ -200,9 +200,9 @@ void Helper::PrintCam(){
 
 			CenterX[y] = (int) round((LeftEdgeX + RightEdgeX)/2);
 
-			car_pt->GetLcd()->DrawPixel(LeftEdgeX, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
-			car_pt->GetLcd()->DrawPixel(RightEdgeX, y, libutil::GetRgb565(0x00, 0xFF, 0x00));
-			car_pt->GetLcd()->DrawPixel(CenterX[y], y, libutil::GetRgb565(0x00, 0x00, 0xFF));
+			car_pt->GetLcd()->DrawPixel(LeftEdgeX, y+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			car_pt->GetLcd()->DrawPixel(RightEdgeX, y+24, libutil::GetRgb565(0x00, 0xFF, 0x00));
+			car_pt->GetLcd()->DrawPixel(CenterX[y], y+24, libutil::GetRgb565(0x00, 0x00, 0xFF));
 		}
 		//---------------------Edge Detection---------------------//
 

@@ -44,9 +44,9 @@ float s_kp[3] = {55.0, 55.0, 55.0};
 float s_ki[3] = {4.5, 4.5, 4.5};
 float s_kd[3] = {0.0, 0.0, 0.0};
 
-float t_kp[3] = {1.12, 1.0, 1.0};
+float t_kp[3] = {1.0, 1.0, 1.0};
 float t_ki[3] = {0.0, 0.0, 0.0};
-float t_kd[3] = {0.0155, 0.2, 0.2};
+float t_kd[3] = {0.2, 0.2, 0.2};
 
 CameraApp::CameraApp():
 	m_helper(&m_car),
@@ -60,7 +60,7 @@ CameraApp::CameraApp():
 	m_turn_pid(TURN_SETPOINT, t_kp, t_ki, t_kd, 3, 1),
 	m_balance_pid(BALANCE_SETPOINT, b_kp, b_ki, b_kd, 3, 1),
 	speed_smoothing(SPEEDCONTROLPERIOD),
-	speed_input_smoothing(4500),
+	speed_input_smoothing(10000),
 	turn_smoothing(TURNCONTROLPERIOD),
 	m_gyro(0),
 	m_encoder_2(0),
@@ -85,28 +85,32 @@ CameraApp::CameraApp():
 	mpu6050_init();
 	m_car.GetLcd()->Clear(WHITE);
 
-	tunableints[0] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("bkp", TunableInt::REAL,
+	tunableints[0] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("bkp", TunableInt::REAL,
 			TunableInt::AsUnsigned(b_kp[1]));
-	tunableints[1] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("bkd", TunableInt::REAL,
+	tunableints[1] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("bkd", TunableInt::REAL,
 				TunableInt::AsUnsigned(b_kd[1]));
-	tunableints[2] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("bki", TunableInt::REAL,
+	tunableints[2] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("bki", TunableInt::REAL,
 					TunableInt::AsUnsigned(b_ki[1]));
-	tunableints[3] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("skp", TunableInt::REAL,
+	tunableints[3] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("skp", TunableInt::REAL,
 						TunableInt::AsUnsigned(s_kp[1]));
-	tunableints[4] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("skd", TunableInt::REAL,
+	tunableints[4] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("skd", TunableInt::REAL,
 						TunableInt::AsUnsigned(s_kd[1]));
-	tunableints[5] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("ski", TunableInt::REAL,
+	tunableints[5] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("ski", TunableInt::REAL,
 						TunableInt::AsUnsigned(s_ki[1]));
-	tunableints[6] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("tkp", TunableInt::REAL,
+	tunableints[6] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("tkp", TunableInt::REAL,
 						TunableInt::AsUnsigned(t_kp[1]));
-	tunableints[7] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("tkd", TunableInt::REAL,
+	tunableints[7] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("tkd", TunableInt::REAL,
 						TunableInt::AsUnsigned(t_kd[1]));
-	tunableints[8] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("speed", TunableInt::INTEGER,
+	tunableints[8] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("speed", TunableInt::INTEGER,
 						TunableInt::AsSigned(SPEED_SETPOINTS[1]));
-	tunableints[9] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("estop", TunableInt::INTEGER,
+	tunableints[9] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("speed++", TunableInt::INTEGER,
+						TunableInt::AsSigned(0));
+	tunableints[10] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("turn_multiplier", TunableInt::INTEGER,
+						TunableInt::AsSigned(15));
+	tunableints[11] = TunableIntManager<12>::GetInstance(m_car.GetUart())->Register("estop", TunableInt::INTEGER,
 						TunableInt::AsSigned(-1));
 
-	TunableIntManager<10>::GetInstance(m_car.GetUart())->Start();
+	TunableIntManager<12>::GetInstance(m_car.GetUart())->Start();
 
 	__g_hard_fault_handler = HardFaultHandler;
 	m_instance = this;
@@ -168,10 +172,10 @@ void CameraApp::SpeedControl(){
 
 	m_speed_pid.UpdatePreviousError();
 
-//	if(m_encoder_2 > 500)
-//	{
-//		eStop();
-//	}
+	if(m_encoder_2 > 450)
+	{
+		eStop();
+	}
 }
 
 
@@ -210,7 +214,7 @@ void CameraApp::TurnControl(){
 	white_dot[0] = 0;
 	white_dot[1] = 0;
 
-	int degree = (int) round(
+	int32_t degree = (int32_t) round(
 		- m_turn_pid.Proportional() + -1 * m_turn_pid.Derivative()
 	);
 
@@ -218,7 +222,17 @@ void CameraApp::TurnControl(){
 
 	//degree = m_helper.Clamp(degree, -100, 100);
 
-	turn_smoothing.UpdateCurrentOutput(- degree * 10);
+
+	if(m_helper.abs(degree) <= 10)
+	{
+		m_speed_pid.SetSetPoint(m_speed_pid.GetSetPoint() + TunableInt::AsFloat(tunableints[9]->GetValue()) );
+	}
+	else
+	{
+		m_speed_pid.SetSetPoint( m_speed_pid.GetSetPoint() );
+	}
+
+	turn_smoothing.UpdateCurrentOutput(-degree * (int32_t) TunableInt::AsFloat(tunableints[10]->GetValue()) );
 
 //	m_turn_speed[0] = - degree * 10;
 //	m_turn_speed[1] = - m_turn_speed[0];
@@ -253,127 +267,108 @@ void CameraApp::MoveMotor(){
 
 void CameraApp::AutoMode()
 {
+	uint32_t t = 0, set_time = 0;
+	uint32_t dt = 0;
+	uint32_t pt = libutil::Clock::Time();
 
-//	libsc::Motor motor[2] = {libsc::Motor(0), libsc::Motor(1)};
-//	motor[0].SetClockwise(true);
-//	motor[1].SetClockwise(true);
-//
-//	motor[0].SetPower(600);
-//	motor[1].SetPower(600);
-	gpio_init(PTE6, GPO, 1);
-	gpio_init(PTE7, GPO, 1);
+	libsc::Button* m_start_button = m_car.GetButton();
 
-	FTM_PWM_init(FTM0, FTM_CH6, 1000, 9000);
-	FTM_PWM_init(FTM0, FTM_CH7, 1000, 9000);
-
-	gpio_init(PTD0, GPO, 1);
-	gpio_init(PTD1, GPO, 1);
-
-
-	while(true){
-		gpio_turn(PTD0);
-		gpio_turn(PTD1);
-		DELAY_MS(100);
-	}
-
-//	uint32_t t = 0, set_time = 0;
-//	uint32_t dt = 0;
-//	uint32_t pt = libutil::Clock::Time();
-//
-//	libsc::Button* m_start_button = m_car.GetButton();
-//
 //	m_balance_pid.SetMode(2);
 //	m_turn_pid.SetMode(2);
 //	m_speed_pid.SetMode(2);
+
+	while (true)
+	{
+
+		///System loop - 1ms///
+		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
+			t = libutil::Clock::Time();
+
+			if(t%1500==0){
 //
-//	while (true)
-//	{
+				m_balance_pid.SetKP( TunableInt::AsFloat(tunableints[0]->GetValue()) );
+				m_balance_pid.SetKD( TunableInt::AsFloat(tunableints[1]->GetValue()) );
+				m_balance_pid.SetKI( TunableInt::AsFloat(tunableints[2]->GetValue()) );
+				m_speed_pid.SetKP( TunableInt::AsFloat(tunableints[3]->GetValue()) );
+				m_speed_pid.SetKD( TunableInt::AsFloat(tunableints[4]->GetValue()) );
+				m_speed_pid.SetKI( TunableInt::AsFloat(tunableints[5]->GetValue()) );
+				m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
+				m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[7]->GetValue()) );
+
+//				if(TunableInt::AsFloat(tunableints[9]->GetValue())==e_stop) eStop();
 //
-//		///System loop - 1ms///
-//		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
-//			t = libutil::Clock::Time();
-//
-//			if(t%1500==0){
-////
-//				m_balance_pid.SetKP( TunableInt::AsFloat(tunableints[0]->GetValue()) );
-//				m_balance_pid.SetKD( TunableInt::AsFloat(tunableints[1]->GetValue()) );
-//				m_balance_pid.SetKI( TunableInt::AsFloat(tunableints[2]->GetValue()) );
-//				m_speed_pid.SetKP( TunableInt::AsFloat(tunableints[3]->GetValue()) );
-//				m_speed_pid.SetKD( TunableInt::AsFloat(tunableints[4]->GetValue()) );
-//				m_speed_pid.SetKI( TunableInt::AsFloat(tunableints[5]->GetValue()) );
-//				m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
-//				m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[7]->GetValue()) );
-//				speed_input_smoothing.UpdateCurrentOutput(TunableInt::AsFloat(tunableints[8]->GetValue()) );
-//////				if(TunableInt::AsFloat(tunableints[9]->GetValue())==e_stop) eStop();
-////
-////				/*printf("b_kp: %f\n",b_kp[1]);
-////				printf("b_kd: %f\n",b_kd[1]);
-////				printf("b_ki: %f\n",b_ki[1]);
-////				printf("s_kp: %f\n",s_kp[1]);
-////				printf("s_kd: %f\n",s_kd[1]);
-////				printf("s_ki: %f\n",s_ki[1]);
-////				printf("t_kp: %f\n",t_kp[1]);
-////				printf("t_kd: %f\n",t_kd[1]);
-////				printf("SPEED_SETPOINTS: %f\n",SPEED_SETPOINTS[1]);*/
-//				printf("degree: %.3f\n",m_gyro);
-//			}
-//
-//			m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
-//
-//
-//
-//			///Speed Control Output every 1ms///
-//			SpeedControlOutput();
-//
-//			///Turn Control Output every 1 ms///
-//			TurnControlOutput();
-//
-//
-//			if(t%2==0){
-//				mpu6050_update();
-//			}
-//
-//			if(t%2==1){
-//				BalanceControl();
-//			}
-//
-//
-//			if(libutil::Clock::TimeDiff(t,pt) > 5000) {
-//
-//				if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
-//					ProcessImage();
-//					num_finished_row+=15;
-//				}
-//
-//				if(t%TURNCONTROLPERIOD==3 && num_finished_row==15){
-//					ProcessImage();
-//					num_finished_row+=15;
-//				}
-//
-//				if(t%TURNCONTROLPERIOD==5 && num_finished_row==30){
-//					ProcessImage();
-//					num_finished_row+=15;
-//				}
-//
-//				if(t%TURNCONTROLPERIOD==7 && num_finished_row==45){
-//					ProcessImage();
-//					num_finished_row=0;
-//					TurnControl();
-//				}
-//
-//			}
-//
-//
-//			///Speed PID update every 20ms///
-//			if(t%SPEEDCONTROLPERIOD==0){
-//				SpeedControl();
-//			}
-//			if(t%5==0) MoveMotor();
-//
-//		}
-//
-//
-//	}
+//				/*printf("b_kp: %f\n",b_kp[1]);
+//				printf("b_kd: %f\n",b_kd[1]);
+//				printf("b_ki: %f\n",b_ki[1]);
+//				printf("s_kp: %f\n",s_kp[1]);
+//				printf("s_kd: %f\n",s_kd[1]);
+//				printf("s_ki: %f\n",s_ki[1]);
+//				printf("t_kp: %f\n",t_kp[1]);
+//				printf("t_kd: %f\n",t_kd[1]);
+//				printf("SPEED_SETPOINTS: %f\n",SPEED_SETPOINTS[1]);*/
+				printf("degree: %.3f\n",m_gyro);
+			}
+
+			if(t%10000==0) {
+				speed_input_smoothing.UpdateCurrentOutput(TunableInt::AsFloat(tunableints[8]->GetValue()) );
+			}
+
+			m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
+
+
+
+			///Speed Control Output every 1ms///
+			SpeedControlOutput();
+
+			///Turn Control Output every 1 ms///
+			TurnControlOutput();
+
+
+			if(t%2==0){
+				mpu6050_update();
+			}
+
+			if(t%2==1){
+				BalanceControl();
+			}
+
+
+			if(libutil::Clock::TimeDiff(t,pt) > 5000) {
+
+				if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
+					ProcessImage();
+					num_finished_row+=15;
+				}
+
+				if(t%TURNCONTROLPERIOD==3 && num_finished_row==15){
+					ProcessImage();
+					num_finished_row+=15;
+				}
+
+				if(t%TURNCONTROLPERIOD==5 && num_finished_row==30){
+					ProcessImage();
+					num_finished_row+=15;
+				}
+
+				if(t%TURNCONTROLPERIOD==7 && num_finished_row==45){
+					ProcessImage();
+					num_finished_row=0;
+					TurnControl();
+				}
+
+			}
+
+
+			///Speed PID update every 20ms///
+			if(t%SPEEDCONTROLPERIOD==0){
+				SpeedControl();
+			}
+			if(t%5==0) MoveMotor();
+
+		}
+
+
+	}
 
 }
 
