@@ -11,7 +11,7 @@
 namespace camera
 {
 
-PID::PID(const int setpoint, float _kp[], float _ki[], float _kd[], const int n, const int mode)
+PID::PID(const float setpoint, float _kp[], float _ki[], float _kd[], const int n, const int mode)
 	: setpoint(setpoint), mode(mode), previous_error(0), current_error(0), total_error(0)
 {
 	kp = new float[n];

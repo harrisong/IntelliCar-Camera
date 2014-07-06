@@ -70,7 +70,7 @@ private:
 	int32_t m_turn_speed[2];
 	int32_t m_total_speed[2];
 	bool m_dir[2];
-	int white_dot[2];
+	int32_t white_dot[2];
 
 	PID m_speed_pid;
 	PID m_turn_pid;
@@ -85,11 +85,11 @@ private:
 	int32_t m_encoder_2;
 	int32_t m_count;
 
-	int num_finished_row;
+	int32_t num_finished_row;
 
 	const Byte* src;
 
-	const libutil::TunableInt *tunableints[12];
+	const libutil::TunableInt *tunableints[10];
 
 	int e_stop;
 

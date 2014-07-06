@@ -51,7 +51,16 @@ void LcdMenu::WaitForSelection()
 
 	uint8_t mx;
 
+	uint32_t pt = libutil::Clock::Time();
+
 	while(selected_choice==-1){
+
+		if(libutil::Clock::TimeDiff(libutil::Clock::Time(), pt) > 3000)
+		{
+			selected_choice = 1;
+			break;
+		}
+
 		mx = FONT_W * 5;
 		helper.Printline( mx , 0, libutil::String::Format("%02d/%02d", ptr_pos, num_choice).c_str());
 		mx = FONT_W * 11;

@@ -130,6 +130,28 @@ void Helper::PrintCam(){
 		const char* s = libutil::String::Format("Difference: %d", white_dot[0] - white_dot[1]).c_str();
 		Printline(car_pt->GetLcd()->FONT_H * 6, s);
 
+
+		for(int x=30; x<=49; x++)
+		{
+			lcd->DrawPixel(x, 18+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 19+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 20+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 39+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 40+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 41+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+		}
+
+		for(int y=20+24; y<=39+24; y++)
+		{
+			lcd->DrawPixel(28, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(29, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(30, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(49, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(50, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(51, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+		}
+
+/*
 		//---------------------Edge Detection---------------------//
 		int LeftEdgeX, CenterX[CAM_H], RightEdgeX;
 		memset(CenterX, -1, CAM_H);
@@ -205,7 +227,7 @@ void Helper::PrintCam(){
 			car_pt->GetLcd()->DrawPixel(CenterX[y], y+24, libutil::GetRgb565(0x00, 0x00, 0xFF));
 		}
 		//---------------------Edge Detection---------------------//
-
+*/
 
 		car_pt->GetCamera()->UnlockBuffer();
 	}
