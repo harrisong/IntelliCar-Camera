@@ -3,3 +3,4 @@ Debug/
 build/
 .project
 .cproject
+data/killgdb.bat
