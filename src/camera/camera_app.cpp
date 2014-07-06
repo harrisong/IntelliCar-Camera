@@ -230,9 +230,8 @@ void CameraApp::MoveMotor(){
 	m_dir[0] = m_total_speed[0] > 0 ? true : false;
 	m_dir[1] = m_total_speed[1] > 0 ? true : false;
 
-
-	m_total_speed[0] = m_helper.Clamp(m_total_speed[0], -PWMCLAMP, PWMCLAMP);
-	m_total_speed[1] = m_helper.Clamp(m_total_speed[1], -PWMCLAMP, PWMCLAMP);
+//	m_total_speed[0] = m_helper.Clamp(m_total_speed[0], -PWMCLAMP, PWMCLAMP);
+//	m_total_speed[1] = m_helper.Clamp(m_total_speed[1], -PWMCLAMP, PWMCLAMP);
 
 	m_car.MotorDir(0, !m_dir[0]); 			////Right Motor - True Backward  -  False Forward
 	m_car.MoveMotor(0,(uint16_t) m_helper.abs(m_total_speed[0]));

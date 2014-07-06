@@ -13,7 +13,7 @@
 
 #define TIMECONST 100.0f
 
-#define PWMCLAMP 8000
+//#define PWMCLAMP 8000
 
 #define BALANCE_SETPOINT 48
 #define TURN_SETPOINT 0
