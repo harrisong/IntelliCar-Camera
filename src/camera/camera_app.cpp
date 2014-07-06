@@ -34,14 +34,14 @@ using namespace libutil;
 namespace camera
 {
 
-float b_kp[3] = {900.0, 900.0, 900.0};
+float b_kp[3] = {2000.0, 2000.0, 2000.0};
 float b_ki[3] = {0.0, 0.0, 0.0};
-float b_kd[3] = {27000.0, 27000.0, 27000.0};
+float b_kd[3] = {4000.0, 4000.0, 4000.0};
 
 int16_t SPEED_SETPOINTS[3] = {0, 85, 100};
 
-float s_kp[3] = {55.0, 55.0, 55.0};
-float s_ki[3] = {4.5, 4.5, 4.5};
+float s_kp[3] = {13.0, 13.0, 13.0};
+float s_ki[3] = {5.5, 5.5, 5.5};
 float s_kd[3] = {0.0, 0.0, 0.0};
 
 float t_kp[3] = {1.0, 1.0, 1.0};
@@ -70,13 +70,7 @@ CameraApp::CameraApp():
 	e_stop(0)
 {
 	printf("Voltage: %f\n", m_car.GetVolt());
-	gpio_init(PTA11, GPO, 1);
 
-	gpio_init(PTB22, GPO, 0);
-	gpio_init(PTD2, GPO, 0);
-	gpio_set(PTD2, 0);
-	gpio_init(PTD3, GPO, 0);
-	gpio_set(PTD3, 0);
 	libutil::Clock::Init();
 	kalman_filter_init(&m_gyro_kf[0], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, 0, 1);
@@ -284,7 +278,7 @@ void CameraApp::AutoMode()
 //				printf("t_kp: %f\n",t_kp[1]);
 //				printf("t_kd: %f\n",t_kd[1]);
 //				printf("SPEED_SETPOINTS: %f\n",SPEED_SETPOINTS[1]);*/
-				printf("degree: %.3f\n",m_gyro);
+
 			}
 
 			m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
@@ -303,6 +297,8 @@ void CameraApp::AutoMode()
 			if(t%2==1){
 				BalanceControl();
 			}
+
+			if(t%1000==0) printf("%.3f\n",m_gyro);
 
 
 			if(libutil::Clock::TimeDiff(t,pt) > 5000) {

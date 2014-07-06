@@ -49,13 +49,15 @@ void LcdMenu::WaitForSelection()
 	int ptr_output_pos = 1;
 	int viewport[2] = {1, maxh};
 
+	bool moved = false;
+
 	uint8_t mx;
 
 	uint32_t pt = libutil::Clock::Time();
 
 	while(selected_choice==-1){
 
-		if(libutil::Clock::TimeDiff(libutil::Clock::Time(), pt) > 3000)
+		if(libutil::Clock::TimeDiff(libutil::Clock::Time(), pt) > 3000 && moved==false)
 		{
 			selected_choice = 1;
 			break;
@@ -68,7 +70,7 @@ void LcdMenu::WaitForSelection()
 		switch (m_joystick->GetState())
 		{
 			case libsc::Joystick::DOWN:
-
+				moved = true;
 				if(ptr_pos + 1 <= num_choice){
 					++ptr_pos;
 					++ptr_output_pos;
@@ -99,6 +101,7 @@ void LcdMenu::WaitForSelection()
 				break;
 
 			case libsc::Joystick::UP:
+				moved = true;
 				if(ptr_pos - 1 >= 1){
 					--ptr_pos;
 					--ptr_output_pos;

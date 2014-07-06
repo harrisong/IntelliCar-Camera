@@ -11,11 +11,11 @@
 #ifndef VARS_H_
 #define VARS_H_
 
-#define TIMECONST 100.0f
+#define TIMECONST 27.0f
 
 #define PWMCLAMP 8000
 
-#define BALANCE_SETPOINT 48
+#define BALANCE_SETPOINT 60
 #define TURN_SETPOINT 0
 #define DEADZONELOWER 90
 #define DEADZONEHIGHER -20
