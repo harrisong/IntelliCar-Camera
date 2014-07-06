@@ -34,17 +34,17 @@ using namespace libutil;
 namespace camera
 {
 
-float b_kp[3] = {2000.0, 2000.0, 2000.0};
+float b_kp[3] = {2180.0, 2180.0, 2180.0};
 float b_ki[3] = {0.0, 0.0, 0.0};
-float b_kd[3] = {4000.0, 4000.0, 4000.0};
+float b_kd[3] = {9800.0, 9800.0, 9800.0};
 
 int16_t SPEED_SETPOINTS[3] = {0, 85, 100};
 
-float s_kp[3] = {13.0, 13.0, 13.0};
-float s_ki[3] = {5.5, 5.5, 5.5};
+float s_kp[3] = {40.0, 40.0, 40.0};
+float s_ki[3] = {5.0, 5.0, 5.0};
 float s_kd[3] = {0.0, 0.0, 0.0};
 
-float t_kp[3] = {1.0, 1.0, 1.0};
+float t_kp[3] = {1.49, 1.0, 1.0};
 float t_ki[3] = {0.0, 0.0, 0.0};
 float t_kd[3] = {0.2, 0.2, 0.2};
 
@@ -137,7 +137,7 @@ void CameraApp::BalanceControl()
 
 	m_balance_pid.UpdateCurrentError(m_gyro);
 
-	m_balance_speed[0] = m_balance_speed[1] = ( m_balance_pid.Proportional() + m_balance_pid.Derivative() );
+	m_balance_speed[0] = m_balance_speed[1] = (int32_t) ( m_balance_pid.Proportional() + m_balance_pid.Derivative() );
 
 	m_balance_pid.UpdatePreviousError();
 }
@@ -193,15 +193,17 @@ void CameraApp::ProcessImage(){
 }
 
 void CameraApp::TurnControl(){
-
-	m_turn_pid.UpdateCurrentError(white_dot[1] - white_dot[0]);
+	int32_t error = white_dot[1] - white_dot[0];
+	m_turn_pid.UpdateCurrentError(error);
 
 	white_dot[0] = 0;
 	white_dot[1] = 0;
 
-	int32_t degree = (int32_t) round(
-		- m_turn_pid.Proportional() + -1 * m_turn_pid.Derivative()
+	float degree = round(
+		- m_turn_pid.Proportional() * error + -1 * m_turn_pid.Derivative()
 	);
+
+
 
 	m_turn_pid.UpdatePreviousError();
 
@@ -224,9 +226,6 @@ void CameraApp::MoveMotor(){
 	m_dir[0] = m_total_speed[0] > 0 ? true : false;
 	m_dir[1] = m_total_speed[1] > 0 ? true : false;
 
-
-	m_total_speed[0] = m_helper.Clamp(m_total_speed[0], -PWMCLAMP, PWMCLAMP);
-	m_total_speed[1] = m_helper.Clamp(m_total_speed[1], -PWMCLAMP, PWMCLAMP);
 
 	m_car.MotorDir(0, !m_dir[0]); 			////Right Motor - True Backward  -  False Forward
 	m_car.MoveMotor(0,(uint16_t) m_helper.abs(m_total_speed[0]));
@@ -294,11 +293,11 @@ void CameraApp::AutoMode()
 				mpu6050_update();
 			}
 
-			if(t%2==1){
+			if(t%4==1){
 				BalanceControl();
 			}
 
-			if(t%1000==0) printf("%.3f\n",m_gyro);
+			if(t%100==0) printf("%.3f\n",m_gyro);
 
 
 			if(libutil::Clock::TimeDiff(t,pt) > 5000) {
