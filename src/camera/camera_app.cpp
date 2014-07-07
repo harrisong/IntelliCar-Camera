@@ -34,17 +34,19 @@ using namespace libutil;
 namespace camera
 {
 
-float b_kp[3] = {2180.0, 2180.0, 2180.0};
+//2180 9800
+
+float b_kp[3] = {2150.0, 2150.0, 2150.0};
 float b_ki[3] = {0.0, 0.0, 0.0};
 float b_kd[3] = {9800.0, 9800.0, 9800.0};
 
-int16_t SPEED_SETPOINTS[3] = {0, 85, 100};
+int16_t SPEED_SETPOINTS[3] = {0, 0, 0};
 
 float s_kp[3] = {40.0, 40.0, 40.0};
 float s_ki[3] = {5.0, 5.0, 5.0};
 float s_kd[3] = {0.0, 0.0, 0.0};
 
-float t_kp[3] = {1.49, 1.0, 1.0};
+float t_kp[3] = {1.0, 1.0, 1.0};
 float t_ki[3] = {0.0, 0.0, 0.0};
 float t_kd[3] = {0.2, 0.2, 0.2};
 
@@ -135,6 +137,10 @@ void CameraApp::BalanceControl()
 	kalman_filtering(&m_acc_kf, &acc, 1);
 	m_gyro = 1/TIMECONST * acc + (1- 1/TIMECONST) * angle[0];
 
+	m_balance_pid.SetKP( TunableInt::AsFloat(tunableints[0]->GetValue()) );
+	m_balance_pid.SetKD( TunableInt::AsFloat(tunableints[1]->GetValue()) );
+	m_balance_pid.SetKI( TunableInt::AsFloat(tunableints[2]->GetValue()) );
+
 	m_balance_pid.UpdateCurrentError(m_gyro);
 
 	m_balance_speed[0] = m_balance_speed[1] = (int32_t) ( m_balance_pid.Proportional() + m_balance_pid.Derivative() );
@@ -156,6 +162,10 @@ void CameraApp::SpeedControl(){
 	FTM_QUAD_clean(FTM1);
 	FTM_QUAD_clean(FTM2);
 
+	m_speed_pid.SetKP( TunableInt::AsFloat(tunableints[3]->GetValue()) );
+	m_speed_pid.SetKD( TunableInt::AsFloat(tunableints[4]->GetValue()) );
+	m_speed_pid.SetKI( TunableInt::AsFloat(tunableints[5]->GetValue()) );
+
 	m_speed_pid.UpdateCurrentError( m_encoder_2 );
 
 	speed_smoothing.UpdateCurrentOutput( (int32_t) (m_speed_pid.Proportional() + m_speed_pid.Integral() + m_speed_pid.Derivative()) );
@@ -166,6 +176,7 @@ void CameraApp::SpeedControl(){
 
 void CameraApp::SpeedControlOutput(){
 
+	m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
     m_control_speed[0] = m_control_speed[1] = speed_smoothing.SmoothingOutput();
 }
 
@@ -194,15 +205,32 @@ void CameraApp::ProcessImage(){
 
 void CameraApp::TurnControl(){
 	int32_t error = white_dot[1] - white_dot[0];
+
 	m_turn_pid.UpdateCurrentError(error);
 
-	white_dot[0] = 0;
-	white_dot[1] = 0;
+	white_dot[0] = white_dot[1] = 0;
+
+	switch( (int32_t) (abs(error) / 100) )
+	{
+//		case 0:
+//		case 1:
+//		//case 2:
+//			m_turn_pid.SetKP(1.0);
+//			m_turn_pid.SetKD(0.2);
+//			break;
+//		case 3:
+//			m_turn_pid.SetKP(1.12);
+//			m_turn_pid.SetKD(0.28);
+//			break;
+		default:
+			m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
+			m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[7]->GetValue()) );
+			break;
+	}
 
 	float degree = round(
-		- m_turn_pid.Proportional() * error + -1 * m_turn_pid.Derivative()
+		(-1 * m_turn_pid.Proportional()) + (-1 * m_turn_pid.Derivative())
 	);
-
 
 
 	m_turn_pid.UpdatePreviousError();
@@ -258,29 +286,8 @@ void CameraApp::AutoMode()
 			t = libutil::Clock::Time();
 
 			if(t%1500==0){
-//
-				m_balance_pid.SetKP( TunableInt::AsFloat(tunableints[0]->GetValue()) );
-				m_balance_pid.SetKD( TunableInt::AsFloat(tunableints[1]->GetValue()) );
-				m_balance_pid.SetKI( TunableInt::AsFloat(tunableints[2]->GetValue()) );
-				m_speed_pid.SetKP( TunableInt::AsFloat(tunableints[3]->GetValue()) );
-				m_speed_pid.SetKD( TunableInt::AsFloat(tunableints[4]->GetValue()) );
-				m_speed_pid.SetKI( TunableInt::AsFloat(tunableints[5]->GetValue()) );
-				m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
-				m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[7]->GetValue()) );
 				speed_input_smoothing.UpdateCurrentOutput( TunableInt::AsFloat(tunableints[8]->GetValue()) );
-//				/*printf("b_kp: %f\n",b_kp[1]);
-//				printf("b_kd: %f\n",b_kd[1]);
-//				printf("b_ki: %f\n",b_ki[1]);
-//				printf("s_kp: %f\n",s_kp[1]);
-//				printf("s_kd: %f\n",s_kd[1]);
-//				printf("s_ki: %f\n",s_ki[1]);
-//				printf("t_kp: %f\n",t_kp[1]);
-//				printf("t_kd: %f\n",t_kd[1]);
-//				printf("SPEED_SETPOINTS: %f\n",SPEED_SETPOINTS[1]);*/
-
 			}
-
-			m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
 
 			///Speed Control Output every 1ms///
 			SpeedControlOutput();
