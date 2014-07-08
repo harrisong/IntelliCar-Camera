@@ -31,6 +31,7 @@
 
 using namespace libutil;
 
+
 namespace camera
 {
 
@@ -67,7 +68,9 @@ CameraApp::CameraApp():
 	m_count(0),
 	num_finished_row(0),
 	src(NULL),
-	e_stop(0)
+	e_stop(0),
+	start_row(0),
+	end_row(0)
 {
 	printf("Voltage: %f\n", m_car.GetVolt());
 	gpio_init(PTA11, GPO, 1);
@@ -176,13 +179,22 @@ void CameraApp::SpeedControlOutput(){
 }
 
 void CameraApp::ProcessImage(){
+	start_row = num_finished_row;
+	end_row = num_finished_row+15;
+	bool ready = m_car.GetCamera()->IsImageReady();
+	static bool locked = false;
 
-	const int start_row = num_finished_row;
-	const int end_row = num_finished_row+15;
-
-	if(m_car.GetCamera()->IsImageReady())
-	{
-		src = m_car.GetCamera()->LockBuffer();
+	if(num_finished_row==0) {
+		if(ready) {
+			src = m_car.GetCamera()->LockBuffer();
+			locked = true;
+			white_dot[1] = white_dot[0] = 0;
+		}
+		else {
+			locked = false;
+			return;
+		}
+	}else if(locked){
 		for(int y=start_row; y<end_row; y++)
 		{
 			for(int x=0; x<CAM_W; x++)
@@ -193,21 +205,28 @@ void CameraApp::ProcessImage(){
 				}
 			}
 		}
-
 	}
+
+
 
 }
 
 void CameraApp::TurnControl(){
+	int error = white_dot[0] - white_dot[1];
 
-	m_turn_pid.UpdateCurrentError(white_dot[1] - white_dot[0]);
+	if(error==0){
+		error = turn_error[1] - turn_error[0] + turn_error[1];
+	}
 
-	white_dot[0] = 0;
-	white_dot[1] = 0;
+	turn_error[0]= turn_error[1];
+	turn_error[1]= error;
+
+
+	m_turn_pid.UpdateCurrentError(error);
+
 
 	int32_t degree = (int32_t) round(
-		- m_turn_pid.Proportional() + -1 * m_turn_pid.Derivative()
-	);
+		m_turn_pid.Proportional() +   m_turn_pid.Derivative()	);
 
 	m_turn_pid.UpdatePreviousError();
 
@@ -323,8 +342,8 @@ void CameraApp::AutoMode()
 
 				if(t%TURNCONTROLPERIOD==7 && num_finished_row==45){
 					ProcessImage();
-					num_finished_row=0;
 					TurnControl();
+					num_finished_row=0;
 				}
 
 			}

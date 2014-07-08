@@ -94,6 +94,11 @@ private:
 	int e_stop;
 
 	static CameraApp *m_instance;
+
+	int start_row;
+	int end_row;
+
+	int turn_error[2];
 };
 
 }
