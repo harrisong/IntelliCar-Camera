@@ -208,7 +208,7 @@ void CameraApp::TurnControl(){
 
 	m_turn_pid.UpdateCurrentError(error);
 
-	white_dot[0] = white_dot[1] = 0;
+	if(m_car.GetCamera()->IsImageReady()) white_dot[0] = white_dot[1] = 0;
 
 	switch( (int32_t) (abs(error) / 100) )
 	{
