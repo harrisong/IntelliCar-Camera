@@ -60,7 +60,7 @@ CameraApp::CameraApp():
 	m_turn_pid(TURN_SETPOINT, t_kp, t_ki, t_kd, 3, 1),
 	m_balance_pid(BALANCE_SETPOINT, b_kp, b_ki, b_kd, 3, 1),
 	speed_smoothing(SPEEDCONTROLPERIOD),
-	speed_input_smoothing(4500),
+	speed_input_smoothing(1500),
 	turn_smoothing(TURNCONTROLPERIOD),
 	m_gyro(0),
 	m_encoder_2(0),
@@ -102,9 +102,9 @@ CameraApp::CameraApp():
 	tunableints[7] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("tkd", TunableInt::REAL,
 						TunableInt::AsUnsigned(t_kd[1]));
 	tunableints[8] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("speed", TunableInt::INTEGER,
-						TunableInt::AsSigned(SPEED_SETPOINTS[1]));
-	tunableints[9] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("estop", TunableInt::INTEGER,
-						TunableInt::AsSigned(-1));
+						TunableInt::AsSigned(SPEED_SETPOINTS[0]));
+	tunableints[9] = TunableIntManager<10>::GetInstance(m_car.GetUart())->Register("turn_multiplier", TunableInt::INTEGER,
+						TunableInt::AsSigned(15));
 
 	TunableIntManager<10>::GetInstance(m_car.GetUart())->Start();
 
@@ -140,11 +140,10 @@ void CameraApp::BalanceControl()
 	float acc = m_car.GetRawAngle();
 	kalman_filtering(&m_acc_kf, &acc, 1);
 	m_gyro = 1/TIMECONST * acc + (1- 1/TIMECONST) * angle[0];
-//	m_gyro = angle[0];
 
 	m_balance_pid.UpdateCurrentError(m_gyro);
 
-	m_balance_speed[0] = m_balance_speed[1] = m_balance_pid.Proportional() + m_balance_pid.Derivative();
+	m_balance_speed[0] = m_balance_speed[1] = ( m_balance_pid.Proportional() + m_balance_pid.Derivative() );
 
 	m_balance_pid.UpdatePreviousError();
 }
@@ -168,11 +167,6 @@ void CameraApp::SpeedControl(){
 	speed_smoothing.UpdateCurrentOutput( (int32_t) (m_speed_pid.Proportional() + m_speed_pid.Integral() + m_speed_pid.Derivative()) );
 
 	m_speed_pid.UpdatePreviousError();
-
-//	if(m_encoder_2 > 500)
-//	{
-//		eStop();
-//	}
 }
 
 
@@ -205,26 +199,22 @@ void CameraApp::ProcessImage(){
 }
 
 void CameraApp::TurnControl(){
-	gpio_set(PTB22, 1);
+
 	m_turn_pid.UpdateCurrentError(white_dot[1] - white_dot[0]);
 
-	white_dot[0] = white_dot[1] = 0;
+	white_dot[0] = 0;
+	white_dot[1] = 0;
 
-	int degree = (int) round(
+	int32_t degree = (int32_t) round(
 		- m_turn_pid.Proportional() + -1 * m_turn_pid.Derivative()
 	);
 
 	m_turn_pid.UpdatePreviousError();
 
-//	degree = m_helper.Clamp(degree, -100, 100);
-
-	turn_smoothing.UpdateCurrentOutput(- degree * 10);
-//	printf("A: %f\n", angle[0]);
-//	m_turn_speed[0] = - degree * 10;
-//	m_turn_speed[1] = - m_turn_speed[0];
+	turn_smoothing.UpdateCurrentOutput( -1 * degree * ((int32_t) TunableInt::AsFloat(tunableints[9]->GetValue())) );
 
 	m_car.GetCamera()->UnlockBuffer();
-	gpio_set(PTB22, 0);
+
 }
 
 void CameraApp::TurnControlOutput(){
@@ -256,17 +246,18 @@ void CameraApp::AutoMode()
 	uint32_t dt = 0;
 	uint32_t pt = libutil::Clock::Time();
 
-	bool autoprint = false;
-
-//	MCM_ETBCC &= ~(1 << 0);
 	libsc::Button* m_start_button = m_car.GetButton();
 
-	m_balance_pid.SetMode(2);
-	m_turn_pid.SetMode(2);
-	m_speed_pid.SetMode(2);
+//	m_balance_pid.SetMode(2);
+//	m_turn_pid.SetMode(2);
+//	m_speed_pid.SetMode(2);
 
 	while (true)
 	{
+		if(m_encoder_2 > 450)
+		{
+			eStop();
+		}
 
 		///System loop - 1ms///
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
@@ -282,9 +273,7 @@ void CameraApp::AutoMode()
 				m_speed_pid.SetKI( TunableInt::AsFloat(tunableints[5]->GetValue()) );
 				m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
 				m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[7]->GetValue()) );
-				speed_input_smoothing.UpdateCurrentOutput(TunableInt::AsFloat(tunableints[8]->GetValue()) );
-////				if(TunableInt::AsFloat(tunableints[9]->GetValue())==e_stop) eStop();
-//
+				speed_input_smoothing.UpdateCurrentOutput( TunableInt::AsFloat(tunableints[8]->GetValue()) );
 //				/*printf("b_kp: %f\n",b_kp[1]);
 //				printf("b_kd: %f\n",b_kd[1]);
 //				printf("b_ki: %f\n",b_ki[1]);
@@ -294,11 +283,10 @@ void CameraApp::AutoMode()
 //				printf("t_kp: %f\n",t_kp[1]);
 //				printf("t_kd: %f\n",t_kd[1]);
 //				printf("SPEED_SETPOINTS: %f\n",SPEED_SETPOINTS[1]);*/
+				printf("degree: %.3f\n",m_gyro);
 			}
 
 			m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
-
-
 
 			///Speed Control Output every 1ms///
 			SpeedControlOutput();
@@ -382,8 +370,8 @@ void CameraApp::PidMode()
 			}
 
 		if(t%1500==0 /*&& autoprint*/) {
-//			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 1,
-//					libutil::String::Format("%.3f",angle[0]).c_str());
+			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 1,
+					libutil::String::Format("%.3f",angle[0]).c_str());
 //			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 2,
 //					libutil::String::Format("%.3f",b_kd[1]).c_str());
 //			m_helper.Printline(m_car.GetLcd()->FONT_W * 1, m_car.GetLcd()->FONT_H * 3,
@@ -721,33 +709,16 @@ void CameraApp::CameraMoveMode()
 		///System loop - 1ms///
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 			t = libutil::Clock::Time();
+			m_helper.PrintCam();
 
-			/*
-			if(t - pt> 5000){
-				if(!speedInit)
-				{
-					SPEEDSETPOINT = -60;
-					speedInit = true;
-				}
-				else if(t%1000 == 0)
-				{
-					if(SPEEDSETPOINT-5 >= -100)
-					{
-						SPEEDSETPOINT -= 5;
-					}
-				}
-			}
-			*/
-			//if(t - pt > 5000) {
-				//SPEEDSETPOINT = 100;
 				m_balance_pid.SetMode(2);
 				m_turn_pid.SetMode(2);
 				m_speed_pid.SetMode(2);
 				m_speed_pid.SetSetPoint(SPEED_SETPOINTS[1]);
-			//}
 
 
-			if(t%1500==0 && autoprint) {
+			if(t%1500==0) {
+
 				/*const char* s = libutil::String::Format("%06d",m_control_speed[0]).c_str();
 				m_helper.Printline(m_car.GetLcd()->FONT_W * 8, m_car.GetLcd()->FONT_H * 1, s);
 				s = libutil::String::Format("%06d",m_control_speed[1]).c_str();
@@ -766,7 +737,7 @@ void CameraApp::CameraMoveMode()
 			SpeedControlOutput();
 
 			///Turn Control Output every 1 ms///
-			//TurnControlOutput();
+			TurnControlOutput();
 
 
 			if(t%2==0){
@@ -795,7 +766,7 @@ void CameraApp::CameraMoveMode()
 			if(t%TURNCONTROLPERIOD==5 && num_finished_row==40){
 				ProcessImage();
 				num_finished_row=0;
-//				TurnControl();
+				TurnControl();
 			}
 
 			//}
@@ -808,10 +779,7 @@ void CameraApp::CameraMoveMode()
 
 		}
 
-		if(m_start_button->IsDown()) {
-			autoprint = !autoprint;
-			while(m_start_button->IsDown());
-		}
+
 	}
 
 }
@@ -1256,12 +1224,12 @@ void CameraApp::HardFaultHandler()
 
 void CameraApp::PitIndicator()
 {
-	error_prints();
-	static bool flag = true;
-	m_instance->m_car.SwitchLed(2, !flag);
-	m_instance->m_car.SwitchLed(3, flag);
-	flag ^= true;
-	PIT_Flag_Clear(PIT1);
+//	error_prints();
+//	static bool flag = true;
+//	m_instance->m_car.SwitchLed(2, !flag);
+//	m_instance->m_car.SwitchLed(3, flag);
+//	flag ^= true;
+//	PIT_Flag_Clear(PIT1);
 }
 
 CameraApp *CameraApp::m_instance = nullptr;

@@ -101,98 +101,141 @@ void Helper::PrintPtr(uint8_t y){
 }
 
 void Helper::PrintCam(){
-	if(car_pt->GetCamera()->IsImageReady()){
-	const Byte* src = car_pt->GetCamera()->LockBuffer();
 
-	for (int i = CAM_H - 1; i >= 0; --i)
+	if(car_pt->GetCamera()->IsImageReady())
 	{
-		const Byte *buf = ExpandPixel(src, i);
-		car_pt->GetLcd()->DrawGrayscalePixelBuffer((CAM_H - 1) - i, 0, 1, CAM_W, buf);
-	}
+		const Byte* src = car_pt->GetCamera()->LockBuffer();
 
-	//---------------------Edge Detection---------------------//
-	int LeftEdgeX, CenterX[CAM_H], RightEdgeX;
-	memset(CenterX, -1, CAM_H);
+		libsc::Lcd* lcd = car_pt->GetLcd();
 
-	for(int y=CAM_H-1; y>=0; y--)
-	{
-		LeftEdgeX = -1;
-		RightEdgeX = -1;
-
-		if(y+2>=CAM_H)
-			CenterX[y] = CenterX[y+1] + (CenterX[y+1] - CenterX[y+2]);
-		else
-			CenterX[y] = CAM_W/2;
-
-		CenterX[y] = Clamp(CenterX[y], 0, CAM_W-1);
-
-		int x = CenterX[y];
-
-		if(
-			GetPixel(src, x, y)==BLACK_BYTE
-			&& GetPixel(src, Clamp(x-1, 0, CAM_W-1), y)==BLACK_BYTE
-			&& GetPixel(src, Clamp(x+1, 0, CAM_W-1), y)==BLACK_BYTE
-		)
+		for (int i = 0; i < CAM_H; ++i)
 		{
-			const char* s = libutil::String::Format("%d, %d, %d", x, x-1, x+1).c_str();
-			Printline(car_pt->GetLcd()->FONT_H * 7+30, s);
-			break;
+			const Byte *buf = ExpandPixel(src, i);
+			lcd->DrawPixelBuffer(0, i+24, CAM_W, 1, 0xFFFF, 0, (const bool*) buf);
 		}
 
-		for(int x=CenterX[y]; x>=0; x--)
+		int white_dot[2] = {0, 0};
+
+		for(int y=0; y<CAM_H; y++)
 		{
-			if(
-				x-1>=0 && x-2>=0 && x-3>=0
-				&& GetPixel(src, x, y) == WHITE_BYTE
-				&& GetPixel(src, x-1, y) == BLACK_BYTE
-				&& GetPixel(src, x-2, y) == BLACK_BYTE
-				&& GetPixel(src, x-3, y) == BLACK_BYTE
-			)
+			for(int x=0; x<CAM_W; x++)
 			{
-				LeftEdgeX = x-1;
-				break;
+				if(GetPixel(src, x, y) == WHITE_BYTE)
+				{
+					x>=(CAM_W/2) ? white_dot[1]++ : white_dot[0]++;
+				}
 			}
 		}
 
-		for(int x=CenterX[y]; x<CAM_W; x++)
+		const char* s = libutil::String::Format("Difference: %d", white_dot[0] - white_dot[1]).c_str();
+		Printline(car_pt->GetLcd()->FONT_H * 6, s);
+
+
+		for(int x=30; x<=49; x++)
 		{
+			lcd->DrawPixel(x, 18+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 19+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 20+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 39+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 40+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 41+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+		}
+
+		for(int y=20+24; y<=39+24; y++)
+		{
+			lcd->DrawPixel(28, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(29, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(30, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(49, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(50, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(51, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+		}
+
+/*
+		//---------------------Edge Detection---------------------//
+		int LeftEdgeX, CenterX[CAM_H], RightEdgeX;
+		memset(CenterX, -1, CAM_H);
+
+		for(int y=CAM_H-1; y>=0; y--)
+		{
+			LeftEdgeX = -1;
+			RightEdgeX = -1;
+
+			if(y+2>=CAM_H)
+				CenterX[y] = CenterX[y+1] + (CenterX[y+1] - CenterX[y+2]);
+			else
+				CenterX[y] = CAM_W/2;
+
+			CenterX[y] = Clamp(CenterX[y], 0, CAM_W-1);
+
+			int x = CenterX[y];
+
 			if(
-				x+1<CAM_W && x+2<CAM_W && x+3<CAM_W
-				&& GetPixel(src, x, y) == WHITE_BYTE
-				&& GetPixel(src, x+1, y) == BLACK_BYTE
-				&& GetPixel(src, x+2, y) == BLACK_BYTE
-				&& GetPixel(src, x+3, y) == BLACK_BYTE
+				GetPixel(src, x, y)==BLACK_BYTE
+				&& GetPixel(src, Clamp(x-1, 0, CAM_W-1), y)==BLACK_BYTE
+				&& GetPixel(src, Clamp(x+1, 0, CAM_W-1), y)==BLACK_BYTE
 			)
 			{
-				RightEdgeX = x+1;
+				const char* s = libutil::String::Format("%d, %d, %d", x, x-1, x+1).c_str();
+				Printline(car_pt->GetLcd()->FONT_H * 7, s);
 				break;
 			}
+
+			for(int x=CenterX[y]; x>=0; x--)
+			{
+				if(
+					x-1>=0 && x-2>=0 && x-3>=0
+					&& GetPixel(src, x, y) == WHITE_BYTE
+					&& GetPixel(src, x-1, y) == BLACK_BYTE
+					&& GetPixel(src, x-2, y) == BLACK_BYTE
+					&& GetPixel(src, x-3, y) == BLACK_BYTE
+				)
+				{
+					LeftEdgeX = x-1;
+					break;
+				}
+			}
+
+			for(int x=CenterX[y]; x<CAM_W; x++)
+			{
+				if(
+					x+1<CAM_W && x+2<CAM_W && x+3<CAM_W
+					&& GetPixel(src, x, y) == WHITE_BYTE
+					&& GetPixel(src, x+1, y) == BLACK_BYTE
+					&& GetPixel(src, x+2, y) == BLACK_BYTE
+					&& GetPixel(src, x+3, y) == BLACK_BYTE
+				)
+				{
+					RightEdgeX = x+1;
+					break;
+				}
+			}
+
+			if(LeftEdgeX==-1 || RightEdgeX==-1)
+			{
+				if(LeftEdgeX==-1)
+					LeftEdgeX = 0;
+				if(RightEdgeX==-1)
+					RightEdgeX = CAM_W-1;
+
+			}
+
+			CenterX[y] = (int) round((LeftEdgeX + RightEdgeX)/2);
+
+			car_pt->GetLcd()->DrawPixel(LeftEdgeX, y+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			car_pt->GetLcd()->DrawPixel(RightEdgeX, y+24, libutil::GetRgb565(0x00, 0xFF, 0x00));
+			car_pt->GetLcd()->DrawPixel(CenterX[y], y+24, libutil::GetRgb565(0x00, 0x00, 0xFF));
 		}
+		//---------------------Edge Detection---------------------//
+*/
 
-		if(LeftEdgeX==-1 || RightEdgeX==-1)
-		{
-			if(LeftEdgeX==-1)
-				LeftEdgeX = 0;
-			if(RightEdgeX==-1)
-				RightEdgeX = CAM_W-1;
-
-		}
-
-		CenterX[y] = (int) round((LeftEdgeX + RightEdgeX)/2);
-
-		car_pt->GetLcd()->DrawPixel((CAM_H - 1) - y, LeftEdgeX, libutil::GetRgb565(0xFF, 0x00, 0x00));
-		car_pt->GetLcd()->DrawPixel((CAM_H - 1) - y, RightEdgeX, libutil::GetRgb565(0x00, 0xFF, 0x00));
-		car_pt->GetLcd()->DrawPixel((CAM_H - 1) - y, CenterX[y], libutil::GetRgb565(0x00, 0x00, 0xFF));
+		car_pt->GetCamera()->UnlockBuffer();
 	}
-	//---------------------Edge Detection---------------------//
 
-
-	car_pt->GetCamera()->UnlockBuffer();
-	}
 	uint16_t sec = libutil::Clock::Time()/1000;
 	const char* s = libutil::String::Format("Time: %02d",sec).c_str();
-	Printline(car_pt->GetLcd()->FONT_H * 7, s);
-	//DELAY_MS(10);
+	Printline(car_pt->GetLcd()->FONT_H * 8, s);
+
 }
 
 }

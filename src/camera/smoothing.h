@@ -17,16 +17,16 @@ class Smoothing
 {
 
 	public:
-		Smoothing(const int output_period);
+		Smoothing(const int32_t output_period);
 		~Smoothing();
 
-		int32_t SmoothingOutput();
+		float SmoothingOutput();
 
-		void UpdateCurrentOutput(const int32_t cur_output);
+		void UpdateCurrentOutput(const float cur_output);
 
 	private:
-		int output_period;
-		int output_count;
+		int32_t output_period;
+		int32_t output_count;
 		float previous_output;
 		float current_output;
 };
