@@ -39,7 +39,7 @@ float b_kp[3] = {900.0, 900.0, 900.0};
 float b_ki[3] = {0.0, 0.0, 0.0};
 float b_kd[3] = {27000.0, 27000.0, 27000.0};
 
-int16_t SPEED_SETPOINTS[3] = {0, 85, 100};
+int16_t SPEED_SETPOINTS[3] = {0, 0, 0};
 
 float s_kp[3] = {55.0, 55.0, 55.0};
 float s_ki[3] = {4.5, 4.5, 4.5};
@@ -90,30 +90,33 @@ CameraApp::CameraApp():
 	mpu6050_init();
 	m_car.GetLcd()->Clear(WHITE);
 
-	tunableints[0] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("bkp", TunableInt::REAL,
+	tunableints[0] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("bkp", TunableInt::REAL,
 			TunableInt::AsUnsigned(b_kp[1]));
-	tunableints[1] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("bkd", TunableInt::REAL,
+	tunableints[1] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("bkd", TunableInt::REAL,
 				TunableInt::AsUnsigned(b_kd[1]));
-	tunableints[2] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("bki", TunableInt::REAL,
+	tunableints[2] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("bki", TunableInt::REAL,
 					TunableInt::AsUnsigned(b_ki[1]));
-	tunableints[3] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("skp", TunableInt::REAL,
+	tunableints[3] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("skp", TunableInt::REAL,
 						TunableInt::AsUnsigned(s_kp[1]));
-	tunableints[4] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("skd", TunableInt::REAL,
+	tunableints[4] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("skd", TunableInt::REAL,
 						TunableInt::AsUnsigned(s_kd[1]));
-	tunableints[5] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("ski", TunableInt::REAL,
+	tunableints[5] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("ski", TunableInt::REAL,
 						TunableInt::AsUnsigned(s_ki[1]));
-	tunableints[6] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("tkp", TunableInt::REAL,
+	tunableints[6] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("tkp", TunableInt::REAL,
 						TunableInt::AsUnsigned(t_kp[1]));
-	tunableints[7] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("tkd", TunableInt::REAL,
+	tunableints[7] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("tkd", TunableInt::REAL,
 						TunableInt::AsUnsigned(t_kd[1]));
-	tunableints[8] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("speed", TunableInt::INTEGER,
+	tunableints[8] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("speed", TunableInt::INTEGER,
 						TunableInt::AsSigned(SPEED_SETPOINTS[0]));
-	tunableints[9] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("turn_multiplier", TunableInt::INTEGER,
+	tunableints[9] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("turn_multiplier", TunableInt::INTEGER,
 						TunableInt::AsSigned(15));
-	tunableints[10] = TunableIntManager<11>::GetInstance(m_car.GetUart())->Register("threshold", TunableInt::INTEGER,
+	tunableints[10] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("threshold", TunableInt::INTEGER,
 						TunableInt::AsSigned(5));
-
-	TunableIntManager<11>::GetInstance(m_car.GetUart())->Start();
+	tunableints[11] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("tkp_s", TunableInt::REAL,
+						TunableInt::AsUnsigned(0.22f));
+	tunableints[12] = TunableIntManager<13>::GetInstance(m_car.GetUart())->Register("tkd_d", TunableInt::REAL,
+						TunableInt::AsUnsigned(0.30f));
+	TunableIntManager<13>::GetInstance(m_car.GetUart())->Start();
 
 	__g_hard_fault_handler = HardFaultHandler;
 	m_instance = this;
@@ -125,18 +128,18 @@ CameraApp::~CameraApp()
 }
 
 void CameraApp::eStop(){
-//	m_car.MoveMotor(0, 0);
-//	m_car.MoveMotor(1, 0);
-//
-//	angle[0] = 18;
-//	m_speed_pid.ResetError();
-//	m_speed_pid.SetSetPoint(0);
-//	m_balance_pid.ResetError();
-//	m_turn_pid.ResetError();
-//
-//	while(m_car.GetJoystick()->GetState() != libsc::Joystick::SELECT);
-//
-//	e_stop++;
+	m_car.MoveMotor(0, 0);
+	m_car.MoveMotor(1, 0);
+
+	angle[0] = 18;
+	m_speed_pid.ResetError();
+	m_speed_pid.SetSetPoint(0);
+	m_balance_pid.ResetError();
+	m_turn_pid.ResetError();
+
+	while(m_car.GetJoystick()->GetState() != libsc::Joystick::SELECT);
+
+	e_stop++;
 }
 
 void CameraApp::BalanceControl()
@@ -192,10 +195,6 @@ void CameraApp::SpeedControlOutput(){
 
 bool CameraApp::isDestination(int y)
 {
-//int32_t cluster_length[7] = {0, 0, 0, 0, 0, 0, 0};
-//	int32_t sum = 0;
-//	int32_t avg = -1;
-//	int index = 0;
 	const int threshold = (int) TunableInt::AsFloat(tunableints[10]->GetValue()) ;
 	int color;
 	int count = 0;
@@ -215,35 +214,12 @@ bool CameraApp::isDestination(int y)
 		}
 
 		count=0;
-//		{
-//			cluster_length[index]++;
-//		}
-//		index = m_helper.Clamp(index+1, 0, 6);
 	}
 
-	printf("degree: %d\r\n", cluster_num);
-
-	if(cluster_num>=7)
+	if(cluster_num>=5)
 		return true;
 
 	return false;
-
-
-	//printf("y=%d:%d (threshold:%d)\r\n", y, cluster_num, threshold);
-	//DELAY_MS(10);
-//
-//	printf("length: %d, %d, %d, %d, %d, %d, %d\r\n", cluster_length[0], cluster_length[1], cluster_length[2], cluster_length[3], cluster_length[4], cluster_length[5], cluster_length[6]);
-//
-//	for(int x=0; x<7; x++)
-//	{
-//		sum+= cluster_length[x];
-//		if(avg>0 && abs(avg - sum/x) > 10)
-//			return false;
-//		else
-//			avg = sum/x;
-//	}
-
-	return true;
 }
 
 void CameraApp::ProcessImage(){
@@ -269,9 +245,8 @@ void CameraApp::ProcessImage(){
 		{
 			if(encoder_total>=28*7200 && isDestination(y))
 			{
-//				eStop();
-				m_speed_pid.SetSetPoint(0);
 				stopped = true;
+				eStop();
 			}
 
 			for(int x=0; x<CAM_W; x++)
@@ -305,8 +280,8 @@ void CameraApp::TurnControl(){
 	{
 		case 0:
 		case 1:
-			m_turn_pid.SetKP(0.22);
-			m_turn_pid.SetKD(0.22);
+			m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[11]->GetValue()) );
+			m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[12]->GetValue()) );
 			break;
 		default:
 			m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
@@ -372,7 +347,7 @@ void CameraApp::AutoMode()
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 			t = libutil::Clock::Time();
 
-			if(t%1500==0){
+			if(t%6000==0){
 
 				speed_input_smoothing.UpdateCurrentOutput( TunableInt::AsFloat(tunableints[8]->GetValue()) );
 //				/*printf("b_kp: %f\r\n",b_kp[1]);
@@ -384,10 +359,10 @@ void CameraApp::AutoMode()
 //				printf("t_kp: %f\r\n",t_kp[1]);
 //				printf("t_kd: %f\r\n",t_kd[1]);
 //				printf("SPEED_SETPOINTS: %f\r\n",SPEED_SETPOINTS[1]);*/
-				//printf("degree: %.3f\r\n",m_gyro);
+				printf("degree: %.3f\r\n",m_gyro);
 			}
 
-			if(!stopped) m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
+			if(!stopped && t%100==0) printf("output: %.3f\r\n", speed_input_smoothing.SmoothingOutput() );
 
 			///Speed Control Output every 1ms///
 			SpeedControlOutput();
@@ -404,30 +379,26 @@ void CameraApp::AutoMode()
 				BalanceControl();
 			}
 
-
-			if(libutil::Clock::TimeDiff(t,pt) > 5000) {
-				if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
-					ProcessImage();
-					num_finished_row+=15;
-				}
-
-				if(t%TURNCONTROLPERIOD==3 && num_finished_row==15){
-					ProcessImage();
-					num_finished_row+=15;
-				}
-
-				if(t%TURNCONTROLPERIOD==5 && num_finished_row==30){
-					ProcessImage();
-					num_finished_row+=15;
-				}
-
-				if(t%TURNCONTROLPERIOD==7 && num_finished_row==45){
-					ProcessImage();
-					TurnControl();
-					num_finished_row=0;
-				}
+			if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
+				ProcessImage();
+				num_finished_row+=15;
 			}
 
+			if(t%TURNCONTROLPERIOD==3 && num_finished_row==15){
+				ProcessImage();
+				num_finished_row+=15;
+			}
+
+			if(t%TURNCONTROLPERIOD==5 && num_finished_row==30){
+				ProcessImage();
+				num_finished_row+=15;
+			}
+
+			if(t%TURNCONTROLPERIOD==7 && num_finished_row==45){
+				ProcessImage();
+				TurnControl();
+				num_finished_row=0;
+			}
 
 			///Speed PID update every 20ms///
 			if(t%SPEEDCONTROLPERIOD==0){
