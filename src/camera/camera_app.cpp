@@ -61,7 +61,7 @@ CameraApp::CameraApp():
 	m_turn_pid(TURN_SETPOINT, t_kp, t_ki, t_kd, 3, 1),
 	m_balance_pid(BALANCE_SETPOINT, b_kp, b_ki, b_kd, 3, 1),
 	speed_smoothing(SPEEDCONTROLPERIOD),
-	speed_input_smoothing(1500),
+	speed_input_smoothing(6000),
 	turn_smoothing(TURNCONTROLPERIOD),
 	m_gyro(0),
 	m_encoder_2(0),
@@ -71,7 +71,8 @@ CameraApp::CameraApp():
 	src(NULL),
 	e_stop(0),
 	start_row(0),
-	end_row(0)
+	end_row(0),
+	stopped(false)
 {
 	printf("Voltage: %f\r\n", m_car.GetVolt());
 	gpio_init(PTA11, GPO, 1);
@@ -124,18 +125,18 @@ CameraApp::~CameraApp()
 }
 
 void CameraApp::eStop(){
-	m_car.MoveMotor(0, 0);
-	m_car.MoveMotor(1, 0);
-
-	angle[0] = 18;
-	m_speed_pid.ResetError();
-	m_speed_pid.SetSetPoint(0);
-	m_balance_pid.ResetError();
-	m_turn_pid.ResetError();
-
-	while(m_car.GetJoystick()->GetState() != libsc::Joystick::SELECT);
-
-	e_stop++;
+//	m_car.MoveMotor(0, 0);
+//	m_car.MoveMotor(1, 0);
+//
+//	angle[0] = 18;
+//	m_speed_pid.ResetError();
+//	m_speed_pid.SetSetPoint(0);
+//	m_balance_pid.ResetError();
+//	m_turn_pid.ResetError();
+//
+//	while(m_car.GetJoystick()->GetState() != libsc::Joystick::SELECT);
+//
+//	e_stop++;
 }
 
 void CameraApp::BalanceControl()
@@ -213,6 +214,8 @@ bool CameraApp::isDestination(int y)
 //		index = m_helper.Clamp(index+1, 0, 6);
 	}
 
+	printf("degree: %d\r\n", cluster_num);
+
 	if(cluster_num>=7)
 		return true;
 
@@ -257,9 +260,11 @@ void CameraApp::ProcessImage(){
 	if(locked){
 		for(int y=start_row; y<end_row; y++)
 		{
-			if(encoder_total>=24*7200 && isDestination(y))
+			if(encoder_total>=28*7200 && isDestination(y))
 			{
-				eStop();
+//				eStop();
+				m_speed_pid.SetSetPoint(0);
+				stopped = true;
 			}
 
 			for(int x=0; x<CAM_W; x++)
@@ -367,10 +372,10 @@ void CameraApp::AutoMode()
 //				printf("t_kp: %f\r\n",t_kp[1]);
 //				printf("t_kd: %f\r\n",t_kd[1]);
 //				printf("SPEED_SETPOINTS: %f\r\n",SPEED_SETPOINTS[1]);*/
-				printf("degree: %.3f\r\n",m_gyro);
+				//printf("degree: %.3f\r\n",m_gyro);
 			}
 
-			m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
+			if(!stopped) m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
 
 			///Speed Control Output every 1ms///
 			SpeedControlOutput();
