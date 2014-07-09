@@ -100,7 +100,7 @@ private:
 	int start_row;
 	int end_row;
 
-	int turn_error[2];
+	int32_t turn_error[2];
 };
 
 }

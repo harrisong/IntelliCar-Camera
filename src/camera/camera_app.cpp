@@ -140,6 +140,9 @@ void CameraApp::eStop(){
 
 void CameraApp::BalanceControl()
 {
+	m_balance_pid.SetKP( TunableInt::AsFloat(tunableints[0]->GetValue()) );
+	m_balance_pid.SetKD( TunableInt::AsFloat(tunableints[1]->GetValue()) );
+	m_balance_pid.SetKI( TunableInt::AsFloat(tunableints[2]->GetValue()) );
 	///Get values from gyro///
 	m_car.AccelRefresh();
 
@@ -159,6 +162,10 @@ void CameraApp::SpeedControl(){
 #ifndef LIBSC_USE_K60_ENCODERS
 	return;
 #endif
+
+	m_speed_pid.SetKP( TunableInt::AsFloat(tunableints[3]->GetValue()) );
+	m_speed_pid.SetKD( TunableInt::AsFloat(tunableints[4]->GetValue()) );
+	m_speed_pid.SetKI( TunableInt::AsFloat(tunableints[5]->GetValue()) );
 
 	int32_t encoder1 = FTM_QUAD_get(FTM1);
 	int32_t encoder2 = -FTM_QUAD_get(FTM2);
@@ -277,7 +284,7 @@ void CameraApp::ProcessImage(){
 }
 
 void CameraApp::TurnControl(){
-	int error = white_dot[0] - white_dot[1];
+	int32_t error = white_dot[0] - white_dot[1];
 
 	if(error==0){
 		error = turn_error[1] - turn_error[0] + turn_error[1];
@@ -288,6 +295,19 @@ void CameraApp::TurnControl(){
 
 
 	m_turn_pid.UpdateCurrentError(error);
+
+	switch( (int32_t) (abs(error) / 100) )
+	{
+		case 0:
+		case 1:
+			m_turn_pid.SetKP(0.22);
+			m_turn_pid.SetKD(0.22);
+			break;
+		default:
+			m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
+			m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[7]->GetValue()) );
+			break;
+	}
 
 
 	int32_t degree = (int32_t) round(
@@ -348,15 +368,7 @@ void CameraApp::AutoMode()
 			t = libutil::Clock::Time();
 
 			if(t%1500==0){
-//
-				m_balance_pid.SetKP( TunableInt::AsFloat(tunableints[0]->GetValue()) );
-				m_balance_pid.SetKD( TunableInt::AsFloat(tunableints[1]->GetValue()) );
-				m_balance_pid.SetKI( TunableInt::AsFloat(tunableints[2]->GetValue()) );
-				m_speed_pid.SetKP( TunableInt::AsFloat(tunableints[3]->GetValue()) );
-				m_speed_pid.SetKD( TunableInt::AsFloat(tunableints[4]->GetValue()) );
-				m_speed_pid.SetKI( TunableInt::AsFloat(tunableints[5]->GetValue()) );
-				m_turn_pid.SetKP( TunableInt::AsFloat(tunableints[6]->GetValue()) );
-				m_turn_pid.SetKD( TunableInt::AsFloat(tunableints[7]->GetValue()) );
+
 				speed_input_smoothing.UpdateCurrentOutput( TunableInt::AsFloat(tunableints[8]->GetValue()) );
 //				/*printf("b_kp: %f\r\n",b_kp[1]);
 //				printf("b_kd: %f\r\n",b_kd[1]);
