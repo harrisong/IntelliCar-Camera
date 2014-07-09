@@ -36,6 +36,7 @@ public:
 	void TurnControl();
 	void TurnControlOutput();
 	void MoveMotor();
+	bool isDestination(int y);
 
 	void eStop();
 
@@ -83,6 +84,7 @@ private:
 	float m_gyro;
 
 	int32_t m_encoder_2;
+	int32_t encoder_total;
 	int32_t m_count;
 
 	int32_t num_finished_row;
