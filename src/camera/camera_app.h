@@ -101,6 +101,9 @@ private:
 	int end_row;
 
 	int32_t turn_error[2];
+
+	bool stopped;
+
 };
 
 }
