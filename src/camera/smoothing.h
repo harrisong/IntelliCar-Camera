@@ -22,6 +22,7 @@ class Smoothing
 
 		float SmoothingOutput();
 
+		void SetOutputPeriod(const int32_t _output_period);
 		void UpdateCurrentOutput(const float cur_output);
 
 	private:
@@ -29,6 +30,7 @@ class Smoothing
 		int32_t output_count;
 		float previous_output;
 		float current_output;
+		bool updated;
 };
 
 }
