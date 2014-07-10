@@ -91,7 +91,7 @@ private:
 
 	const Byte* src;
 
-	const libutil::TunableInt *tunableints[15];
+	const libutil::TunableInt *tunableints[16];
 
 	int e_stop;
 
@@ -100,7 +100,11 @@ private:
 	int start_row;
 	int end_row;
 
+	uint32_t t;
+
 	bool stopped;
+
+	int num_finished_laps;
 
 	int32_t turn_error[2];
 
