@@ -61,7 +61,7 @@ CameraApp::CameraApp():
 	m_turn_pid(TURN_SETPOINT, t_kp, t_ki, t_kd, 3, 1),
 	m_balance_pid(BALANCE_SETPOINT, b_kp, b_ki, b_kd, 3, 1),
 	speed_smoothing(SPEEDCONTROLPERIOD),
-	speed_input_smoothing(2500),
+	speed_input_smoothing(6000),
 	turn_smoothing(TURNCONTROLPERIOD),
 	m_gyro(0),
 	m_encoder_2(0),
@@ -241,11 +241,16 @@ void CameraApp::ProcessImage(){
 	if(locked){
 		for(int y=start_row; y<end_row; y++)
 		{
-			if(encoder_total>=28*7200)
+			if((encoder_total>=28*7200))
 			{
 				for(int x=2; x<=10; x+=2){
-					if(y==47 && isDestination(x,y)){
-						eStop();
+					if(y==47 && (stopped || isDestination(x,y))){
+						stopped = true;
+						static int32_t temp = encoder_total;
+						if(encoder_total>=temp+7200) {
+							speed_smoothing.SetOutputPeriod(3000);
+							m_speed_pid.SetSetPoint( 0 );
+						}
 					}
 				}
 
@@ -284,14 +289,20 @@ void CameraApp::TurnControl(){
 		case 1:
 			m_turn_pid.SetKP( TunableInt::AsFloat( tunableints[11]->GetValue()) );
 			m_turn_pid.SetKD( TunableInt::AsFloat( tunableints[12]->GetValue()) );
-			speed_input_smoothing.SetOutputPeriod(20);
-			speed_input_smoothing.UpdateCurrentOutput( TunableInt::AsFloat(tunableints[8]->GetValue()) + TunableInt::AsFloat(tunableints[13]->GetValue()) );
+//			if(abs(m_speed_pid.GetSetPoint() - TunableInt::AsFloat(tunableints[8]->GetValue()))<0.01)
+//			{
+//				speed_input_smoothing.SetOutputPeriod(20);
+//				speed_input_smoothing.UpdateCurrentOutput( TunableInt::AsFloat(tunableints[8]->GetValue()) + TunableInt::AsFloat(tunableints[13]->GetValue()) );
+//			}
 			break;
 		default:
 			m_turn_pid.SetKP( TunableInt::AsFloat( tunableints[6]->GetValue()) );
 			m_turn_pid.SetKD( TunableInt::AsFloat( tunableints[7]->GetValue()) );
-			speed_input_smoothing.SetOutputPeriod(20);
-			speed_input_smoothing.UpdateCurrentOutput( TunableInt::AsFloat(tunableints[8]->GetValue()) - TunableInt::AsFloat(tunableints[14]->GetValue()) );
+//			if(abs(m_speed_pid.GetSetPoint() - TunableInt::AsFloat(tunableints[8]->GetValue()))<0.01)
+//			{
+//				speed_input_smoothing.SetOutputPeriod(20);
+//				speed_input_smoothing.UpdateCurrentOutput( TunableInt::AsFloat(tunableints[8]->GetValue()) - TunableInt::AsFloat(tunableints[14]->GetValue()) );
+//			}
 			break;
 	}
 
@@ -353,7 +364,7 @@ void CameraApp::AutoMode()
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>0){
 			t = libutil::Clock::Time();
 
-			if(t%2500==0 && m_speed_pid.GetSetPoint() < 1){
+			if(t%6000==0 && m_speed_pid.GetSetPoint() < 1 && !stopped){
 
 				speed_input_smoothing.UpdateCurrentOutput( TunableInt::AsFloat(tunableints[8]->GetValue()) );
 //				/*printf("b_kp: %f\r\n",b_kp[1]);
