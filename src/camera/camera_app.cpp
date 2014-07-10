@@ -195,31 +195,45 @@ void CameraApp::SpeedControlOutput(){
 
 bool CameraApp::isDestination(int y)
 {
-	const int threshold = (int) TunableInt::AsFloat(tunableints[10]->GetValue()) ;
-	int color;
-	int count = 0;
-	int cluster_num = 0;
-
-	for(int x=0; x<CAM_W; x++)
-	{
-		color=m_helper.GetPixel(src, x, y);
-		while(m_helper.GetPixel(src, x, y)==color)
-		{
-			count++;
-			x++;
-		}
-
-		if(count>=threshold) {
-			cluster_num++;
-		}
-
-		count=0;
+//	const int threshold = (int) TunableInt::AsFloat(tunableints[10]->GetValue()) ;
+//	int color;
+//	int count = 0;
+//	int cluster_num = 0;
+//
+//	for(int x=0; x<CAM_W; x++)
+//	{
+//		color=m_helper.GetPixel(src, x, y);
+//		while(m_helper.GetPixel(src, x, y)==color)
+//		{
+//			count++;
+//			x++;
+//		}
+//
+//		if(count>=threshold) {
+//			cluster_num++;
+//		}
+//
+//		count=0;
+//	}
+//
+//	if(cluster_num>=5)
+//		return true;
+//
+//	return false;
+	bool total = true;
+	bool left=false, middle=false, right=false;
+	for(int y1=51;y1<=53;y1++){
+		left = m_helper.RangeIsColor(10, 30, y1, BLACK_BYTE, src);
+		middle = m_helper.RangeIsColor(31, 49, y1, WHITE_BYTE, src);
+		right = m_helper.RangeIsColor(50, 70, y1, BLACK_BYTE, src);
+//		printf("%d \t %d \t %d\n", left, middle, right);
+		total &= left;
+		total &= middle;
+		total &= right;
 	}
+	if(total) printf("ENDLINE\n");
 
-	if(cluster_num>=5)
-		return true;
-
-	return false;
+	return total;
 }
 
 void CameraApp::ProcessImage(){
@@ -568,7 +582,15 @@ void CameraApp::CameraMode()
 		///System loop - 1ms///
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),t)>=1){
 			t = libutil::Clock::Time();
-			m_helper.PrintCam();
+
+			if(m_car.GetCamera()->IsImageReady())
+			{
+				src = m_car.GetCamera()->LockBuffer();
+				m_helper.PrintCam();
+				isDestination(50);
+				m_car.GetCamera()->UnlockBuffer();
+			}
+
 		}
 
 	}

@@ -34,7 +34,7 @@ class Helper
 		}
 
 		void PrintPtr(uint8_t y);
-
+		bool RangeIsColor(int x1, int x2, int y, int color, const Byte * src);
 		void PrintCam();
 
 		void CreateMenu(const char** menu, const int num_choice);
