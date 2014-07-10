@@ -22,6 +22,8 @@ class Smoothing
 
 		float SmoothingOutput();
 
+		bool isFull();
+
 		void SetOutputPeriod(const int32_t _output_period);
 		void UpdateCurrentOutput(const float cur_output);
 

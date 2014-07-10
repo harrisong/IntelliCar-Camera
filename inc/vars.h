@@ -31,6 +31,7 @@
 */
 #define TURNCONTROLPERIOD 8
 #define SPEEDCONTROLPERIOD 20
+#define SPEEDINPUTPERIOD 2500
 
 /*
 #define degree_kp 0.089f

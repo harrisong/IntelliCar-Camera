@@ -39,6 +39,7 @@ class LcdMenu
 		char** choices;
 		int num_choice;
 		int selected_choice;
+		bool moved;
 };
 
 }

@@ -140,25 +140,25 @@ void Helper::PrintCam(){
 		Printline(car_pt->GetLcd()->FONT_H * 6, s);
 
 
-//		for(int x=30; x<=49; x++)
-//		{
-//			lcd->DrawPixel(x, 18+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//			lcd->DrawPixel(x, 19+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//			lcd->DrawPixel(x, 20+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//			lcd->DrawPixel(x, 39+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//			lcd->DrawPixel(x, 40+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//			lcd->DrawPixel(x, 41+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//		}
-//
-//		for(int y=20+24; y<=39+24; y++)
-//		{
-//			lcd->DrawPixel(28, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//			lcd->DrawPixel(29, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//			lcd->DrawPixel(30, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//			lcd->DrawPixel(49, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//			lcd->DrawPixel(50, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//			lcd->DrawPixel(51, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
-//		}
+		for(int x=30; x<=49; x++)
+		{
+			lcd->DrawPixel(x, 18+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 19+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 20+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 39+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 40+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(x, 41+24, libutil::GetRgb565(0xFF, 0x00, 0x00));
+		}
+
+		for(int y=20+24; y<=39+24; y++)
+		{
+			lcd->DrawPixel(28, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(29, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(30, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(49, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(50, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+			lcd->DrawPixel(51, y, libutil::GetRgb565(0xFF, 0x00, 0x00));
+		}
 
 		for(int x=10; x<=30; x++){
 			lcd->DrawPixel(x, 50+24, libutil::GetRgb565(0x00, 0xFF, 0x00));
