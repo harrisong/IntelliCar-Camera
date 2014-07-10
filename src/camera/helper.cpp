@@ -106,7 +106,7 @@ bool Helper::RangeIsColor(int x1, int x2, int y, int color, const Byte * src){
 		if(GetPixel(src, x, y)==color) count++;
 	}
 
-	return count*100/(x2-x1) >  70 ? true : false;
+	return count*100/(x2-x1+1) >= 65 ? true : false;
 }
 
 void Helper::PrintCam(){
