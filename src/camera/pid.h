@@ -44,6 +44,7 @@ class PID
 		float* kd;
 		float current_error;
 		float previous_error;
+		float pre_previous_error;
 		float total_error;
 
 };

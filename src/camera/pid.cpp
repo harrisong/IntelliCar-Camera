@@ -34,7 +34,9 @@ PID::~PID()
 
 void PID::UpdatePreviousError()
 {
+	pre_previous_error = previous_error;
 	previous_error = current_error;
+
 }
 
 void PID::UpdateCurrentError(const float cur_reading)
@@ -109,6 +111,7 @@ float PID::Integral() const
 float PID::Derivative() const
 {
 	return kd[mode-1] * (current_error - previous_error);
+//	return kd[mode-1] * 0.8f * (current_error - previous_error) + 0.2f * (kd[mode-1] * (pre_previous_error - previous_error) );
 }
 
 }

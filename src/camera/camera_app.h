@@ -18,6 +18,7 @@
 #include "camera/helper.h"
 #include "camera/pid.h"
 #include "camera/smoothing.h"
+#include "math_tools.h"
 
 
 namespace camera
@@ -91,7 +92,7 @@ private:
 
 	const Byte* src;
 
-	const libutil::TunableInt *tunableints[19];
+	const libutil::TunableInt *tunableints[20];
 
 	int e_stop;
 
@@ -107,6 +108,9 @@ private:
 	int num_finished_laps;
 
 	int32_t turn_error[2];
+
+	MOV_STRUCT acc_moving;
+	float buffer[200];
 
 };
 

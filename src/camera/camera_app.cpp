@@ -28,6 +28,7 @@
 #include <libsc/com/joystick.h>
 #include <libsc/com/button.h>
 #include "lcdmenu.h"
+#include "math_tools.h"
 
 using namespace libutil;
 
@@ -35,11 +36,11 @@ using namespace libutil;
 namespace camera
 {
 
-float b_kp[3] = {1700.0, 1700.0, 1700.0};
+float b_kp[3] = {1800.0, 1800.0, 1800.0};
 float b_ki[3] = {0.0, 0.0, 0.0};
-float b_kd[3] = {12000.0, 12000.0, 12000.0};
+float b_kd[3] = {1000.0, 1000.0, 1000.0};
 
-int16_t SPEED_SETPOINTS[3] = {0, 70, 0};
+float SPEED_SETPOINTS[3] = {0.0, 70.0, 0.0};
 
 float s_kp[3] = {0.5, 0.5, 0.5};
 float s_ki[3] = {0.01, 0.01, 0.01};
@@ -48,6 +49,8 @@ float s_kd[3] = {0.0, 0.0, 0.0};
 float t_kp[3] = {0.17, 0.17, 0.17};
 float t_ki[3] = {0.0, 0.0, 0.0};
 float t_kd[3] = {0.1, 0.1, 0.1};
+
+float BALANCE_SETPOINT = 32.0;
 
 CameraApp::CameraApp():
 	m_helper(&m_car),
@@ -76,6 +79,7 @@ CameraApp::CameraApp():
 	t(libutil::Clock::Time()),
 	num_finished_laps(0)
 {
+	moving_struct_init(&acc_moving, buffer, 200);
 	printf("Voltage: %f\r\n", m_car.GetVolt());
 	gpio_init(PTA11, GPO, 1);
 
@@ -88,48 +92,50 @@ CameraApp::CameraApp():
 	kalman_filter_init(&m_gyro_kf[0], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, 0, 1);
 	kalman_filter_init(&m_gyro_kf[2], 0.0012, 0.012, 0, 1);
-	kalman_filter_init(&m_acc_kf, 0.0005, 0.05, 0, 1);
+	kalman_filter_init(&m_acc_kf, 0.00095, 0.05, 0, 1);
 	mpu6050_init();
 	m_car.GetLcd()->Clear(WHITE);
 
-	tunableints[0] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("bkp", TunableInt::REAL,
+	tunableints[0] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("bkp", TunableInt::REAL,
 			TunableInt::AsUnsigned(b_kp[1]));
-	tunableints[1] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("bkd", TunableInt::REAL,
+	tunableints[1] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("bkd", TunableInt::REAL,
 				TunableInt::AsUnsigned(b_kd[1]));
-	tunableints[2] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("bki", TunableInt::REAL,
+	tunableints[2] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("bki", TunableInt::REAL,
 					TunableInt::AsUnsigned(b_ki[1]));
-	tunableints[3] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("skp", TunableInt::REAL,
+	tunableints[3] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("skp", TunableInt::REAL,
 						TunableInt::AsUnsigned(s_kp[1]));
-	tunableints[4] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("skd", TunableInt::REAL,
+	tunableints[4] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("skd", TunableInt::REAL,
 						TunableInt::AsUnsigned(s_kd[1]));
-	tunableints[5] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("ski", TunableInt::REAL,
+	tunableints[5] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("ski", TunableInt::REAL,
 						TunableInt::AsUnsigned(s_ki[1]));
-	tunableints[6] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("tkp", TunableInt::REAL,
+	tunableints[6] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("tkp", TunableInt::REAL,
 						TunableInt::AsUnsigned(t_kp[1]));
-	tunableints[7] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("tkd", TunableInt::REAL,
+	tunableints[7] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("tkd", TunableInt::REAL,
 						TunableInt::AsUnsigned(t_kd[1]));
-	tunableints[8] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("speed", TunableInt::INTEGER,
+	tunableints[8] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("speed", TunableInt::INTEGER,
 						TunableInt::AsSigned(SPEED_SETPOINTS[0]));
-	tunableints[9] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("turn_multiplier", TunableInt::INTEGER,
+	tunableints[9] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("turn_multiplier", TunableInt::INTEGER,
 						TunableInt::AsSigned(15));
-	tunableints[10] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("threshold", TunableInt::INTEGER,
+	tunableints[10] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("threshold", TunableInt::INTEGER,
 						TunableInt::AsSigned(1));
-	tunableints[11] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("tkp_s", TunableInt::REAL,
+	tunableints[11] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("tkp_s", TunableInt::REAL,
 						TunableInt::AsUnsigned(0.22f));
-	tunableints[12] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("tkd_s", TunableInt::REAL,
+	tunableints[12] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("tkd_s", TunableInt::REAL,
 						TunableInt::AsUnsigned(0.30f));
-	tunableints[13] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("speed++", TunableInt::REAL,
+	tunableints[13] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("speed++", TunableInt::REAL,
 						TunableInt::AsUnsigned(0.0f));
-	tunableints[14] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("speed--", TunableInt::REAL,
+	tunableints[14] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("speed--", TunableInt::REAL,
 						TunableInt::AsUnsigned(0.0f));
-	tunableints[15] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("speed--_kp", TunableInt::REAL,
+	tunableints[15] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("speed--_kp", TunableInt::REAL,
 						TunableInt::AsUnsigned(1.5f));
-	tunableints[16] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("speed--period", TunableInt::REAL,
+	tunableints[16] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("speed--period", TunableInt::REAL,
 						TunableInt::AsUnsigned(80.0f));
-	tunableints[17] = TunableIntManager<18>::GetInstance(m_car.GetUart())->Register("speed++period", TunableInt::REAL,
+	tunableints[17] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("speed++period", TunableInt::REAL,
 						TunableInt::AsUnsigned(20.0f));
-	tunableints[18] = TunableIntManager<19>::GetInstance(m_car.GetUart())->Register("estop", TunableInt::INTEGER, e_stop);
-	TunableIntManager<19>::GetInstance(m_car.GetUart())->Start();
+	tunableints[18] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("estop", TunableInt::INTEGER, e_stop);
+	tunableints[19] = TunableIntManager<20>::GetInstance(m_car.GetUart())->Register("BalanceSetPt", TunableInt::REAL, BALANCE_SETPOINT);
+
+	TunableIntManager<20>::GetInstance(m_car.GetUart())->Start();
 
 	__g_hard_fault_handler = HardFaultHandler;
 	m_instance = this;
@@ -141,6 +147,7 @@ CameraApp::~CameraApp()
 }
 
 void CameraApp::eStop(){
+	printf("estop\n");
 	m_car.MoveMotor(0, 0);
 	m_car.MoveMotor(1, 0);
 
@@ -167,9 +174,17 @@ void CameraApp::BalanceControl()
 
 	float acc = m_car.GetRawAngle();
 	kalman_filtering(&m_acc_kf, &acc, 1);
-	m_gyro = PROPORTIONALCONST * acc + (1 - PROPORTIONALCONST) * angle[0];
+	window_update(&acc_moving, acc);
 
-	if(t%100==0) printf("%d, %d, %d\n", (int16_t) m_gyro, (int16_t) acc, (int16_t) angle[0]);
+	if(moving_struct_get_window_count(&acc_moving)==moving_struct_get_window_size(&acc_moving)-1){
+		m_gyro = 0.8 * avg(moving_struct_get_window(&acc_moving), moving_struct_get_window_size(&acc_moving)) + (1 - 0.8) * angle[0];
+	}else{
+		m_gyro = PROPORTIONALCONST * acc + (1 - PROPORTIONALCONST) * angle[0];
+	}
+
+//	if(t%100==0) printf("%d, %d, %d\n", (int16_t) m_gyro, (int16_t) acc, (int16_t) angle[0]);
+
+	m_balance_pid.SetSetPoint( TunableInt::AsFloat( tunableints[19]->GetValue()) );
 
 	m_balance_pid.UpdateCurrentError(m_gyro);
 
@@ -375,7 +390,7 @@ void CameraApp::AutoMode()
 
 	libsc::Joystick* m_joystick = m_car.GetJoystick();
 
-//	m_balance_pid.SetMode(2);
+	m_balance_pid.SetMode(2);
 //	m_turn_pid.SetMode(2);
 //	m_speed_pid.SetMode(2);
 
@@ -386,9 +401,23 @@ void CameraApp::AutoMode()
 //			eStop();
 //		}
 
-		if(m_joystick->GetState()==libsc::Joystick::DOWN){
+		if(m_joystick->GetState()==libsc::Joystick::LEFT){
 			printf("startcar\n");
 		}
+
+//		if(m_joystick->GetState()==libsc::Joystick::DOWN){
+//			BALANCE_SETPOINT+=0.1;
+//			printf("sp: %f\n", BALANCE_SETPOINT);
+//			m_balance_pid.SetSetPoint(BALANCE_SETPOINT);
+//			while(m_joystick->GetState()==libsc::Joystick::DOWN);
+//		}
+//
+//		if(m_joystick->GetState()==libsc::Joystick::UP){
+//			BALANCE_SETPOINT-=0.1;
+//			printf("sp: %f\n", BALANCE_SETPOINT);
+//			m_balance_pid.SetSetPoint(BALANCE_SETPOINT);
+//			while(m_joystick->GetState()==libsc::Joystick::UP);
+//		}
 
 		///System loop - 1ms///
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(), t)>0){
@@ -411,6 +440,11 @@ void CameraApp::AutoMode()
 
 			if(!stopped) {
 				m_speed_pid.SetSetPoint( speed_input_smoothing.SmoothingOutput() );
+			}
+
+			if(e_stop != TunableInt::AsFloat(tunableints[18]->GetValue()) ){
+				e_stop = TunableInt::AsFloat(tunableints[18]->GetValue());
+				eStop();
 			}
 
 			///Speed Control Output every 1ms///
@@ -902,10 +936,7 @@ void CameraApp::BalanceAndSpeedMode()
 					m_speed_pid.SetSetPoint(SPEED_SETPOINTS[1]);
 //				}
 
-				if(e_stop != TunableInt::AsFloat(tunableints[18]->GetValue()) ){
-					e_stop = TunableInt::AsFloat(tunableints[18]->GetValue());
-					eStop();
-				}
+
 
 				if(t%1500==0){
 /*					b_kp[1] = TunableInt::AsFloat(tunableints[0]->GetValue());
