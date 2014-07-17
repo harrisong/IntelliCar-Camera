@@ -28,7 +28,9 @@ BalanceAccel::BalanceAccel(ADCn_Ch_e p3):
 }
 void BalanceAccel::Refresh(){
 
-		Rx =  (((float) adc_once(raw_x_port, ADC_10bit) * Vmax/ 1023) - Accelzero)/ 0.8f;
+//		Rx =  (((float) adc_once(raw_x_port, ADC_10bit) * Vmax/ 1023) - Accelzero)/ 0.8f;
+		Rx =  (((float) (adc_once(raw_x_port, ADC_10bit) - 525) * Vmax/ 1023))/ 0.8f;
+//		printf("%d\n", adc_once(raw_x_port, ADC_10bit));
 		if(Rx > 1.0){
 			Rx = 1.0;
 		}else if(Rx < -1.0){

@@ -1,3 +1,4 @@
+
 #include <stdint.h>
 #include "kalman.h"
 #include "vars.h"
@@ -6,6 +7,7 @@
 #include <hw_common.h>
 #include <MK60_i2c.h>
 #include <MK60_gpio.h>
+#include <MK60_adc.h>
 #include <libutil/clock.h>
 #include "MK60_port.h"
 #include "MK60_i2c.h"
@@ -29,10 +31,11 @@ int16_t raw_acc[3] = {0,0,0};
 int16_t raw_omega[3] = {0,0,0};
 float omega[3] = {0,0,0};
 float acc[3] = {0,0,0};
-float angle[3] = {18,0,0};
+float angle[3] = {0,0,0};
 int gyro_cal_ok = 0;
 
-#define GYROLSB 1/16.4f
+//#define GYROLSB 1/16.4f
+#define GYROLSB 1/15.9f
 
 #define i2c_Start(I2Cn)             I2C_C1_REG(I2C0_BASE_PTR) |= (I2C_C1_TX_MASK | I2C_C1_MST_MASK)    //MST 由0变1，产生起始信号，TX = 1 进入发送模式
 
@@ -207,7 +210,7 @@ void  mpu6050_update(){
 		omega[i] = omega[i] < 5.0f && omega[i] > -5.0f ? 0 : omega[i];
 	}
 	if(gyro_cal_ok){
-		kalman_filtering(m_gyro_kf, omega, 3);
+//		kalman_filtering(m_gyro_kf, omega, 3);
 	}
 
 	for(int i = 0; i < 3; i++){
@@ -266,6 +269,20 @@ void mpu6050_init(){
 	DELAY_MS(1000);
 	gyro_cal();
 	printf("init ends\n");
+
+	float Rx = 0, raw_accel_angle = 0, sum = 0;
+	for(int i=0; i<100; i++){
+		float Rx =  (((float) (adc_once(ADC0_SE17, ADC_10bit) - 525) * 3.3/ 1023))/ 0.8f;
+
+		if(Rx > 1.0){
+			Rx = 1.0;
+		}else if(Rx < -1.0){
+			Rx = -1.0;
+		}
+		raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
+		sum += raw_accel_angle;
+	}
+	angle[0] = sum/100;
 }
 
 

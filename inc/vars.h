@@ -11,11 +11,12 @@
 #ifndef VARS_H_
 #define VARS_H_
 
-#define TIMECONST 100.0f
+#define PROPORTIONALCONST 0.3f
+//#define TIMECONST 30.0f
 
 //#define PWMCLAMP 8000
 
-#define BALANCE_SETPOINT 48
+#define BALANCE_SETPOINT 32
 #define TURN_SETPOINT 0
 #define DEADZONELOWER 90
 #define DEADZONEHIGHER -20
@@ -31,7 +32,7 @@
 */
 #define TURNCONTROLPERIOD 8
 #define SPEEDCONTROLPERIOD 20
-#define SPEEDINPUTPERIOD 2500
+#define SPEEDINPUTPERIOD 20
 
 /*
 #define degree_kp 0.089f

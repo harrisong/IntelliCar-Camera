@@ -55,11 +55,11 @@ void LcdMenu::WaitForSelection()
 
 	while(selected_choice==-1){
 
-		if(libutil::Clock::TimeDiff(libutil::Clock::Time(), pt) > 2500 && !moved )
+		/*if(libutil::Clock::TimeDiff(libutil::Clock::Time(), pt) > 2500 && !moved )
 		{
 			selected_choice = 1;
 			break;
-		}
+		}*/
 
 		mx = FONT_W * 5;
 		helper.Printline( mx , 0, libutil::String::Format("%02d/%02d", ptr_pos, num_choice).c_str());
@@ -86,8 +86,10 @@ void LcdMenu::WaitForSelection()
 				}else{
 					ptr_pos = 1;
 					ptr_output_pos = 1;
-					viewport[0] = 1;
-					viewport[1] = maxh;
+					if(num_choice > maxh){
+						viewport[0] = 1;
+						viewport[1] = maxh;
+					}
 					for(int i=1; i<=maxh; i++) {
 						if(ptr_output_pos == i) helper.Printline(FONT_H * i, choices[viewport[0]-1+i-1], true);
 						else helper.Printline(FONT_H * i, choices[viewport[0]-1+i-1]);
@@ -117,9 +119,12 @@ void LcdMenu::WaitForSelection()
 
 				}else{
 					ptr_pos = num_choice;
-					ptr_output_pos = maxh;
-					viewport[0] = num_choice - maxh + 1;
-					viewport[1] = num_choice;
+					ptr_output_pos = ptr_pos;
+					if(num_choice > maxh){
+						ptr_output_pos = maxh;
+						viewport[0] = num_choice - maxh + 1;
+						viewport[1] = num_choice;
+					}
 					for(int i=1; i<=maxh; i++) {
 						//helper.Printline(FONT_H * i, "                ");
 						if(ptr_output_pos == i) helper.Printline(FONT_H * i, choices[viewport[0]-1+i-1], true);

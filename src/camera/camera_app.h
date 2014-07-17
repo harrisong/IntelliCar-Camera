@@ -71,7 +71,7 @@ private:
 	int32_t m_turn_speed[2];
 	int32_t m_total_speed[2];
 	bool m_dir[2];
-	int32_t white_dot[2];
+	int32_t white_dot[2], white_dot_z[2];
 
 	PID m_speed_pid;
 	PID m_turn_pid;
@@ -91,7 +91,7 @@ private:
 
 	const Byte* src;
 
-	const libutil::TunableInt *tunableints[18];
+	const libutil::TunableInt *tunableints[19];
 
 	int e_stop;
 
