@@ -29,19 +29,20 @@ BalanceAccel::BalanceAccel(ADCn_Ch_e p3):
 void BalanceAccel::Refresh(){
 
 //		Rx =  (((float) adc_once(raw_x_port, ADC_10bit) * Vmax/ 1023) - Accelzero)/ 0.8f;
-		Rx =  (((float) adc_once(raw_x_port, ADC_10bit) * Vmax/ 1024));
-//		printf("%d\n", adc_once(raw_x_port, ADC_10bit));
-		Rx *= 1.179859431f;
-		Rx -= -0.011406844f;
+		Rx =  (((float) adc_once(raw_x_port, ADC_10bit) * Vmax / 1024.0f)) - 1.65f;
+
+		Rx *= 1.3f;
+		Rx -= 0.002f;
 
 		if(Rx > 1.0){
 			Rx = 1.0;
 		}else if(Rx < -1.0){
 			Rx = -1.0;
 		}
-		raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
+//		raw_accel_angle = Rx * 180 / 3.1415f + 90 - setpoint;
+		raw_accel_angle = asin(Rx) * 57.2957795f;
 
-
+//		printf("%g\n", raw_accel_angle);
 }
 
 

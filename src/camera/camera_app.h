@@ -20,6 +20,7 @@
 #include "camera/smoothing.h"
 #include "math_tools.h"
 
+extern float* g_m_gyro;
 
 namespace camera
 {
@@ -60,10 +61,12 @@ public:
 	void TimeMeasurementMode();
 	void SpeedToMotorMode();
 
+	float m_gyro;
+
 private:
 	static void HardFaultHandler();
 	static void PitIndicator();
-
+	float fixedangle;
 	Car m_car;
 	Helper m_helper;
 
@@ -77,12 +80,13 @@ private:
 	PID m_speed_pid;
 	PID m_turn_pid;
 	PID m_balance_pid;
+	PID m_balance_derivative_pid;
 
 	Smoothing speed_smoothing;
 	Smoothing turn_smoothing;
 	Smoothing speed_input_smoothing;
 
-	float m_gyro;
+
 
 	int32_t m_encoder_2;
 	int32_t encoder_total;
@@ -92,7 +96,7 @@ private:
 
 	const Byte* src;
 
-	const libutil::TunableInt *tunableints[20];
+	const libutil::TunableInt *tunableints[13];
 
 	int e_stop;
 
@@ -111,6 +115,8 @@ private:
 
 	MOV_STRUCT acc_moving;
 	float buffer[200];
+
+	float m_acc;
 
 };
 

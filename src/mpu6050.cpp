@@ -15,6 +15,8 @@
 #include <libsc/com/config/2014_camera.h>
 #include <vectors.h>
 
+float* g_m_gyro = NULL;
+
 KF m_gyro_kf[3];
 KF m_acc_kf;
 
@@ -181,12 +183,12 @@ void mpu6050_short_init(){
 	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_CONFIG, 0x00);			//bandwith: gyro=256hz, acc=260hz
 	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
 	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g
-	kalman_filter_init(&m_gyro_kf[0], 0.0012, 0.012, omega[0], 1);
-	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, omega[1], 1);
-	kalman_filter_init(&m_gyro_kf[2], 0.0012, 0.012, omega[2], 1);
+//	kalman_filter_init(&m_gyro_kf[0], 0.0012, 0.012, omega[0], 1);
+//	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, omega[1], 1);
+//	kalman_filter_init(&m_gyro_kf[2], 0.0012, 0.012, omega[2], 1);
 }
 
-void  mpu6050_update(){
+void  mpu6050_update(float* m_gyro){
 
 //	sw_i2c_read_nbytes(MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
 	//i2c_read_nbytes(I2C0, MPU6050_ADDRESS, MPU6050_ACCEL_XOUT_H, 14, data);
@@ -213,11 +215,13 @@ void  mpu6050_update(){
 //		kalman_filtering(m_gyro_kf, omega, 3);
 	}
 
-	for(int i = 0; i < 3; i++){
+//	for(int i = 0; i < 3; i++){
 //		if(i==0) angle[i] -= omega[i] * 0.002f / 2;
 //		else
-		angle[i] += omega[i] * 0.002f / 2;
-	}
+//		angle[i] += omega[i] * 0.002f / 2;
+//		m_gyro
+//	}
+	 *m_gyro += omega[0] * 0.002f / 2;
 
 }
 
@@ -232,7 +236,7 @@ void gyro_cal(void){
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(),c_time_img) > 0){
 			c_time_img = libutil::Clock::Time();
 			if(c_time_img % 2 == 0){
-				mpu6050_update();
+				mpu6050_update(g_m_gyro);
 				if(i >= 256){
 					for(int j = 0; j < 3; j++){
 						gyro_cal_sum[j] += (uint32_t)raw_omega[j];
@@ -270,21 +274,24 @@ void mpu6050_init(){
 	gyro_cal();
 	printf("init ends\n");
 
-	float Rx = 0, raw_accel_angle = 0, sum = 0;
-	for(int i=0; i<100; i++){
-		float Rx =  (((float) (adc_once(ADC0_SE17, ADC_10bit) - 525) * 3.3/ 1023))/ 0.8f;
-
-		if(Rx > 1.0){
-			Rx = 1.0;
-		}else if(Rx < -1.0){
-			Rx = -1.0;
-		}
-		raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
-		sum += raw_accel_angle;
-	}
-	angle[0] = sum/100;
+//	float Rx = 0, raw_accel_angle = 0, sum = 0;
+//	for(int i=0; i<100; i++){
+//		float Rx =  (((float) (adc_once(ADC0_SE17, ADC_10bit) - 525) * 3.3/ 1023))/ 0.8f;
+//
+//		if(Rx > 1.0){
+//			Rx = 1.0;
+//		}else if(Rx < -1.0){
+//			Rx = -1.0;
+//		}
+//		raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
+//		sum += raw_accel_angle;
+//	}
+//	angle[0] = sum/100;
 }
 
+float getOmega(){
+	return omega[0];
+}
 
 
 #else

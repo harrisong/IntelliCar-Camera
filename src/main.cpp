@@ -4,9 +4,9 @@
 
 int main()
 {
-	gpio_init(PTB22, GPO, 1);
-	DELAY_MS(100);
-	gpio_set(PTB22, 0);
+//	gpio_init(PTB22, GPO, 1);
+//	DELAY_MS(100);
+//	gpio_set(PTB22, 0);
 
 	camera::CameraApp app;
 	app.Run();

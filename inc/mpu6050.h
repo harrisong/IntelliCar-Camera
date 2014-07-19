@@ -122,7 +122,8 @@
 
 void mpu6050_init();
 void gyro_cal(void);
-void  mpu6050_update();
+void  mpu6050_update(float*);
 void error_prints();
+float getOmega();
 
 #endif /* MPU6050_H_ */
