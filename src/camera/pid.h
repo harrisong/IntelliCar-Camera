@@ -19,6 +19,7 @@ class PID
 
 		void UpdatePreviousError();
 		void UpdateCurrentError(const float cur_error);
+		void UpdateCurrentClampError(const float cur_reading);
 		void ResetError(const float error = 0.0);
 
 		void SetMode(const int new_mode);

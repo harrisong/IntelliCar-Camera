@@ -6,9 +6,11 @@
  * Copyright (c) 2014 HKUST SmartCar Team
  */
 
+
 #ifndef CAMERA_APP_H_
 #define CAMERA_APP_H_
 #include <log.h>
+#include <vectors.h>
 #include <libutil/misc.h>
 //#include <libutil/pid_controller.h>
 //#include <libutil/pid_controller.tcc>
@@ -22,8 +24,10 @@
 
 extern float* g_m_gyro;
 
+
 namespace camera
 {
+
 
 class CameraApp
 {
@@ -62,8 +66,11 @@ public:
 	void SpeedToMotorMode();
 
 	float m_gyro;
+	const libutil::TunableInt *tunableints[14];
+
 
 private:
+	static __ISR void Pit3Handler();
 	static void HardFaultHandler();
 	static void PitIndicator();
 	float fixedangle;
@@ -96,7 +103,7 @@ private:
 
 	const Byte* src;
 
-	const libutil::TunableInt *tunableints[13];
+
 
 	int e_stop;
 
@@ -122,4 +129,8 @@ private:
 
 }
 
+
+extern camera::CameraApp* app;
 #endif /* CAMERA_APP_H_ */
+
+

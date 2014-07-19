@@ -6,7 +6,9 @@
  */
 
 #include "pid.h"
+#include <libutil/misc.h>
 
+using namespace libutil;
 
 namespace camera
 {
@@ -43,6 +45,15 @@ void PID::UpdateCurrentError(const float cur_reading)
 {
 	current_error = setpoint - cur_reading;
 	total_error += current_error;
+	total_error = Clamp<float>(-8000, total_error, 8000);
+}
+
+void PID::UpdateCurrentClampError(const float cur_reading)
+{
+	current_error = setpoint - cur_reading;
+	current_error = Clamp<float>(-200, current_error, 200);
+	total_error += current_error;
+	total_error = Clamp<float>(-1000, total_error, 1000);
 }
 
 void PID::ResetError(const float error)
@@ -105,7 +116,10 @@ float PID::Proportional() const
 
 float PID::Integral() const
 {
-	return ki[mode-1] * total_error;
+	float integral = ki[mode-1] * total_error;
+//	integral = integral > 10000.0f ? 10000.0f : integral < -10000.0f ? -10000.0f : integral;
+	integral = libutil::Clamp<float>(-1000, integral, 1000);
+	return integral;
 }
 
 float PID::Derivative() const
