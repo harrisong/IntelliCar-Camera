@@ -55,11 +55,11 @@ void LcdMenu::WaitForSelection()
 
 	while(selected_choice==-1){
 
-		if(libutil::Clock::TimeDiff(libutil::Clock::Time(), pt) > 2500 && !moved )
-		{
-			selected_choice = 1;
-			break;
-		}
+//		if(libutil::Clock::TimeDiff(libutil::Clock::Time(), pt) > 2500 && !moved )
+//		{
+//			selected_choice = 1;
+//			break;
+//		}
 
 		mx = FONT_W * 5;
 		helper.Printline( mx , 0, libutil::String::Format("%02d/%02d", ptr_pos, num_choice).c_str());

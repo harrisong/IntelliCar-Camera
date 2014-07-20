@@ -14,7 +14,7 @@ namespace camera
 class PID
 {
 	public:
-		PID(const float setpoint, float _kp[], float _ki[], float _kd[], const int n, const int mode=1);
+		PID(const float setpoint, const float integral_limit, float _kp[], float _ki[], float _kd[], const int n, const int mode=1);
 		~PID();
 
 		void UpdatePreviousError();
@@ -38,6 +38,7 @@ class PID
 
 	private:
 		float setpoint;
+		float integral_limit;
 		int mode;
 		float* kp;
 		float* ki;

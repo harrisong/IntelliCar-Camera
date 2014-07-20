@@ -6,13 +6,13 @@
  */
 
 #include "pid.h"
-
+#include <libutil/misc.h>
 
 namespace camera
 {
 
-PID::PID(const float setpoint, float _kp[], float _ki[], float _kd[], const int n, const int mode)
-	: setpoint(setpoint), mode(mode), previous_error(0), current_error(0), total_error(0)
+PID::PID(const float setpoint, const float integral_limit, float _kp[], float _ki[], float _kd[], const int n, const int mode)
+	: setpoint(setpoint), integral_limit(integral_limit), mode(mode), previous_error(0), current_error(0), total_error(0)
 {
 	kp = new float[n];
 	ki = new float[n];
@@ -103,7 +103,10 @@ float PID::Proportional() const
 
 float PID::Integral() const
 {
-	return ki[mode-1] * total_error;
+	if(integral_limit<0)
+		return ki[mode-1] * total_error;
+
+	return ki[mode-1] * libutil::Clamp<float>(-integral_limit, total_error, integral_limit);
 }
 
 float PID::Derivative() const
