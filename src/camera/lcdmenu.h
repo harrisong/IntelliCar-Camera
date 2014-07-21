@@ -32,7 +32,11 @@ class LcdMenu
 		void CreateMenu();
 		void WaitForSelection();
 
+		__ISR static void MoveMenu();
+
 	private:
+		static LcdMenu *m_instance;
+
 		Car* car_pt;
 		Helper helper;
 		char* title;
@@ -40,6 +44,12 @@ class LcdMenu
 		int num_choice;
 		int selected_choice;
 		bool moved;
+		uint8_t mx;
+		int maxh;
+		int ptr_pos;
+		int ptr_output_pos;
+		int viewport[2];
+
 };
 
 }

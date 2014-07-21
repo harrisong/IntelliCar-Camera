@@ -22,13 +22,15 @@ BalanceAccel::BalanceAccel(ADCn_Ch_e p3):
 	raw_accel_angle(90),
 	Rx(0),
 	Vmax(3.3), Adc16max(65535),
-	Accelzero(1.616812667), Accelscale(0.206) {
+	Accelzero(1.65f), Accelscale(0.206) {
 
 	adc_init(raw_x_port);
 }
 void BalanceAccel::Refresh(){
 
-		Rx =  (((float) adc_once(raw_x_port, ADC_10bit) * Vmax/ 1023) - Accelzero)/ 0.8f;
+		Rx =  (((float) adc_once(raw_x_port, ADC_10bit) * Vmax/ 1024) - Accelzero);
+		Rx *= 1.3f;
+		Rx -= 0.001f;
 		if(Rx > 1.0){
 			Rx = 1.0;
 		}else if(Rx < -1.0){

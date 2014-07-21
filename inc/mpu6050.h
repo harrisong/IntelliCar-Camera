@@ -124,5 +124,8 @@ void mpu6050_init();
 void gyro_cal(void);
 void  mpu6050_update();
 void error_prints();
+float getAngle(void);
+void setAngle(float value);
+
 
 #endif /* MPU6050_H_ */

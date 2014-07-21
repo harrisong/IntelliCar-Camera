@@ -42,22 +42,12 @@ public:
 
 	void Run();
 
-	void AutoMode();
-	void PidMode();
+	void AutoMode(int mode = -1);
 	void AccelAndGyroMode();
 	void EncoderMode();
 	void CameraMode();
-	void ParadeMode();
 	void BalanceOnlyMode();
-	void CameraMoveMode();
 	void BalanceAndSpeedMode();
-	void MoveMotorMode();
-	void UartMode();
-	void CalGyroMode();
-	void SpeedModeOne();
-	void SpeedModeTwo();
-	void TimeMeasurementMode();
-	void SpeedToMotorMode();
 
 private:
 	static void HardFaultHandler();
@@ -108,6 +98,7 @@ private:
 
 	int32_t turn_error[2];
 
+	int mode_chosen;
 };
 
 }

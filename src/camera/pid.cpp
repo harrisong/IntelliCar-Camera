@@ -103,10 +103,10 @@ float PID::Proportional() const
 
 float PID::Integral() const
 {
-	if(integral_limit<0)
+	//if(integral_limit<0)
 		return ki[mode-1] * total_error;
 
-	return ki[mode-1] * libutil::Clamp<float>(-integral_limit, total_error, integral_limit);
+	//return ki[mode-1] * libutil::Clamp<float>(-integral_limit, total_error, integral_limit);
 }
 
 float PID::Derivative() const

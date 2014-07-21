@@ -29,7 +29,7 @@ int16_t raw_acc[3] = {0,0,0};
 int16_t raw_omega[3] = {0,0,0};
 float omega[3] = {0,0,0};
 float acc[3] = {0,0,0};
-float angle[3] = {18,0,0};
+float angle[3] = {0,0,0};
 int gyro_cal_ok = 0;
 
 #define GYROLSB 1/16.4f
@@ -178,9 +178,9 @@ void mpu6050_short_init(){
 	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_CONFIG, 0x00);			//bandwith: gyro=256hz, acc=260hz
 	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
 	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g
-	kalman_filter_init(&m_gyro_kf[0], 0.0012, 0.012, omega[0], 1);
-	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, omega[1], 1);
-	kalman_filter_init(&m_gyro_kf[2], 0.0012, 0.012, omega[2], 1);
+//	kalman_filter_init(&m_gyro_kf[0], 0.0012, 0.012, omega[0], 1);
+//	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, omega[1], 1);
+//	kalman_filter_init(&m_gyro_kf[2], 0.0012, 0.012, omega[2], 1);
 }
 
 void  mpu6050_update(){
@@ -207,7 +207,7 @@ void  mpu6050_update(){
 		omega[i] = omega[i] < 5.0f && omega[i] > -5.0f ? 0 : omega[i];
 	}
 	if(gyro_cal_ok){
-		kalman_filtering(m_gyro_kf, omega, 3);
+		//kalman_filtering(m_gyro_kf, omega, 3);
 	}
 
 	for(int i = 0; i < 3; i++){
@@ -245,6 +245,15 @@ void gyro_cal(void){
 //	printf("omega_offset:%d,%d,%d\n", omega_offset[0], omega_offset[1], omega_offset[2]);
 	gyro_cal_ok = 1;
 
+}
+
+float getAngle(){
+	return angle[0];
+}
+
+
+void setAngle(float value){
+	angle[0] = value;
 }
 
 //void NMI_Handler(){
