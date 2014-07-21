@@ -46,7 +46,7 @@ void LcdMenu::SetChoice(const int line, char* choice)
 	choices[line-1] = choice;
 }
 
-void LcdMenu::MoveMenu(){
+__ISR void LcdMenu::MoveMenu(){
 //	libsc::Joystick* m_joystick = car_pt->GetJoystick();
 
 	uint8_t n = 0;

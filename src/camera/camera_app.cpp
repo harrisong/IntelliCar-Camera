@@ -29,6 +29,7 @@
 #include <libsc/com/joystick.h>
 #include <libsc/com/button.h>
 #include "lcdmenu.h"
+#include "math_tools.h"
 
 using namespace libutil;
 
@@ -36,25 +37,42 @@ using namespace libutil;
 namespace camera
 {
 
-float b_kp[3] = {1000.0, 1000.0, 1000.0};
-float b_ki[3] = {0.0001, 0.0001, 0.0001};
-float b_kd[3] = {27000.0, 27000.0, 27000.0};
+float b_kp[3] = {1200.0, 1200.0, 1200.0};
+float b_ki[3] = {0.0052, 0.0052, 0.0052};
+float b_kd[3] = {30000.0, 30000.0, 30000.0};
 
-int16_t SPEED_SETPOINTS[3] = {0, 0, 0};
+int16_t SPEED_SETPOINTS[3] = {100.0f, 150.0f, 200.0f};
 
-float s_kp[3] = {55.0, 55.0, 55.0};
-float s_ki[3] = {4.5, 4.5, 4.5};
-float s_kd[3] = {0.0, 0.0, 0.0};
+float s_kp[3] = {50.0f, 50.0f, 50.0f};
+float s_ki[3] = {0.0f, 0.0f, 0.0f};
+float s_kd[3] = {0.001f, 0.001f, 0.001f};
 
-float t_kp[3] = {0.0, 0.0, 0.0};
-float t_ki[3] = {0.0, 0.0, 0.0};
-float t_kd[3] = {0.0, 0.0, 0.0};
+float t_kp[3] = {0.2f, 0.2f, 0.2f};
+float t_ki[3] = {0.0f, 0.0f, 0.0f};
+float t_kd[3] = {5.0f, 5.0f, 5.0f};
 
 float t_kp_s[3] = {0.45, 0.45, 0.45};
 float t_kd_s[3] = {5.0, 5.0, 5.0};
 
 float s_s_kp[3] = {15.0, 15.0, 15.0};
 float s_s_ki[3] = {0.3, 0.3, 0.3};
+
+__ISR void CameraApp::Pit3Handler()
+{
+	float acc;
+	mpu6050_update();
+	for(int i = 0; i < moving_struct_get_window_size(&m_instance->acc_moving); i++){
+		m_instance->m_car.AccelRefresh();
+		acc = m_instance->m_car.GetRawAngle();
+		window_update(&m_instance->acc_moving, acc);
+	}
+	acc = avg(moving_struct_get_window(&m_instance->acc_moving), moving_struct_get_window_size(&m_instance->acc_moving));
+	float a = getAngle();
+
+	kalman_filtering(&m_gyro_kf[0], &m_instance->m_gyro, &a, &acc, 1);
+
+	PIT_Flag_Clear(PIT3);
+}
 
 
 CameraApp::CameraApp():
@@ -65,7 +83,7 @@ CameraApp::CameraApp():
 	m_total_speed{0, 0},
 	m_dir{false, false},
 	white_dot{0, 0},
-	m_speed_pid(SPEED_SETPOINTS[0], 8000, s_kp, s_ki, s_kd, 3, 1), //SETPOINT, kp array, ki array, kd array, max_mode, initital mode (from 1 to max_mode);
+	m_speed_pid(0, 8000, s_kp, s_ki, s_kd, 3, 1), //SETPOINT, kp array, ki array, kd array, max_mode, initital mode (from 1 to max_mode);
 	m_turn_pid(TURN_SETPOINT, 8000, t_kp, t_ki, t_kd, 3, 1),
 	m_balance_pid(BALANCE_SETPOINT, 8000, b_kp, b_ki, b_kd, 3, 1),
 	speed_smoothing(SPEEDCONTROLPERIOD),
@@ -85,6 +103,7 @@ CameraApp::CameraApp():
 	num_finished_laps(0),
 	mode_chosen(-1)
 {
+	m_instance = this;
 	printf("Voltage: %f\r\n", m_car.GetVolt());
 
 	gpio_init(PTB22, GPO, 0);
@@ -92,17 +111,28 @@ CameraApp::CameraApp():
 	libutil::Clock::Init();
 
 	mpu6050_init();
+
+	moving_struct_init(&acc_moving, buffer, 100);
 	float acc = 0;
-	for(int i = 0; i < 50; i++){
+	for(int i = 0; i < moving_struct_get_window_size(&acc_moving); i++){
 		m_car.AccelRefresh();
-		acc += m_car.GetRawAngle();
+		acc = m_car.GetRawAngle();
+		window_update(&acc_moving, acc);
 	}
-	acc /= 50;
-	float value[2] = {0.001f,0.7f};
+
+	acc = avg(moving_struct_get_window(&acc_moving), moving_struct_get_window_size(&acc_moving));
+
+	float value[2] = {0.0005f,0.7f};
 	kalman_filter_init(&m_gyro_kf[0], 0.00001f, value, acc, 1);
 	m_gyro = angle[0] = acc;
 
-	gpio_init(PTB22, GPO, 1);
+	moving_struct_init(&acc_moving, buffer, 10);
+
+	pit_init_ms(PIT3, 2);
+	SetIsr(PIT3_VECTORn, Pit3Handler);
+	EnableIsr(PIT3_VECTORn);
+
+	gpio_set(PTB22, 1);
 	DELAY_MS(100);
 	gpio_set(PTB22, 0);
 
@@ -149,7 +179,6 @@ CameraApp::CameraApp():
 	TunableIntManager<19>::GetInstance(m_car.GetUart())->Start();
 
 	__g_hard_fault_handler = HardFaultHandler;
-	m_instance = this;
 }
 
 CameraApp::~CameraApp()
@@ -175,12 +204,12 @@ void CameraApp::eStop(){
 
 void CameraApp::BalanceControl()
 {
-	/*
+
 	static bool is_state_changed = false;
 	if(m_speed_pid.GetSetPoint() < 1 && !is_state_changed) {
-		m_balance_pid.SetSetPoint(42);
+//		m_balance_pid.SetSetPoint(40);
 		is_state_changed = true;
-	}*/
+	}
 
 	if(mode_chosen==-1){
 		m_balance_pid.SetKP( TunableInt::AsFloat(tunableints[0]->GetValue()) );
@@ -198,6 +227,7 @@ void CameraApp::BalanceControl()
 	float a = getAngle();
 	kalman_filtering(&m_gyro_kf[0], &m_gyro, &a, &acc, 1);
 
+
 //	m_gyro = 1/TIMECONST * acc + (1- 1/TIMECONST) * angle[0];
 
 	m_balance_pid.UpdateCurrentError(m_gyro);
@@ -213,14 +243,13 @@ void CameraApp::SpeedControl(){
 	return;
 #endif
 
-	//int32_t encoder1 = FTM_QUAD_get(FTM1);
-	//int32_t encoder2 = -FTM_QUAD_get(FTM2);
+	int32_t encoder1 = FTM_QUAD_get(FTM1);
+	int32_t encoder2 = -FTM_QUAD_get(FTM2);
 
-	//m_encoder_2 = (encoder1 + encoder2)/2;
+	m_encoder_2 = (encoder1 + encoder2)/2;
 
-	//encoder_total += m_encoder_2;
+	encoder_total += m_encoder_2;
 
-	printf("en: %d, %d\n", FTM_QUAD_get(FTM1), -FTM_QUAD_get(FTM2));
 
 	FTM_QUAD_clean(FTM1);
 	FTM_QUAD_clean(FTM2);
@@ -382,7 +411,7 @@ void CameraApp::TurnControl(){
 
 	m_turn_pid.UpdatePreviousError();
 
-	turn_smoothing.UpdateCurrentOutput( -degree * TunableInt::AsFloat(tunableints[9]->GetValue()) );
+	turn_smoothing.UpdateCurrentOutput( -degree * 10 );
 
 	m_car.GetCamera()->UnlockBuffer();
 }
@@ -423,9 +452,10 @@ void CameraApp::AutoMode(int mode)
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(), t)>0){
 			t = libutil::Clock::Time();
 
-			if(mode_chosen != -1){
-				if(libutil::Clock::TimeDiff(t, pt) > 5000){
+			if(mode != -1){
+				if(libutil::Clock::TimeDiff(t, pt) > 3000){
 					mode_chosen = mode;
+					m_speed_pid.SetSetPoint( SPEED_SETPOINTS[mode_chosen] );
 				}
 			}
 
@@ -447,8 +477,6 @@ void CameraApp::AutoMode(int mode)
 			if(!stopped && m_speed_pid.GetSetPoint() < 1) {
 				if(mode_chosen==-1)
 					m_speed_pid.SetSetPoint( TunableInt::AsFloat(tunableints[8]->GetValue()) );
-				else
-					m_speed_pid.SetSetPoint( SPEED_SETPOINTS[mode_chosen] );
 			}
 
 			///Speed Control Output every 1ms///
@@ -463,9 +491,7 @@ void CameraApp::AutoMode(int mode)
 				BalanceControl();
 			}
 
-			if(t%2==1){
-//				BalanceControl();
-			}
+			if(t%100==0) printf("Plot:%g,%g,%g\n", angle[0], m_car.GetRawAngle(), m_gyro);
 
 			if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
 				ProcessImage();
@@ -485,7 +511,7 @@ void CameraApp::AutoMode(int mode)
 			if(t%TURNCONTROLPERIOD==7 && num_finished_row==45){
 				ProcessImage();
 				num_finished_row=0;
-				if(m_speed_pid.GetSetPoint() > 1)
+//				if(m_speed_pid.GetSetPoint() > 1)
 					TurnControl();
 			}
 
@@ -869,9 +895,10 @@ void CameraApp::Run()
 	lcdmenu.CreateMenu();
 	lcdmenu.WaitForSelection();
 
+	DisableIsr(PIT3_VECTORn);
+
 	m_car.GetLcd()->Clear(WHITE);
 
-	printf("sc2: %d\n", lcdmenu.GetSelectedChoice());
 	switch(lcdmenu.GetSelectedChoice()){
 		case 1:
 			AutoMode();

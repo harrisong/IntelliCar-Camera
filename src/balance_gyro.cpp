@@ -6,6 +6,7 @@
  */
 //#include <cstdlib>
 #include <balance_gyro.h>
+#include <libsc/com/config.h>
 //#include <FIRE_MK60_conf.h>
 //#include <float.h>
 
@@ -25,19 +26,33 @@ BalanceAccel::BalanceAccel(ADCn_Ch_e p3):
 	Accelzero(1.65f), Accelscale(0.206) {
 
 	adc_init(raw_x_port);
+	adc_init(RZADC);
 }
 void BalanceAccel::Refresh(){
 
 		Rx =  (((float) adc_once(raw_x_port, ADC_10bit) * Vmax/ 1024) - Accelzero);
-		Rx *= 1.3f;
-		Rx -= 0.001f;
+		Rx *= 1.25f;
+		Rx -= -0.005f;
+
 		if(Rx > 1.0){
 			Rx = 1.0;
 		}else if(Rx < -1.0){
 			Rx = -1.0;
 		}
-		raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
 
+		Rz = (((float) adc_once(RZADC, ADC_10bit) * Vmax/ 1024) - Accelzero);
+		Rz *= 1.25f;
+		Rz -= -0.005f;
+
+		if(Rz > 1.0){
+			Rz = 1.0;
+		}else if(Rz < -1.0){
+			Rz = -1.0;
+		}
+
+		if(sqrt(Rx * Rx + Rz * Rz) > 0.7f){
+			raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
+		}
 
 }
 

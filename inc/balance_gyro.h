@@ -23,7 +23,7 @@ private:
 	float raw_accel_angle;
 
 	float VR;
-	float Rx;
+	float Rx, Rz;
 	float Vmax;
 	int Adc16max;
 

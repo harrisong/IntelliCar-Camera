@@ -18,6 +18,7 @@
 #include "camera/helper.h"
 #include "camera/pid.h"
 #include "camera/smoothing.h"
+#include "math_tools.h"
 
 
 namespace camera
@@ -48,10 +49,14 @@ public:
 	void CameraMode();
 	void BalanceOnlyMode();
 	void BalanceAndSpeedMode();
+	static __ISR void Pit3Handler();
 
 private:
 	static void HardFaultHandler();
 	static void PitIndicator();
+
+	MOV_STRUCT acc_moving;
+	float buffer[200];
 
 	Car m_car;
 	Helper m_helper;

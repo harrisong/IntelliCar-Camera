@@ -176,7 +176,7 @@ void mpu6050_short_init(){
 	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_PWR_MGMT_1, 0x00);		//use PLL with Z axis gyro ref
 	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_SMPLRT_DIV, 0x00);		//sampling frequence=1000K
 	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_CONFIG, 0x00);			//bandwith: gyro=256hz, acc=260hz
-	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x10);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
+	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_GYRO_CONFIG, 0x18);	//gyro range: 00->250, 08->500, 10->1000, 18->2000
 	my_i2c_write_reg(I2C0, MPU6050_ADDRESS, MPU6050_ACCEL_CONFIG, 0x10);	//acc range: 00->2g, 08->4g, 10->8g, 18->16g
 //	kalman_filter_init(&m_gyro_kf[0], 0.0012, 0.012, omega[0], 1);
 //	kalman_filter_init(&m_gyro_kf[1], 0.0012, 0.012, omega[1], 1);
@@ -213,7 +213,7 @@ void  mpu6050_update(){
 	for(int i = 0; i < 3; i++){
 //		if(i==0) angle[i] -= omega[i] * 0.002f / 2;
 //		else
-		angle[i] += omega[i] * 0.002f / 2;
+		angle[i] += omega[i] * 0.002f;
 	}
 
 }
@@ -284,5 +284,6 @@ void mpu6050_init(){
 void mpu6050_init(){}
 void gyro_cal(void){}
 void  mpu6050_update(){}
+
 
 #endif
