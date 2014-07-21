@@ -126,6 +126,7 @@ void  mpu6050_update();
 void error_prints();
 float getAngle(void);
 void setAngle(float value);
+float getOmega();
 
 
 #endif /* MPU6050_H_ */

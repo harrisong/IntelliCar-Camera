@@ -204,7 +204,7 @@ void  mpu6050_update(){
 		}
 	}
 	for(int i = 0; i < 3; i++){
-		omega[i] = omega[i] < 5.0f && omega[i] > -5.0f ? 0 : omega[i];
+		//omega[i] = omega[i] < 5.0f && omega[i] > -5.0f ? 0 : omega[i];
 	}
 	if(gyro_cal_ok){
 		//kalman_filtering(m_gyro_kf, omega, 3);
@@ -277,7 +277,9 @@ void mpu6050_init(){
 	printf("init ends\n");
 }
 
-
+float getOmega(){
+	return omega[0];
+}
 
 #else
 

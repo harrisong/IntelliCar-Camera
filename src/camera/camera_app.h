@@ -50,6 +50,7 @@ public:
 	void BalanceOnlyMode();
 	void BalanceAndSpeedMode();
 	static __ISR void Pit3Handler();
+	static __ISR void ShiftAccel();
 
 private:
 	static void HardFaultHandler();
@@ -71,6 +72,7 @@ private:
 	PID m_speed_pid;
 	PID m_turn_pid;
 	PID m_balance_pid;
+	PID m_balance_derivative_pid;
 
 	Smoothing speed_smoothing;
 	Smoothing turn_smoothing;

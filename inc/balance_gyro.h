@@ -23,7 +23,7 @@ private:
 	float raw_accel_angle;
 
 	float VR;
-	float Rx, Rz;
+	float Rx, Rz, RxOffset;
 	float Vmax;
 	int Adc16max;
 
@@ -35,6 +35,12 @@ public:
 	void Refresh();
 	float GetRawAngle(){
 		return raw_accel_angle;
+	}
+	void ShiftZero(float delta){
+		RxOffset += delta;
+	}
+	float GetOffset(){
+		return RxOffset;
 	}
 
 

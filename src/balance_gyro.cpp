@@ -21,7 +21,7 @@
 BalanceAccel::BalanceAccel(ADCn_Ch_e p3):
 	raw_x_port(p3),
 	raw_accel_angle(90),
-	Rx(0),
+	Rx(0), RxOffset(-0.002f),
 	Vmax(3.3), Adc16max(65535),
 	Accelzero(1.65f), Accelscale(0.206) {
 
@@ -30,9 +30,10 @@ BalanceAccel::BalanceAccel(ADCn_Ch_e p3):
 }
 void BalanceAccel::Refresh(){
 
-		Rx =  (((float) adc_once(raw_x_port, ADC_10bit) * Vmax/ 1024) - Accelzero);
+		Rx =  ((float) ((adc_once(raw_x_port, ADC_10bit) & 0xfffc) * Vmax/ 1024) - Accelzero);
 		Rx *= 1.25f;
-		Rx -= -0.005f;
+		Rx -= RxOffset;
+//		Rx -= -0.002f;
 
 		if(Rx > 1.0){
 			Rx = 1.0;
@@ -40,9 +41,9 @@ void BalanceAccel::Refresh(){
 			Rx = -1.0;
 		}
 
-		Rz = (((float) adc_once(RZADC, ADC_10bit) * Vmax/ 1024) - Accelzero);
+		Rz = ((float) ((adc_once(RZADC, ADC_10bit) & 0xfffc) * Vmax/ 1024) - Accelzero);
 		Rz *= 1.25f;
-		Rz -= -0.005f;
+//		Rz -= -0.002f;
 
 		if(Rz > 1.0){
 			Rz = 1.0;
@@ -50,7 +51,7 @@ void BalanceAccel::Refresh(){
 			Rz = -1.0;
 		}
 
-		if(sqrt(Rx * Rx + Rz * Rz) > 0.7f){
+		if(sqrt(Rx * Rx + Rz * Rz) > 0.8f && sqrt(Rx * Rx + Rz * Rz) < 1.0f){
 			raw_accel_angle = 90 - (acos(Rx) * 180 / 3.1415f - 90);
 		}
 
