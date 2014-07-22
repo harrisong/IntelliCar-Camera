@@ -44,21 +44,15 @@ float b_kd[4] = {55000.0f, 55000.0f, 55000.0f, 55000.0f};
 
 float BALANCE_SETPOINTS[4]  = {52.8f, 52.8f, 52.8f, 52.8f};
 float TURN_SETPOINTS[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-float SPEED_SETPOINTS[4] = {0.0f, 250.0f, 250.0f, 250.0f};
+float SPEED_SETPOINTS[4] = {0.0f, 500.0f, 400.0f, 300.0f};
 
-float s_kp[4] = {0.065f, 0.065f, 0.065f, 0.065f};
-float s_ki[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-float s_kd[4] = {6.4f, 6.4f, 6.4f, 6.4f};
+float s_kp[4] = {0.065f, 0.045f, 0.045f, 0.045f};
+float s_ki[4] = {0.0f, 0.0002f, 0.0002f, 0.00025f};
+float s_kd[4] = {6.4f, 5.0f, 5.0f, 35.0f};
 
-float t_kp[4] = {0.22f, 0.22f, 0.22f, 0.22f};
+float t_kp[4] = {0.0f, 0.25f, 0.25f, 0.25f};
 float t_ki[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-float t_kd[4] = {5.0f, 5.0f, 5.0f, 5.0f};
-
-float t_kp_s[4] = {0.45f, 0.45f, 0.45f, 0.45f};
-float t_kd_s[4] = {5.0f, 5.0f, 5.0f, 5.0f};
-
-float s_s_kp[4] = {15.0f, 15.0f, 15.0f, 15.0f};
-float s_s_ki[4] = {0.3f, 0.3f, 0.3f, 0.3f};
+float t_kd[4] = {0.0f, 5.0f, 5.0f, 5.0f};
 
 __ISR void CameraApp::Pit3Handler()
 {
@@ -86,9 +80,9 @@ CameraApp::CameraApp():
 	m_total_speed{0, 0},
 	m_dir{false, false},
 	white_dot{0, 0},
-	m_speed_pid(SPEED_SETPOINTS, 8000, s_kp, s_ki, s_kd, 4, BLUETOOTH_MODE), //SETPOINT array, kp array, ki array, kd array, max_mode, initital mode (from 1 to max_mode);
-	m_turn_pid(TURN_SETPOINTS, 8000, t_kp, t_ki, t_kd, 4, BLUETOOTH_MODE),
-	m_balance_pid(BALANCE_SETPOINTS, 8000, b_kp, b_ki, b_kd, 4, BLUETOOTH_MODE),
+	m_speed_pid(SPEED_SETPOINTS, -1, s_kp, s_ki, s_kd, 4, BLUETOOTH_MODE), //SETPOINT array, kp array, ki array, kd array, max_mode, initital mode (from 1 to max_mode);
+	m_turn_pid(TURN_SETPOINTS, -1, t_kp, t_ki, t_kd, 4, BLUETOOTH_MODE),
+	m_balance_pid(BALANCE_SETPOINTS, -1, b_kp, b_ki, b_kd, 4, BLUETOOTH_MODE),
 	//m_balance_derivative_pid(0, 8000, b_kd, 0, 0, 3, 1),
 	speed_smoothing(SPEEDCONTROLPERIOD),
 	speed_input_smoothing(SPEEDINPUTPERIOD),
@@ -103,6 +97,7 @@ CameraApp::CameraApp():
 	start_row(0),
 	end_row(0),
 	stopped(false),
+	is_car_started(false),
 	t(libutil::Clock::Time())
 {
 	m_instance = this;
@@ -329,13 +324,12 @@ void CameraApp::ProcessImage(){
 			if((encoder_total>=28*7200))
 			{
 				for(int x=2; x<=10; x+=2){
-					if(y==47 && isDestination(x,y)){
+					if(y==47 && (stopped || isDestination(x,y))){
 						static int32_t temp = encoder_total;
+						stopped = true;
 						if(encoder_total>=temp+7200) {
-//							m_speed_pid.SetSetPoint( 0 );
 							eStop();
 						}
-						break;
 					}
 				}
 			}
@@ -490,11 +484,17 @@ __ISR void CameraApp::ShiftAccel(){
 				m_instance->m_balance_pid.SetSetPoint( m_instance->m_balance_pid.GetSetPoint() - 0.4 );
 				printf("%f\n", m_instance->m_balance_pid.GetSetPoint() );
 		}
+
+	n=10;
+	if(PORTC_ISFR & (1<<n)){
+			PORTC_ISFR  |= (1<<n);
+			m_instance->is_car_started = true;
+	}
 }
 
-void CameraApp::AutoMode(const int mode)
+void CameraApp::AutoMode(const int mode, const float integral_limit)
 {
-	uint32_t pt = libutil::Clock::Time();
+	uint32_t pt = 0;
 
 	while (true)
 	{
@@ -506,11 +506,13 @@ void CameraApp::AutoMode(const int mode)
 		if(libutil::Clock::TimeDiff(libutil::Clock::Time(), t)>0){
 			t = libutil::Clock::Time();
 
-			if(libutil::Clock::TimeDiff(t, pt) >= 5000) {
+			if(is_car_started) {
+				pt = libutil::Clock::Time();
 				if(mode!=BLUETOOTH_MODE) {
 					m_balance_pid.SetMode(mode);
 					m_speed_pid.SetMode(mode);
 					m_turn_pid.SetMode(mode);
+					m_speed_pid.SetIntegralLimit(integral_limit);
 				} else {
 					m_balance_pid.SetKP( TunableInt::AsFloat(tunableints[0]->GetValue()) );
 					m_balance_pid.SetKI( TunableInt::AsFloat(tunableints[1]->GetValue()) );
@@ -539,7 +541,7 @@ void CameraApp::AutoMode(const int mode)
 				//printf("degree: %.3f\r\n",m_gyro);
 //			}
 
-			if(libutil::Clock::TimeDiff(t, pt) >= 5000) {
+			if(is_car_started && libutil::Clock::TimeDiff(t, pt) >= 2000) {
 				///Speed Control Output every 1ms///
 				SpeedControlOutput();
 
@@ -553,7 +555,7 @@ void CameraApp::AutoMode(const int mode)
 				BalanceControl();
 			}
 
-			if(libutil::Clock::TimeDiff(t, pt) >= 5000) {
+			if(is_car_started && libutil::Clock::TimeDiff(t, pt) >= 2000) {
 				if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
 					ProcessImage();
 					num_finished_row+=15;
@@ -577,7 +579,7 @@ void CameraApp::AutoMode(const int mode)
 			}
 
 			///Speed PID update every 20ms///
-			if(libutil::Clock::TimeDiff(t, pt) >= 5000 && t%20==0){
+			if(is_car_started && libutil::Clock::TimeDiff(t, pt) >= 2000 && t%20==0){
 				static bool is_cleaned_encoder = false;
 				if(!is_cleaned_encoder) {
 					FTM_QUAD_clean(FTM1);
@@ -963,9 +965,9 @@ void CameraApp::Run()
 	char* title = "Mode:";
 	char* choices[9] = {
 		"Auto",				//1
-		"Competition 1",	//2
-		"Competition 2",	//3
-		"Competition 3",	//4
+		"Comp1 (500)",	//2
+		"Comp2 (400)",	//3
+		"Comp3 (300)",	//4
 		"Camera",			//5
 		"Accel & Gyro",		//6
 		"Encoder",			//7
@@ -985,21 +987,22 @@ void CameraApp::Run()
 	port_init(PTC6, ALT1 | IRQ_FALLING );
 	port_init(PTC7, ALT1 | IRQ_FALLING );
 	port_init(PTC8, ALT1 | IRQ_FALLING );
+	port_init(PTC10, ALT1 | IRQ_FALLING );
 
 	SetIsr(PORTC_VECTORn, ShiftAccel);
 	EnableIsr(PORTC_VECTORn);
 	switch(lcdmenu.GetSelectedChoice()){
 		case 1:
-			AutoMode(BLUETOOTH_MODE);
+			AutoMode(BLUETOOTH_MODE, 6000.0f);
 			break;
 		case 2:
-			AutoMode(MODE_ONE);
+			AutoMode(MODE_ONE, 6000.0f);
 			break;
 		case 3:
-			AutoMode(MODE_TWO);
+			AutoMode(MODE_TWO, 7000.0f);
 			break;
 		case 4:
-			AutoMode(MODE_THREE);
+			AutoMode(MODE_THREE, 8000.0f);
 			break;
 		case 5:
 			CameraMode();

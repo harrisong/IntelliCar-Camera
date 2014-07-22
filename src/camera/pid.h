@@ -21,6 +21,7 @@ class PID
 		void UpdateCurrentError(const float cur_error);
 		void ResetError(const float error = 0.0);
 
+		void SetIntegralLimit(const float limit);
 		void SetMode(const int new_mode);
 		void SetSetPoint(const float new_setpoint);
 		void SetKP(const float new_kp);

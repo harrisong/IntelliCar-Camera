@@ -53,6 +53,10 @@ void PID::ResetError(const float error)
 	total_error = error;
 }
 
+void PID::SetIntegralLimit(const float limit) {
+	integral_limit = limit;
+}
+
 void PID::SetSetPoint(const float new_setpoint)
 {
 	setpoint[mode] = new_setpoint;
@@ -106,10 +110,10 @@ float PID::Proportional() const
 
 float PID::Integral() const
 {
-	//if(integral_limit<0)
-	return KI() * total_error;
+	if(integral_limit<0)
+		return KI() * total_error;
 
-//	return ki[mode-1] * libutil::Clamp<float>(-integral_limit, total_error, integral_limit);
+	return KI() * libutil::Clamp<float>(-integral_limit, total_error, integral_limit);
 }
 
 float PID::Derivative() const

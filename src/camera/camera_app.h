@@ -45,7 +45,7 @@ public:
 
 	void Run();
 
-	void AutoMode(const int mode);
+	void AutoMode(const int mode, const float integral_limit);
 	void AccelAndGyroMode();
 	void EncoderMode();
 	void CameraMode();
@@ -102,6 +102,7 @@ private:
 	uint32_t t;
 
 	bool stopped;
+	bool is_car_started;
 
 	int num_finished_laps;
 
