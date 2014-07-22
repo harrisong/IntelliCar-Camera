@@ -24,6 +24,8 @@
 namespace camera
 {
 
+enum Mode {BLUETOOTH_MODE, MODE_ONE, MODE_TWO, MODE_THREE};
+
 class CameraApp
 {
 public:
@@ -43,7 +45,7 @@ public:
 
 	void Run();
 
-	void AutoMode(int mode = -1);
+	void AutoMode(const int mode);
 	void AccelAndGyroMode();
 	void EncoderMode();
 	void CameraMode();
@@ -72,7 +74,7 @@ private:
 	PID m_speed_pid;
 	PID m_turn_pid;
 	PID m_balance_pid;
-	PID m_balance_derivative_pid;
+	//PID m_balance_derivative_pid;
 
 	Smoothing speed_smoothing;
 	Smoothing turn_smoothing;
@@ -104,8 +106,6 @@ private:
 	int num_finished_laps;
 
 	int32_t turn_error[2];
-
-	int mode_chosen;
 };
 
 }

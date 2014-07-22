@@ -11,14 +11,16 @@
 namespace camera
 {
 
-PID::PID(const float setpoint, const float integral_limit, float _kp[], float _ki[], float _kd[], const int n, const int mode)
-	: setpoint(setpoint), integral_limit(integral_limit), mode(mode), previous_error(0), current_error(0), total_error(0)
+PID::PID(float _setpoint[], const float integral_limit, float _kp[], float _ki[], float _kd[], const int n, const int mode)
+	: integral_limit(integral_limit), mode(mode), previous_error(0), current_error(0), total_error(0)
 {
+	setpoint = new float[n];
 	kp = new float[n];
 	ki = new float[n];
 	kd = new float[n];
 	for(int i=0; i<n; i++)
 	{
+		setpoint[i] = _setpoint[i];
 		kp[i] = _kp[i];
 		ki[i] = _ki[i];
 		kd[i] = _kd[i];
@@ -27,6 +29,7 @@ PID::PID(const float setpoint, const float integral_limit, float _kp[], float _k
 
 PID::~PID()
 {
+	delete[] setpoint;
 	delete[] kp;
 	delete[] ki;
 	delete[] kd;
@@ -39,7 +42,7 @@ void PID::UpdatePreviousError()
 
 void PID::UpdateCurrentError(const float cur_reading)
 {
-	current_error = setpoint - cur_reading;
+	current_error = GetSetPoint() - cur_reading;
 	total_error += current_error;
 }
 
@@ -52,7 +55,7 @@ void PID::ResetError(const float error)
 
 void PID::SetSetPoint(const float new_setpoint)
 {
-	setpoint = new_setpoint;
+	setpoint[mode] = new_setpoint;
 }
 
 void PID::SetMode(const int new_mode)
@@ -62,56 +65,56 @@ void PID::SetMode(const int new_mode)
 
 void PID::SetKP(const float new_kp)
 {
-	kp[mode-1] = new_kp;
+	kp[mode] = new_kp;
 }
 
 void PID::SetKI(const float new_ki)
 {
-	ki[mode-1] = new_ki;
+	ki[mode] = new_ki;
 }
 
 
 void PID::SetKD(const float new_kd)
 {
-	kd[mode-1] = new_kd;
+	kd[mode] = new_kd;
 }
 
 float PID::GetSetPoint() const
 {
-	return setpoint;
+	return setpoint[mode];
 }
 
 float PID::KP() const
 {
-	return kp[mode-1];
+	return kp[mode];
 }
 
 float PID::KI() const
 {
-	return ki[mode-1];
+	return ki[mode];
 }
 
 float PID::KD() const
 {
-	return kd[mode-1];
+	return kd[mode];
 }
 
 float PID::Proportional() const
 {
-	return kp[mode-1] * current_error;
+	return KP() * current_error;
 }
 
 float PID::Integral() const
 {
 	//if(integral_limit<0)
-		return ki[mode-1] * total_error;
+	return KI() * total_error;
 
 //	return ki[mode-1] * libutil::Clamp<float>(-integral_limit, total_error, integral_limit);
 }
 
 float PID::Derivative() const
 {
-	return kd[mode-1] * (current_error - previous_error);
+	return KD() * (current_error - previous_error);
 }
 
 }
