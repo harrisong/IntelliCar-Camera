@@ -494,7 +494,7 @@ __ISR void CameraApp::ShiftAccel(){
 
 void CameraApp::AutoMode(const int mode, const float integral_limit)
 {
-	uint32_t pt = 0;
+	uint32_t pt = libutil::Clock::Time();
 
 	while (true)
 	{
@@ -507,7 +507,6 @@ void CameraApp::AutoMode(const int mode, const float integral_limit)
 			t = libutil::Clock::Time();
 
 			if(is_car_started) {
-				pt = libutil::Clock::Time();
 				if(mode!=BLUETOOTH_MODE) {
 					m_balance_pid.SetMode(mode);
 					m_speed_pid.SetMode(mode);
@@ -541,7 +540,7 @@ void CameraApp::AutoMode(const int mode, const float integral_limit)
 				//printf("degree: %.3f\r\n",m_gyro);
 //			}
 
-			if(is_car_started && libutil::Clock::TimeDiff(t, pt) >= 2000) {
+			if(is_car_started) {
 				///Speed Control Output every 1ms///
 				SpeedControlOutput();
 
@@ -555,7 +554,7 @@ void CameraApp::AutoMode(const int mode, const float integral_limit)
 				BalanceControl();
 			}
 
-			if(is_car_started && libutil::Clock::TimeDiff(t, pt) >= 2000) {
+			if(is_car_started) {
 				if(t%TURNCONTROLPERIOD==1 && num_finished_row==0){
 					ProcessImage();
 					num_finished_row+=15;
@@ -579,7 +578,7 @@ void CameraApp::AutoMode(const int mode, const float integral_limit)
 			}
 
 			///Speed PID update every 20ms///
-			if(is_car_started && libutil::Clock::TimeDiff(t, pt) >= 2000 && t%20==0){
+			if(is_car_started && t%20==0){
 				static bool is_cleaned_encoder = false;
 				if(!is_cleaned_encoder) {
 					FTM_QUAD_clean(FTM1);
